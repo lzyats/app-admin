@@ -1,1 +1,5 @@
 /.idea
+/.vscode
+/app/build
+/app/.dart_tool
+/app/.idea

@@ -7,7 +7,7 @@ ruoyi:
   # 版权年份
   copyrightYear: 2026
   # 文件路径 示例（ Windows配置D:/ruoyi/uploadPath，Linux配置 /home/ruoyi/uploadPath）
-  profile: D:/ruoyi/uploadPath
+  profile: /home/ruoyi/uploadPath
   # 获取ip地址开关
   addressEnabled: false
   # 验证码类型 math 数字计算 char 字符验证
@@ -76,7 +76,7 @@ spring:
       # 端口，默认为6379
       port: 6379
       # 数据库索引
-      database: 0
+      database: 9
       # 密码
       password:
       # 连接超时时间
@@ -133,9 +133,9 @@ springdoc:
 # 防盗链配置
 referer:
   # 防盗链开关
-  enabled: false
+  enabled: true
   # 允许的域名列表
-  allowed-domains: localhost,127.0.0.1,ruoyi.vip,www.ruoyi.vip
+  allowed-domains: localhost,127.0.0.1,ruoyi.vip,www.ruoyi.vip,192.168.*.*
 
 # 防止XSS攻击
 xss:
@@ -145,3 +145,26 @@ xss:
   excludes: /system/notice
   # 匹配链接
   urlPatterns: /system/*,/monitor/*,/tool/*
+
+# API 安全加密配置（与 Flutter 端保持一致）
+api-security:
+  aes:
+    # 是否启用 AES 对称加密
+    enabled: true
+    # 加密开关请求头
+    header: X-Api-Encrypt
+    # 请求头匹配值
+    headerValue: "1"
+    # AES 密钥（16/24/32 长度）
+    key: 0123456789abcdef0123456789abcdef
+    # AES 偏移量（16 长度）
+    iv: 0123456789abcdef
+    # 强制加密响应路径（逗号分隔，支持 Ant 风格匹配）
+    # 示例：/app/upgrade/config,/api/mobile/**
+    encryptResponsePaths: /app/**
+
+# 线路二维码加密配置（与 Flutter 端 AppConfig.lineQrCryptoSeed 保持一致）
+line-qr:
+  security:
+    # 用于派生 AES key/iv 的字符种子
+    seed: replace-line-qr-seed

@@ -6,6 +6,7 @@ class AppCard extends StatelessWidget {
   final Widget child;
 
   @override
+  /// 构建通用卡片容器。
   Widget build(BuildContext context) {
     return Card(child: child);
   }

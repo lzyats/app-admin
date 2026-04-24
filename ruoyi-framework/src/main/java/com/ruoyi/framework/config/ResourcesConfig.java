@@ -57,8 +57,13 @@ public class ResourcesConfig implements WebMvcConfigurer
         CorsConfiguration config = new CorsConfiguration();
         // 设置访问源地址
         config.addAllowedOriginPattern("*");
+        // 允许携带认证信息（如 Authorization）
+        config.setAllowCredentials(true);
         // 设置访问源请求头
         config.addAllowedHeader("*");
+        // 暴露前端需要读取的响应头
+        config.addExposedHeader("X-Api-Encrypt");
+        config.addExposedHeader("Authorization");
         // 设置访问源请求方法
         config.addAllowedMethod("*");
         // 有效期 1800秒

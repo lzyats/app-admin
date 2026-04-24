@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:go_api_app/app.dart';
+import 'package:myapp/app.dart';
 
 void main() {
   testWidgets('App should render login button by default', (WidgetTester tester) async {

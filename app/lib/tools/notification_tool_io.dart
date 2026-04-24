@@ -1,6 +1,7 @@
 import 'package:awesome_notifications/awesome_notifications.dart';
 
 class NotificationTool {
+  /// 初始化本地通知通道（移动端实现）。
   static Future<void> init() async {
     await AwesomeNotifications().initialize(
       null,

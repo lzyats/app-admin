@@ -1,4 +1,4 @@
-name: go_api_app
+name: myapp
 description: go-api 的 Flutter 前端基础工程
 publish_to: "none"
 version: 0.1.0+1
@@ -32,6 +32,10 @@ dependencies:
   encrypt: ^5.0.3
   # 哈希签名
   crypto: ^3.0.3
+  # 本地缓存（保存线路选择）
+  shared_preferences: ^2.2.3
+  # 应用版本信息
+  package_info_plus: ^8.0.2
 
 dev_dependencies:
   # Flutter 测试框架
@@ -39,6 +43,7 @@ dev_dependencies:
     sdk: flutter
   # 官方静态检查规则
   flutter_lints: ^4.0.0
+  msix: ^3.16.13
 
 flutter:
   # 启用 Material 图标字体

@@ -1,16 +1,18 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:dio/dio.dart';
 
-import '../../config/app_config.dart';
-import '../request_extra.dart';
+import 'package:myapp/config/app_config.dart';
+import 'package:myapp/request/request_extra.dart';
 
 class RetryInterceptor extends Interceptor {
+  /// 创建重试拦截器并绑定 Dio 实例。
   RetryInterceptor(this._dio);
 
   final Dio _dio;
 
   @override
+  /// 请求异常时按策略执行重试。
   Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     final RequestOptions ro = err.requestOptions;
     final bool canRetry = (ro.extra[RequestExtra.retry] as bool?) ?? true;
@@ -35,6 +37,7 @@ class RetryInterceptor extends Interceptor {
     }
   }
 
+  /// 判断当前异常是否满足重试条件。
   bool _isRetryable(DioException e) {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.receiveTimeout ||

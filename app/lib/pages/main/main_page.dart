@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-
-import '../../config/app_localizations.dart';
-import '../../routers/app_router.dart';
-import '../../tools/auth_tool.dart';
+import 'package:myapp/config/app_localizations.dart';
+import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/tools/auth_tool.dart';
 
 class MainPage extends StatelessWidget {
   const MainPage({
@@ -15,6 +14,7 @@ class MainPage extends StatelessWidget {
   final Locale? selectedLocale;
 
   @override
+  /// 构建主功能导航页面。
   Widget build(BuildContext context) {
     final i18n = AppLocalizations.of(context);
 

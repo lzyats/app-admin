@@ -15,6 +15,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.web.filter.CorsFilter;
 import com.ruoyi.framework.config.properties.PermitAllUrlProperties;
+import com.ruoyi.framework.security.filter.ApiDecryptFilter;
 import com.ruoyi.framework.security.filter.JwtAuthenticationTokenFilter;
 import com.ruoyi.framework.security.handle.AuthenticationEntryPointImpl;
 import com.ruoyi.framework.security.handle.LogoutSuccessHandlerImpl;
@@ -45,6 +46,9 @@ public class SecurityConfig
      */
     @Autowired
     private JwtAuthenticationTokenFilter authenticationTokenFilter;
+
+    @Autowired
+    private ApiDecryptFilter apiDecryptFilter;
     
     /**
      * 跨域过滤器
@@ -100,7 +104,17 @@ public class SecurityConfig
             .authorizeHttpRequests((requests) -> {
                 permitAllUrl.getUrls().forEach(url -> requests.requestMatchers(url).permitAll());
                 // 对于登录login 注册register 验证码captchaImage 允许匿名访问
-                requests.requestMatchers("/login", "/register", "/captchaImage").permitAll()
+                requests.requestMatchers(
+                        "/login",
+                        "/register",
+                        "/captchaImage",
+                        "/app/auth/forgotPwd",
+                        "/prod-api/app/auth/forgotPwd",
+                        "/app/upgrade/config",
+                        "/prod-api/app/upgrade/config"
+                    ).permitAll()
+                    // 预检请求放行，避免跨域 OPTIONS 被鉴权拦截
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                     // 静态资源，可匿名访问
                     .requestMatchers(HttpMethod.GET, "/", "/*.html", "/**.html", "/**.css", "/**.js", "/profile/**").permitAll()
                     .requestMatchers("/swagger-ui.html", "/v3/api-docs/**", "/swagger-ui/**", "/druid/**").permitAll()
@@ -109,10 +123,12 @@ public class SecurityConfig
             })
             // 添加Logout filter
             .logout(logout -> logout.logoutUrl("/logout").logoutSuccessHandler(logoutSuccessHandler))
+            // 添加API解密过滤器（先于JWT鉴权执行）
+            .addFilterBefore(apiDecryptFilter, UsernamePasswordAuthenticationFilter.class)
             // 添加JWT filter
             .addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
-            // 添加CORS filter
-            .addFilterBefore(corsFilter, JwtAuthenticationTokenFilter.class)
+            // 添加CORS filter（使用内置过滤器作为锚点，避免自定义过滤器顺序未注册异常）
+            .addFilterBefore(corsFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(corsFilter, LogoutFilter.class)
             .build();
     }
