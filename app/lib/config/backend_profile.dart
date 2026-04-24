@@ -1,0 +1,5 @@
+﻿enum BackendProfile {
+  ruoyi,
+  legacyGoApi,
+}
+

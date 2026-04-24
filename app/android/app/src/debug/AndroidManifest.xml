@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 调试模式需要网络权限，用于热更新与调试通信 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+</manifest>

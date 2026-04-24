@@ -1,0 +1,19 @@
+{
+  "appName": "GVA App",
+  "homeTitle": "Control Center",
+  "upgradeTitle": "Upgrade",
+  "lineTitle": "Line",
+  "gatewayTitle": "Gateway",
+  "testLine": "Test line",
+  "switchLine": "Switch line",
+  "scanAdd": "Scan to add",
+  "followSystem": "Follow system",
+  "language": "Language",
+  "zhCN": "Chinese",
+  "enUS": "English",
+  "loginTitle": "Login",
+  "loginMock": "Mock Login",
+  "gatewayDesc": "Local proxy and tunnel page (runtime process integration pending).",
+  "upgradeDesc": "Upgrade page (version check, Android install, iOS App Store jump pending).",
+  "lineDesc": "Line test, switch and scan-to-add page."
+}

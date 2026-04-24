@@ -1,0 +1,49 @@
+name: go_api_app
+description: go-api 的 Flutter 前端基础工程
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  # Dart SDK 版本约束（需与 Flutter 3.22.2 匹配）
+  sdk: ">=3.4.0 <4.0.0"
+  # Flutter SDK 版本下限
+  flutter: ">=3.22.2"
+
+dependencies:
+  # Flutter 框架
+  flutter:
+    sdk: flutter
+  # 官方多语言支持
+  flutter_localizations:
+    sdk: flutter
+  # iOS 风格图标
+  cupertino_icons: ^1.0.8
+  # 本地通知（安卓与 iOS）
+  awesome_notifications: ^0.9.3+1
+  # HTTP 请求库
+  dio: ^5.7.0
+  # Android 应用内升级
+  ota_update: ^6.0.0
+  # 扫码能力（当前版本需 minSdkVersion 23）
+  mobile_scanner: ^6.0.11
+  # 外部链接跳转（用于 iOS 跳转 App Store）
+  url_launcher: ^6.3.1
+  # AES 对称加密
+  encrypt: ^5.0.3
+  # 哈希签名
+  crypto: ^3.0.3
+
+dev_dependencies:
+  # Flutter 测试框架
+  flutter_test:
+    sdk: flutter
+  # 官方静态检查规则
+  flutter_lints: ^4.0.0
+
+flutter:
+  # 启用 Material 图标字体
+  uses-material-design: true
+  # 静态资源目录
+  assets:
+    - assets/i18n/
+    - assets/images/
