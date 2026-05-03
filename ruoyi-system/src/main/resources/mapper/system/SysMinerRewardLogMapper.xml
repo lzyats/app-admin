@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysMinerRewardLogMapper">
+
+    <resultMap type="SysMinerRewardLog" id="SysMinerRewardLogResult">
+        <id     property="logId"      column="log_id" />
+        <result property="userId"     column="user_id" />
+        <result property="minerId"    column="miner_id" />
+        <result property="userMinerId" column="user_miner_id" />
+        <result property="runId"      column="run_id" />
+        <result property="rewardMode" column="reward_mode" />
+        <result property="action"     column="action" />
+        <result property="wagAmount"  column="wag_amount" />
+        <result property="periodStart" column="period_start" />
+        <result property="periodEnd"  column="period_end" />
+        <result property="createTime" column="create_time" />
+        <result property="remark"     column="remark" />
+    </resultMap>
+
+    <insert id="insertRewardLog" parameterType="SysMinerRewardLog" useGeneratedKeys="true" keyProperty="logId">
+        insert into sys_miner_reward_log(user_id, miner_id, user_miner_id, run_id, reward_mode, action, wag_amount, period_start, period_end, create_time, remark)
+        values(#{userId}, #{minerId}, #{userMinerId}, #{runId}, #{rewardMode}, #{action}, #{wagAmount}, #{periodStart}, #{periodEnd}, now(), #{remark})
+    </insert>
+
+    <select id="selectRewardLogList" parameterType="SysMinerRewardLog" resultMap="SysMinerRewardLogResult">
+        select log_id, user_id, miner_id, user_miner_id, run_id, reward_mode, action, wag_amount, period_start, period_end, create_time, remark
+        from sys_miner_reward_log
+        <where>
+            <if test="userId != null">and user_id = #{userId}</if>
+            <if test="minerId != null">and miner_id = #{minerId}</if>
+            <if test="userMinerId != null">and user_miner_id = #{userMinerId}</if>
+            <if test="action != null and action != ''">and action = #{action}</if>
+        </where>
+        order by log_id desc
+    </select>
+
+</mapper>
+

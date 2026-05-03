@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysYebaoOrderMapper">
+
+    <resultMap type="SysYebaoOrder" id="SysYebaoOrderResult">
+        <id property="orderId" column="order_id" />
+        <result property="orderNo" column="order_no" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="shares" column="shares" />
+        <result property="unitAmount" column="unit_amount" />
+        <result property="principalAmount" column="principal_amount" />
+        <result property="annualRate" column="annual_rate" />
+        <result property="settledIncome" column="settled_income" />
+        <result property="investTime" column="invest_time" />
+        <result property="lastSettleTime" column="last_settle_time" />
+        <result property="nextSettleTime" column="next_settle_time" />
+        <result property="status" column="status" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectYebaoOrderVo">
+        select o.order_id, o.order_no, o.user_id, u.user_name, o.shares, o.unit_amount, o.principal_amount,
+               o.annual_rate, o.settled_income, o.invest_time, o.last_settle_time, o.next_settle_time,
+               o.status, o.create_by, o.create_time, o.update_by, o.update_time, o.remark
+        from sys_yebao_order o
+        left join sys_user u on o.user_id = u.user_id
+    </sql>
+
+    <select id="selectYebaoOrderList" parameterType="SysYebaoOrder" resultMap="SysYebaoOrderResult">
+        <include refid="selectYebaoOrderVo" />
+        <where>
+            <if test="orderNo != null and orderNo != ''">
+                and o.order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="userId != null">
+                and o.user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and u.user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                and o.status = #{status}
+            </if>
+            <if test="investTime != null">
+                and o.invest_time >= #{investTime}
+            </if>
+        </where>
+        order by o.invest_time desc, o.order_id desc
+    </select>
+
+    <select id="selectAppYebaoOrderList" parameterType="Long" resultMap="SysYebaoOrderResult">
+        <include refid="selectYebaoOrderVo" />
+        where o.user_id = #{userId}
+        order by o.invest_time desc, o.order_id desc
+        limit 10
+    </select>
+
+    <select id="selectDueYebaoOrderList" parameterType="java.util.Date" resultMap="SysYebaoOrderResult">
+        <include refid="selectYebaoOrderVo" />
+        where o.status = '0'
+          and o.next_settle_time &lt;= #{currentTime}
+        order by o.next_settle_time asc, o.order_id asc
+    </select>
+
+    <select id="selectYebaoOrderById" parameterType="Long" resultMap="SysYebaoOrderResult">
+        <include refid="selectYebaoOrderVo" />
+        where o.order_id = #{orderId}
+    </select>
+
+    <select id="selectYebaoOrderByIdForUpdate" parameterType="Long" resultMap="SysYebaoOrderResult">
+        <include refid="selectYebaoOrderVo" />
+        where o.order_id = #{orderId}
+        for update
+    </select>
+
+    <select id="selectUserPrincipalTotal" parameterType="Long" resultType="java.lang.Double">
+        select ifnull(sum(principal_amount), 0)
+        from sys_yebao_order
+        where user_id = #{userId}
+          and status = '0'
+    </select>
+
+    <select id="selectUserSettledIncomeTotal" parameterType="Long" resultType="java.lang.Double">
+        select ifnull(sum(settled_income), 0)
+        from sys_yebao_order
+        where user_id = #{userId}
+          and status = '0'
+    </select>
+
+    <select id="selectUserTodayIncomeTotal" parameterType="Long" resultType="java.lang.Double">
+        select ifnull(sum(l.income_amount), 0)
+        from sys_yebao_income_log l
+        where l.user_id = #{userId}
+          and date(l.settle_time) = curdate()
+          and l.status = '0'
+    </select>
+
+    <select id="selectUserOrderCount" parameterType="Long" resultType="java.lang.Integer">
+        select count(1)
+        from sys_yebao_order
+        where user_id = #{userId}
+          and status = '0'
+    </select>
+
+    <insert id="insertYebaoOrder" parameterType="SysYebaoOrder" useGeneratedKeys="true" keyProperty="orderId">
+        insert into sys_yebao_order
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="shares != null">shares,</if>
+            <if test="unitAmount != null">unit_amount,</if>
+            <if test="principalAmount != null">principal_amount,</if>
+            <if test="annualRate != null">annual_rate,</if>
+            <if test="settledIncome != null">settled_income,</if>
+            <if test="investTime != null">invest_time,</if>
+            <if test="lastSettleTime != null">last_settle_time,</if>
+            <if test="nextSettleTime != null">next_settle_time,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">#{orderNo},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="shares != null">#{shares},</if>
+            <if test="unitAmount != null">#{unitAmount},</if>
+            <if test="principalAmount != null">#{principalAmount},</if>
+            <if test="annualRate != null">#{annualRate},</if>
+            <if test="settledIncome != null">#{settledIncome},</if>
+            <if test="investTime != null">#{investTime},</if>
+            <if test="lastSettleTime != null">#{lastSettleTime},</if>
+            <if test="nextSettleTime != null">#{nextSettleTime},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateYebaoOrder" parameterType="SysYebaoOrder">
+        update sys_yebao_order
+        <set>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="shares != null">shares = #{shares},</if>
+            <if test="unitAmount != null">unit_amount = #{unitAmount},</if>
+            <if test="principalAmount != null">principal_amount = #{principalAmount},</if>
+            <if test="annualRate != null">annual_rate = #{annualRate},</if>
+            <if test="settledIncome != null">settled_income = #{settledIncome},</if>
+            <if test="investTime != null">invest_time = #{investTime},</if>
+            <if test="lastSettleTime != null">last_settle_time = #{lastSettleTime},</if>
+            <if test="nextSettleTime != null">next_settle_time = #{nextSettleTime},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where order_id = #{orderId}
+    </update>
+
+    <delete id="deleteYebaoOrderById" parameterType="Long">
+        delete from sys_yebao_order where order_id = #{orderId}
+    </delete>
+
+    <delete id="deleteYebaoOrderByIds" parameterType="Long[]">
+        delete from sys_yebao_order where order_id in
+        <foreach item="orderId" collection="array" open="(" separator="," close=")">
+            #{orderId}
+        </foreach>
+    </delete>
+</mapper>

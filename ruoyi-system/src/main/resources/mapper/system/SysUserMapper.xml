@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserMapper">
+
+    <resultMap type="SysUser" id="SysUserResult">
+        <id     property="userId"        column="user_id"         />
+        <result property="deptId"        column="dept_id"         />
+        <result property="userName"      column="user_name"       />
+        <result property="nickName"      column="nick_name"       />
+        <result property="email"         column="email"           />
+        <result property="phonenumber"   column="phonenumber"     />
+        <result property="sex"           column="sex"             />
+        <result property="birthday"      column="birthday"        />
+        <result property="avatar"        column="avatar"          />
+        <result property="password"      column="password"        />
+        <result property="inviteCode"    column="invite_code"     />
+        <result property="levelDetail"   column="level_detail"    />
+        <result property="userLevel"     column="user_level"      />
+        <result property="level"         column="level"           />
+        <result property="parentUserName" column="parent_user_name" />
+        <result property="payPassword" column="pay_password" />
+        <result property="payPasswordSet" column="pay_password_set" />
+        <result property="securityQuestionSet" column="security_question_set" />
+        <result property="totalInvestAmount" column="total_invest_amount" />
+        <result property="totalRechargeAmount" column="total_recharge_amount" />
+		<result property="growthValue" column="growth_value" />
+        <result property="teamLeaderLevel" column="team_leader_level" />
+		<result property="defaultCurrency" column="default_currency" />
+        <result property="realNameStatus" column="real_name_status" />
+        <result property="status"        column="status"          />
+        <result property="delFlag"       column="del_flag"        />
+        <result property="loginIp"       column="login_ip"        />
+        <result property="loginDate"     column="login_date"      />
+        <result property="pwdUpdateDate" column="pwd_update_date" />
+        <result property="createBy"      column="create_by"       />
+        <result property="createTime"    column="create_time"     />
+        <result property="updateBy"      column="update_by"       />
+        <result property="updateTime"    column="update_time"     />
+        <result property="remark"        column="remark"          />
+        <association property="dept"     javaType="SysDept"         resultMap="deptResult" />
+        <collection  property="roles"    javaType="java.util.List"  resultMap="RoleResult" />
+    </resultMap>
+	
+    <resultMap id="deptResult" type="SysDept">
+        <id     property="deptId"    column="dept_id"     />
+        <result property="parentId"  column="parent_id"   />
+        <result property="deptName"  column="dept_name"   />
+        <result property="ancestors" column="ancestors"   />
+        <result property="orderNum"  column="order_num"   />
+        <result property="leader"    column="leader"      />
+        <result property="status"    column="dept_status" />
+    </resultMap>
+	
+    <resultMap id="RoleResult" type="SysRole">
+        <id     property="roleId"       column="role_id"        />
+        <result property="roleName"     column="role_name"      />
+        <result property="roleKey"      column="role_key"       />
+        <result property="roleSort"     column="role_sort"      />
+        <result property="dataScope"    column="data_scope"     />
+        <result property="status"       column="role_status"    />
+    </resultMap>
+
+    <resultMap type="SysUser" id="SysUserSimpleResult">
+        <id     property="userId"         column="user_id"          />
+        <result property="deptId"         column="dept_id"          />
+        <result property="userName"       column="user_name"        />
+        <result property="nickName"       column="nick_name"        />
+        <result property="email"          column="email"            />
+        <result property="phonenumber"    column="phonenumber"      />
+        <result property="sex"            column="sex"              />
+        <result property="birthday"       column="birthday"         />
+        <result property="avatar"         column="avatar"           />
+        <result property="password"       column="password"         />
+        <result property="inviteCode"     column="invite_code"      />
+        <result property="levelDetail"    column="level_detail"     />
+        <result property="userLevel"      column="user_level"       />
+        <result property="level"          column="level"            />
+        <result property="payPassword"    column="pay_password"     />
+        <result property="securityQuestionSet" column="security_question_set" />
+        <result property="totalInvestAmount" column="total_invest_amount" />
+        <result property="totalRechargeAmount" column="total_recharge_amount" />
+        <result property="growthValue" column="growth_value" />
+        <result property="teamLeaderLevel" column="team_leader_level" />
+        <result property="defaultCurrency" column="default_currency" />
+        <result property="realNameStatus" column="real_name_status" />
+        <result property="status"         column="status"           />
+        <result property="delFlag"        column="del_flag"         />
+        <result property="loginIp"        column="login_ip"         />
+        <result property="loginDate"      column="login_date"       />
+        <result property="pwdUpdateDate"  column="pwd_update_date"  />
+        <result property="createTime"     column="create_time"      />
+        <result property="updateTime"     column="update_time"      />
+    </resultMap>
+	
+	<sql id="selectUserVo">
+        select u.user_id, u.dept_id, u.user_name, u.nick_name, u.email, u.avatar, u.phonenumber, u.password, u.pay_password, case when u.pay_password is null or u.pay_password = '' then 0 else 1 end as pay_password_set, u.security_question_set, u.total_invest_amount, u.total_recharge_amount, u.growth_value, u.team_leader_level, u.default_currency, u.real_name_status, u.invite_code, u.level_detail, u.user_level, u.level, u.sex, u.birthday, u.status, u.del_flag, u.login_ip, u.login_date, u.pwd_update_date, u.create_by, u.create_time, u.update_by, u.update_time, u.remark, 
+        d.dept_id, d.parent_id, d.ancestors, d.dept_name, d.order_num, d.leader, d.status as dept_status,
+        r.role_id, r.role_name, r.role_key, r.role_sort, r.data_scope, r.status as role_status,
+        (select p.user_name from sys_user p where p.user_id = substring_index(u.level_detail, ',', -1) and p.user_id != 0) as parent_user_name
+        from sys_user u
+		    left join sys_dept d on u.dept_id = d.dept_id
+		    left join sys_user_role ur on u.user_id = ur.user_id
+		    left join sys_role r on r.role_id = ur.role_id
+    </sql>
+    
+    <select id="selectUserList" parameterType="SysUser" resultMap="SysUserResult">
+		select u.user_id, u.dept_id, u.nick_name, u.user_name, u.email, u.avatar, u.phonenumber, u.invite_code, u.level_detail, u.user_level, u.level, u.sex, u.birthday, u.real_name_status, u.growth_value, u.team_leader_level, u.status, u.del_flag, u.login_ip, u.login_date, u.create_by, u.create_time, u.remark, d.dept_name, d.leader, 
+		       (select p.user_name from sys_user p where p.user_id = substring_index(u.level_detail, ',', -1) and p.user_id != 0) as parent_user_name
+		from sys_user u
+		left join sys_dept d on u.dept_id = d.dept_id
+		where u.del_flag = '0'
+		<if test="userId != null and userId != 0">
+			AND u.user_id = #{userId}
+		</if>
+		<if test="userName != null and userName != ''">
+			AND u.user_name like concat('%', #{userName}, '%')
+		</if>
+		<if test="status != null and status != ''">
+			AND u.status = #{status}
+		</if>
+		<if test="realNameStatus != null and realNameStatus != ''">
+			AND u.real_name_status = #{realNameStatus}
+		</if>
+		<if test="phonenumber != null and phonenumber != ''">
+			AND u.phonenumber like concat('%', #{phonenumber}, '%')
+		</if>
+		<if test="params.beginTime != null and params.beginTime != ''"><!-- 开始时间检索 -->
+			AND date_format(u.create_time,'%Y%m%d') &gt;= date_format(#{params.beginTime},'%Y%m%d')
+		</if>
+		<if test="params.endTime != null and params.endTime != ''"><!-- 结束时间检索 -->
+			AND date_format(u.create_time,'%Y%m%d') &lt;= date_format(#{params.endTime},'%Y%m%d')
+		</if>
+		<if test="deptId != null and deptId != 0">
+			AND (u.dept_id = #{deptId} OR u.dept_id IN ( SELECT t.dept_id FROM sys_dept t WHERE find_in_set(#{deptId}, ancestors) ))
+		</if>
+		<!-- 数据范围过滤 -->
+		${params.dataScope}
+	</select>
+	
+	<select id="selectAllocatedList" parameterType="SysUser" resultMap="SysUserResult">
+	    select distinct u.user_id, u.dept_id, u.user_name, u.nick_name, u.email, u.phonenumber, u.real_name_status, u.status, u.create_time
+	    from sys_user u
+			 left join sys_dept d on u.dept_id = d.dept_id
+			 left join sys_user_role ur on u.user_id = ur.user_id
+			 left join sys_role r on r.role_id = ur.role_id
+	    where u.del_flag = '0' and r.role_id = #{roleId}
+	    <if test="userName != null and userName != ''">
+			AND u.user_name like concat('%', #{userName}, '%')
+		</if>
+		<if test="phonenumber != null and phonenumber != ''">
+			AND u.phonenumber like concat('%', #{phonenumber}, '%')
+		</if>
+		<!-- 数据范围过滤 -->
+		${params.dataScope}
+	</select>
+	
+	<select id="selectUnallocatedList" parameterType="SysUser" resultMap="SysUserResult">
+	    select distinct u.user_id, u.dept_id, u.user_name, u.nick_name, u.email, u.phonenumber, u.real_name_status, u.status, u.create_time
+	    from sys_user u
+			 left join sys_dept d on u.dept_id = d.dept_id
+			 left join sys_user_role ur on u.user_id = ur.user_id
+			 left join sys_role r on r.role_id = ur.role_id
+	    where u.del_flag = '0' and (r.role_id != #{roleId} or r.role_id IS NULL)
+	    and u.user_id not in (select u.user_id from sys_user u inner join sys_user_role ur on u.user_id = ur.user_id and ur.role_id = #{roleId})
+	    <if test="userName != null and userName != ''">
+			AND u.user_name like concat('%', #{userName}, '%')
+		</if>
+		<if test="phonenumber != null and phonenumber != ''">
+			AND u.phonenumber like concat('%', #{phonenumber}, '%')
+		</if>
+		<!-- 数据范围过滤 -->
+		${params.dataScope}
+	</select>
+	
+	<select id="selectUserByUserName" parameterType="String" resultMap="SysUserResult">
+	    <include refid="selectUserVo"/>
+		where u.user_name = #{userName} and u.del_flag = '0'
+	</select>
+
+	<select id="selectUserAuthByUserName" parameterType="String" resultMap="SysUserSimpleResult">
+		select user_id, dept_id, user_name, nick_name, password, status, del_flag, avatar, phonenumber, email,
+		       invite_code, level_detail, user_level, level, pay_password, security_question_set, total_invest_amount, total_recharge_amount, team_leader_level, default_currency, real_name_status,
+		       login_ip, login_date, pwd_update_date, create_time, update_time
+		from sys_user
+		where user_name = #{userName} and del_flag = '0'
+		limit 1
+	</select>
+
+	<select id="selectUserBaseById" parameterType="Long" resultMap="SysUserSimpleResult">
+		select user_id, dept_id, user_name, nick_name, avatar, phonenumber, email, sex, birthday,
+		       invite_code, level_detail, user_level, level, pay_password, security_question_set, growth_value, default_currency, real_name_status,
+		       status, del_flag, login_ip, login_date, pwd_update_date, create_time, update_time
+		from sys_user
+		where user_id = #{userId} and del_flag = '0'
+		limit 1
+	</select>
+
+	<select id="selectUserBaseByIdForUpdate" parameterType="Long" resultMap="SysUserSimpleResult">
+		select user_id, dept_id, user_name, nick_name, avatar, phonenumber, email, sex, birthday,
+		       invite_code, level_detail, user_level, level, pay_password, security_question_set, growth_value, team_leader_level, default_currency, real_name_status,
+		       status, del_flag, login_ip, login_date, pwd_update_date, create_time, update_time
+		from sys_user
+		where user_id = #{userId} and del_flag = '0'
+		limit 1
+		for update
+	</select>
+
+	<select id="selectUserBaseByUserName" parameterType="String" resultMap="SysUserSimpleResult">
+		select user_id, dept_id, user_name, nick_name, avatar, phonenumber, email, sex, birthday,
+		       invite_code, level_detail, user_level, level, pay_password, security_question_set, growth_value, default_currency, real_name_status,
+		       status, del_flag, login_ip, login_date, pwd_update_date, create_time, update_time
+		from sys_user
+		where user_name = #{userName} and del_flag = '0'
+		limit 1
+	</select>
+
+	<select id="selectUserByInviteCode" parameterType="String" resultMap="SysUserResult">
+		select u.user_id, u.dept_id, u.user_name, u.nick_name, u.email, u.phonenumber, u.sex, u.birthday, u.avatar, u.password, u.pay_password, case when u.pay_password is null or u.pay_password = '' then 0 else 1 end as pay_password_set, u.security_question_set, u.total_invest_amount, u.total_recharge_amount, u.growth_value, u.team_leader_level, u.default_currency, u.real_name_status, u.invite_code, u.level_detail, u.user_level, u.level, u.status, u.del_flag, u.login_ip, u.login_date, u.pwd_update_date, u.create_by, u.create_time, u.update_by, u.update_time, u.remark,
+		       (select p.user_name from sys_user p where p.user_id = substring_index(u.level_detail, ',', -1) and p.user_id != 0) as parent_user_name
+		from sys_user u
+		where u.invite_code = #{inviteCode} and u.del_flag = '0'
+		limit 1
+	</select>
+	
+	<select id="selectUserById" parameterType="Long" resultMap="SysUserResult">
+		<include refid="selectUserVo"/>
+		where u.user_id = #{userId}
+	</select>
+	
+	<select id="checkUserNameUnique" parameterType="String" resultMap="SysUserResult">
+		select user_id, user_name from sys_user where user_name = #{userName} and del_flag = '0' limit 1
+	</select>
+	
+	<select id="checkPhoneUnique" parameterType="String" resultMap="SysUserResult">
+		select user_id, phonenumber from sys_user where phonenumber = #{phonenumber} and del_flag = '0' limit 1
+	</select>
+	
+	<select id="checkEmailUnique" parameterType="String" resultMap="SysUserResult">
+		select user_id, email from sys_user where email = #{email} and del_flag = '0' limit 1
+	</select>
+	
+	<insert id="insertUser" parameterType="SysUser" useGeneratedKeys="true" keyProperty="userId">
+ 		insert into sys_user(
+ 			<if test="userId != null and userId != 0">user_id,</if>
+ 			<if test="deptId != null and deptId != 0">dept_id,</if>
+ 			<if test="userName != null and userName != ''">user_name,</if>
+ 			<if test="nickName != null and nickName != ''">nick_name,</if>
+ 			<if test="email != null and email != ''">email,</if>
+ 			<if test="avatar != null and avatar != ''">avatar,</if>
+ 			<if test="phonenumber != null and phonenumber != ''">phonenumber,</if>
+ 			<if test="sex != null and sex != ''">sex,</if>
+ 			<if test="birthday != null">birthday,</if>
+ 			<if test="password != null and password != ''">password,</if>
+ 			<if test="inviteCode != null and inviteCode != ''">invite_code,</if>
+ 			<if test="levelDetail != null and levelDetail != ''">level_detail,</if>
+ 			<if test="userLevel != null">user_level,</if>
+ 			<if test="level != null">level,</if>
+ 			<if test="teamLeaderLevel != null">team_leader_level,</if>
+ 			<if test="payPassword != null and payPassword != ''">pay_password,</if>
+ 			<if test="realNameStatus != null">real_name_status,</if>
+			<if test="status != null and status != ''">status,</if>
+ 			<if test="pwdUpdateDate != null">pwd_update_date,</if>
+ 			<if test="createBy != null and createBy != ''">create_by,</if>
+ 			<if test="remark != null and remark != ''">remark,</if>
+ 			create_time
+ 		)values(
+ 			<if test="userId != null and userId != ''">#{userId},</if>
+ 			<if test="deptId != null and deptId != ''">#{deptId},</if>
+ 			<if test="userName != null and userName != ''">#{userName},</if>
+ 			<if test="nickName != null and nickName != ''">#{nickName},</if>
+ 			<if test="email != null and email != ''">#{email},</if>
+ 			<if test="avatar != null and avatar != ''">#{avatar},</if>
+ 			<if test="phonenumber != null and phonenumber != ''">#{phonenumber},</if>
+ 			<if test="sex != null and sex != ''">#{sex},</if>
+ 			<if test="birthday != null">#{birthday},</if>
+ 			<if test="password != null and password != ''">#{password},</if>
+ 			<if test="inviteCode != null and inviteCode != ''">#{inviteCode},</if>
+ 			<if test="levelDetail != null and levelDetail != ''">#{levelDetail},</if>
+ 			<if test="userLevel != null">#{userLevel},</if>
+ 			<if test="level != null">#{level},</if>
+ 			<if test="teamLeaderLevel != null">#{teamLeaderLevel},</if>
+ 			<if test="payPassword != null and payPassword != ''">#{payPassword},</if>
+ 			<if test="realNameStatus != null">#{realNameStatus},</if>
+			<if test="status != null and status != ''">#{status},</if>
+ 			<if test="pwdUpdateDate != null">#{pwdUpdateDate},</if>
+ 			<if test="createBy != null and createBy != ''">#{createBy},</if>
+ 			<if test="remark != null and remark != ''">#{remark},</if>
+ 			sysdate()
+ 		)
+	</insert>
+	
+	<update id="updateUser" parameterType="SysUser">
+ 		update sys_user
+ 		<set>
+ 			<if test="deptId != 0">dept_id = #{deptId},</if>
+ 			<if test="nickName != null and nickName != ''">nick_name = #{nickName},</if>
+ 			<if test="email != null ">email = #{email},</if>
+ 			<if test="phonenumber != null ">phonenumber = #{phonenumber},</if>
+ 			<if test="sex != null and sex != ''">sex = #{sex},</if>
+ 			<if test="birthday != null">birthday = #{birthday},</if>
+ 			<if test="avatar != null and avatar != ''">avatar = #{avatar},</if>
+ 			<if test="password != null and password != ''">password = #{password},</if>
+ 			<if test="inviteCode != null and inviteCode != ''">invite_code = #{inviteCode},</if>
+ 			<if test="levelDetail != null and levelDetail != ''">level_detail = #{levelDetail},</if>
+ 			<if test="userLevel != null">user_level = #{userLevel},</if>
+ 			<if test="level != null">level = #{level},</if>
+ 			<if test="teamLeaderLevel != null">team_leader_level = #{teamLeaderLevel},</if>
+ 			<if test="payPassword != null and payPassword != ''">pay_password = #{payPassword},</if>
+ 			<if test="realNameStatus != null">real_name_status = #{realNameStatus},</if>
+			<if test="status != null and status != ''">status = #{status},</if>
+ 			<if test="loginIp != null and loginIp != ''">login_ip = #{loginIp},</if>
+ 			<if test="loginDate != null">login_date = #{loginDate},</if>
+ 			<if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+ 			<if test="remark != null">remark = #{remark},</if>
+ 			update_time = sysdate()
+ 		</set>
+ 		where user_id = #{userId}
+	</update>
+
+	<update id="updateUserProfile" parameterType="SysUser">
+		update sys_user
+		<set>
+			<if test="nickName != null and nickName != ''">nick_name = #{nickName},</if>
+			<if test="email != null">email = #{email},</if>
+			<if test="phonenumber != null">phonenumber = #{phonenumber},</if>
+			<if test="sex != null and sex != ''">sex = #{sex},</if>
+			<if test="birthday != null">birthday = #{birthday},</if>
+			<if test="avatar != null and avatar != ''">avatar = #{avatar},</if>
+			<if test="remark != null">remark = #{remark},</if>
+			update_time = sysdate()
+		</set>
+		where user_id = #{userId}
+	</update>
+	
+	<update id="updateUserStatus" parameterType="SysUser">
+ 		update sys_user set status = #{status}, update_time = sysdate() where user_id = #{userId}
+	</update>
+
+    <update id="updateUserGrowthValue" parameterType="SysUser">
+        update sys_user set growth_value = #{growthValue}, update_time = sysdate() where user_id = #{userId}
+    </update>
+
+    <update id="updateUserLevelValue">
+        update sys_user
+        set level = #{level},
+            update_time = sysdate()
+        where user_id = #{userId}
+    </update>
+
+	<update id="updateUserAvatar" parameterType="SysUser">
+ 		update sys_user set avatar = #{avatar}, update_time = sysdate() where user_id = #{userId}
+	</update>
+	
+  	<update id="updateLoginInfo" parameterType="SysUser">
+ 		update sys_user set login_ip = #{loginIp}, login_date = #{loginDate}, update_time = sysdate() where user_id = #{userId}
+	</update>
+	
+	<update id="resetUserPwd" parameterType="SysUser">
+		update sys_user set pwd_update_date = sysdate(), password = #{password}, update_time = sysdate() where user_id = #{userId}
+	</update>
+
+	<update id="updateUserPayPwd" parameterType="SysUser">
+		update sys_user set pay_password = #{payPassword}, update_time = sysdate() where user_id = #{userId}
+	</update>
+
+	<update id="updateUserSecurityQuestionSet" parameterType="map">
+		update sys_user set security_question_set = #{securityQuestionSet}, update_time = sysdate() where user_id = #{userId}
+	</update>
+
+	<update id="updateUserDefaultCurrency" parameterType="map">
+		update sys_user set default_currency = #{defaultCurrency}, update_time = sysdate() where user_id = #{userId}
+	</update>
+
+	<update id="updateUserRealNameStatus" parameterType="map">
+		update sys_user set real_name_status = #{realNameStatus}, update_time = sysdate() where user_id = #{userId}
+	</update>
+
+	<update id="addUserTotalAmounts">
+		update sys_user
+		set total_invest_amount = greatest(0, ifnull(total_invest_amount, 0) + ifnull(#{investDelta}, 0)),
+		    total_recharge_amount = greatest(0, ifnull(total_recharge_amount, 0) + ifnull(#{rechargeDelta}, 0)),
+		    update_time = sysdate()
+		where user_id = #{userId}
+	</update>
+	
+	<delete id="deleteUserById" parameterType="Long">
+ 		update sys_user set del_flag = '2' where user_id = #{userId}
+ 	</delete>
+ 	
+ 	<delete id="deleteUserByIds" parameterType="Long">
+ 		update sys_user set del_flag = '2' where user_id in
+ 		<foreach collection="array" item="userId" open="(" separator="," close=")">
+ 			#{userId}
+        </foreach> 
+ 	</delete>
+	
+</mapper> 

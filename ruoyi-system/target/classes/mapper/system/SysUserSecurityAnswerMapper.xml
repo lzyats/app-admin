@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserSecurityAnswerMapper">
+
+    <resultMap type="SysUserSecurityAnswer" id="SysUserSecurityAnswerResult">
+        <id     property="answerId"      column="answer_id"      />
+        <result property="userId"        column="user_id"       />
+        <result property="questionId"    column="question_id"   />
+        <result property="answer"        column="answer"        />
+        <result property="createTime"    column="create_time"  />
+        <result property="updateTime"    column="update_time"   />
+    </resultMap>
+
+    <resultMap type="SysUserSecurityAnswer" id="SysUserSecurityAnswerWithQuestionResult">
+        <id     property="answerId"      column="answer_id"      />
+        <result property="userId"        column="user_id"       />
+        <result property="questionId"    column="question_id"   />
+        <result property="answer"        column="answer"        />
+        <result property="questionText"  column="question_text" />
+        <result property="createTime"    column="create_time"  />
+        <result property="updateTime"    column="update_time"   />
+    </resultMap>
+
+    <sql id="selectAnswerVo">
+        select answer_id, user_id, question_id, answer, create_time, update_time
+        from sys_user_security_answer
+    </sql>
+
+    <select id="selectAnswerByUserId" parameterType="Long" resultMap="SysUserSecurityAnswerWithQuestionResult">
+        select a.answer_id, a.user_id, a.question_id, a.create_time, a.update_time, q.question_text
+        from sys_user_security_answer a
+        left join sys_security_question q on a.question_id = q.question_id
+        where a.user_id = #{userId}
+    </select>
+
+    <select id="selectAnswerCountByUserId" parameterType="Long" resultType="int">
+        select count(*) from sys_user_security_answer where user_id = #{userId}
+    </select>
+
+    <insert id="insertAnswer" parameterType="SysUserSecurityAnswer">
+        insert into sys_user_security_answer (
+            <if test="userId != null">user_id,</if>
+            <if test="questionId != null">question_id,</if>
+            <if test="answer != null and answer != ''">answer,</if>
+            create_time
+        )values(
+            <if test="userId != null">#{userId},</if>
+            <if test="questionId != null">#{questionId},</if>
+            <if test="answer != null and answer != ''">#{answer},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateAnswer" parameterType="SysUserSecurityAnswer">
+        update sys_user_security_answer
+        <set>
+            <if test="answer != null and answer != ''">answer = #{answer},</if>
+            update_time = sysdate()
+        </set>
+        where answer_id = #{answerId}
+    </update>
+
+    <delete id="deleteAnswerById" parameterType="Long">
+        delete from sys_user_security_answer where answer_id = #{answerId}
+    </delete>
+
+    <delete id="deleteAnswerByUserId" parameterType="Long">
+        delete from sys_user_security_answer where user_id = #{userId}
+    </delete>
+
+    <delete id="deleteAnswerByIds" parameterType="Long">
+        delete from sys_user_security_answer where answer_id in
+        <foreach item="answerId" collection="array" open="(" separator="," close=")">
+            #{answerId}
+        </foreach>
+    </delete>
+
+    <select id="selectAnswerForVerify" resultMap="SysUserSecurityAnswerResult">
+        <include refid="selectAnswerVo"/>
+        where user_id = #{userId} and question_id = #{questionId}
+    </select>
+
+</mapper>

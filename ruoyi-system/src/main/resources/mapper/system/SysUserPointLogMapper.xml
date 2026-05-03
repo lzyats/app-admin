@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserPointLogMapper">
+
+    <resultMap type="SysUserPointLog" id="SysUserPointLogResult">
+        <id property="logId" column="log_id" />
+        <result property="pointAccountId" column="point_account_id" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="points" column="points" />
+        <result property="pointsBefore" column="points_before" />
+        <result property="pointsAfter" column="points_after" />
+        <result property="changeType" column="change_type" />
+        <result property="sourceType" column="source_type" />
+        <result property="sourceId" column="source_id" />
+        <result property="sourceNo" column="source_no" />
+        <result property="status" column="status" />
+        <result property="operatorName" column="operator_name" />
+        <result property="remark" column="remark" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectPointLogVo">
+        select l.log_id, l.point_account_id, l.user_id, l.user_name, l.points, l.points_before, l.points_after,
+               l.change_type, l.source_type, l.source_id, l.source_no, l.status, l.operator_name,
+               l.remark, l.create_time, l.update_time
+        from sys_user_point_log l
+        left join sys_user u on l.user_id = u.user_id
+    </sql>
+
+    <select id="selectPointLogByUserId" parameterType="Long" resultMap="SysUserPointLogResult">
+        <include refid="selectPointLogVo" />
+        where l.user_id = #{userId}
+        order by l.log_id desc
+    </select>
+
+    <select id="selectPointLogByPointAccountId" parameterType="Long" resultMap="SysUserPointLogResult">
+        <include refid="selectPointLogVo" />
+        where l.point_account_id = #{pointAccountId}
+        order by l.log_id desc
+    </select>
+
+    <select id="selectPointLogById" parameterType="Long" resultMap="SysUserPointLogResult">
+        <include refid="selectPointLogVo" />
+        where l.log_id = #{logId}
+    </select>
+
+    <select id="selectPointLogList" parameterType="SysUserPointLog" resultMap="SysUserPointLogResult">
+        <include refid="selectPointLogVo" />
+        <where>
+            <if test="pointAccountId != null">
+                and l.point_account_id = #{pointAccountId}
+            </if>
+            <if test="userId != null">
+                and l.user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and l.user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="changeType != null and changeType != ''">
+                and l.change_type = #{changeType}
+            </if>
+            <if test="sourceType != null and sourceType != ''">
+                and l.source_type = #{sourceType}
+            </if>
+            <if test="status != null and status != ''">
+                and l.status = #{status}
+            </if>
+        </where>
+        order by l.log_id desc
+    </select>
+
+    <insert id="insertPointLog" parameterType="SysUserPointLog" useGeneratedKeys="true" keyProperty="logId">
+        insert into sys_user_point_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="pointAccountId != null">point_account_id,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="points != null">points,</if>
+            <if test="pointsBefore != null">points_before,</if>
+            <if test="pointsAfter != null">points_after,</if>
+            <if test="changeType != null and changeType != ''">change_type,</if>
+            <if test="sourceType != null and sourceType != ''">source_type,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="sourceNo != null and sourceNo != ''">source_no,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="operatorName != null and operatorName != ''">operator_name,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="pointAccountId != null">#{pointAccountId},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="points != null">#{points},</if>
+            <if test="pointsBefore != null">#{pointsBefore},</if>
+            <if test="pointsAfter != null">#{pointsAfter},</if>
+            <if test="changeType != null and changeType != ''">#{changeType},</if>
+            <if test="sourceType != null and sourceType != ''">#{sourceType},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="sourceNo != null and sourceNo != ''">#{sourceNo},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="operatorName != null and operatorName != ''">#{operatorName},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updatePointLog" parameterType="SysUserPointLog">
+        update sys_user_point_log
+        <set>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="points != null">points = #{points},</if>
+            <if test="pointsBefore != null">points_before = #{pointsBefore},</if>
+            <if test="pointsAfter != null">points_after = #{pointsAfter},</if>
+            <if test="changeType != null and changeType != ''">change_type = #{changeType},</if>
+            <if test="sourceType != null and sourceType != ''">source_type = #{sourceType},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="sourceNo != null and sourceNo != ''">source_no = #{sourceNo},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="operatorName != null and operatorName != ''">operator_name = #{operatorName},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where log_id = #{logId}
+    </update>
+
+    <delete id="deletePointLogById" parameterType="Long">
+        delete from sys_user_point_log where log_id = #{logId}
+    </delete>
+
+    <delete id="deletePointLogByIds" parameterType="Long[]">
+        delete from sys_user_point_log where log_id in
+        <foreach item="logId" collection="array" open="(" separator="," close=")">
+            #{logId}
+        </foreach>
+    </delete>
+
+</mapper>

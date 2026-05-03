@@ -1,0 +1,258 @@
+package com.ruoyi.system.mapper;
+
+import java.util.Date;
+import java.util.List;
+import java.math.BigDecimal;
+import org.apache.ibatis.annotations.Param;
+import com.ruoyi.common.core.domain.entity.SysUser;
+
+/**
+ * 用户表 数据层
+ * 
+ * @author ruoyi
+ */
+public interface SysUserMapper
+{
+    /**
+     * 根据条件分页查询用户列表
+     * 
+     * @param sysUser 用户信息
+     * @return 用户信息集合信息
+     */
+    public List<SysUser> selectUserList(SysUser sysUser);
+
+    /**
+     * 根据条件分页查询已配用户角色列表
+     * 
+     * @param user 用户信息
+     * @return 用户信息集合信息
+     */
+    public List<SysUser> selectAllocatedList(SysUser user);
+
+    /**
+     * 根据条件分页查询未分配用户角色列表
+     * 
+     * @param user 用户信息
+     * @return 用户信息集合信息
+     */
+    public List<SysUser> selectUnallocatedList(SysUser user);
+
+    /**
+     * 通过用户名查询用户
+     * 
+     * @param userName 用户名
+     * @return 用户对象信息
+     */
+    public SysUser selectUserByUserName(String userName);
+
+    /**
+     * 通过邀请码查询用户
+     *
+     * @param inviteCode 邀请码
+     * @return 用户对象信息
+     */
+    public SysUser selectUserByInviteCode(String inviteCode);
+
+    /**
+     * 通过用户ID查询用户
+     * 
+     * @param userId 用户ID
+     * @return 用户对象信息
+     */
+    public SysUser selectUserById(Long userId);
+
+    /**
+     * APP 轻量查询：按用户名读取认证所需字段（不联表）。
+     *
+     * @param userName 用户名
+     * @return 用户信息
+     */
+    public SysUser selectUserAuthByUserName(String userName);
+
+    /**
+     * APP 轻量查询：按用户ID读取基础信息（不联表）。
+     *
+     * @param userId 用户ID
+     * @return 用户信息
+     */
+    public SysUser selectUserBaseById(Long userId);
+
+    /**
+     * APP 轻量查询：按用户ID读取基础信息并加行锁（for update）。
+     *
+     * @param userId 用户ID
+     * @return 用户信息
+     */
+    public SysUser selectUserBaseByIdForUpdate(Long userId);
+
+    /**
+     * APP 轻量查询：按用户名读取基础信息（不联表）。
+     *
+     * @param userName 用户名
+     * @return 用户信息
+     */
+    public SysUser selectUserBaseByUserName(String userName);
+
+    /**
+     * 根据用户ID查询支付密码是否已设置。
+     *
+     * @param userId 用户ID
+     * @return 1已设置，0未设置
+     */
+
+    /**
+     * 新增用户信息
+     * 
+     * @param user 用户信息
+     * @return 结果
+     */
+    public int insertUser(SysUser user);
+
+    /**
+     * 修改用户信息
+     * 
+     * @param user 用户信息
+     * @return 结果
+     */
+    public int updateUser(SysUser user);
+
+    /**
+     * 修改个人资料。
+     *
+     * @param user 用户信息
+     * @return 结果
+     */
+    public int updateUserProfile(SysUser user);
+
+    /**
+     * 更新用户实名认证状态
+     *
+     * @param userId 用户ID
+     * @param realNameStatus 实名状态
+     * @return 结果
+     */
+    public int updateUserRealNameStatus(@Param("userId") Long userId, @Param("realNameStatus") Integer realNameStatus);
+
+    /**
+     * 修改用户头像
+     * 
+     * @param userId 用户ID
+     * @param avatar 头像地址
+     * @return 结果
+     */
+    public int updateUserAvatar(@Param("userId") Long userId, @Param("avatar") String avatar);
+
+    /**
+     * 修改用户状态
+     * 
+     * @param userId 用户ID
+     * @param status 状态
+     * @return 结果
+     */
+    public int updateUserStatus(@Param("userId") Long userId, @Param("status") String status);
+
+    /**
+     * 更新用户成长值
+     * @param user 用户信息
+     * @return 结果
+     */
+    public int updateUserGrowthValue(SysUser user);
+
+    /**
+     * 更新用户等级
+     * @param userId 用户ID
+     * @param level 等级
+     * @return 结果
+     */
+    public int updateUserLevelValue(@Param("userId") Long userId, @Param("level") Integer level);
+
+    /**
+     * 更新用户登录信息（IP和登录时间）
+     * 
+     * @param userId 用户ID
+     * @param loginIp 登录IP地址
+     * @param loginDate 登录时间
+     * @return 结果
+     */
+    public int updateLoginInfo(@Param("userId") Long userId, @Param("loginIp") String loginIp, @Param("loginDate") Date loginDate);
+
+    /**
+     * 重置用户密码
+     * 
+     * @param userId 用户ID
+     * @param password 密码
+     * @return 结果
+     */
+    public int resetUserPwd(@Param("userId") Long userId, @Param("password") String password);
+
+    /**
+     * 更新用户支付密码
+     * 
+     * @param userId 用户ID
+     * @param payPassword 支付密码
+     * @return 结果
+     */
+    public int updateUserPayPwd(@Param("userId") Long userId, @Param("payPassword") String payPassword);
+
+    /**
+     * 更新用户安全问题设置状态
+     *
+     * @param userId 用户ID
+     * @param securityQuestionSet 是否已设置安全问题（1是 0否）
+     * @return 结果
+     */
+    public int updateUserSecurityQuestionSet(@Param("userId") Long userId, @Param("securityQuestionSet") Integer securityQuestionSet);
+
+    /**
+     * 更新用户默认币种历史字段。
+     * 
+     * @param userId 用户ID
+     * @param defaultCurrency 默认币种历史值
+     * @return 结果
+     */
+    public int updateUserDefaultCurrency(@Param("userId") Long userId, @Param("defaultCurrency") String defaultCurrency);
+
+    public int addUserTotalAmounts(@Param("userId") Long userId,
+            @Param("investDelta") BigDecimal investDelta,
+            @Param("rechargeDelta") BigDecimal rechargeDelta);
+
+    /**
+     * 通过用户ID删除用户
+     * 
+     * @param userId 用户ID
+     * @return 结果
+     */
+    public int deleteUserById(Long userId);
+
+    /**
+     * 批量删除用户信息
+     * 
+     * @param userIds 需要删除的用户ID
+     * @return 结果
+     */
+    public int deleteUserByIds(Long[] userIds);
+
+    /**
+     * 校验用户名称是否唯一
+     * 
+     * @param userName 用户名称
+     * @return 结果
+     */
+    public SysUser checkUserNameUnique(String userName);
+
+    /**
+     * 校验手机号码是否唯一
+     *
+     * @param phonenumber 手机号码
+     * @return 结果
+     */
+    public SysUser checkPhoneUnique(String phonenumber);
+
+    /**
+     * 校验email是否唯一
+     *
+     * @param email 用户邮箱
+     * @return 结果
+     */
+    public SysUser checkEmailUnique(String email);
+}

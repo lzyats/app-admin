@@ -1,0 +1,107 @@
+Flutter crash report.
+Please report a bug at https://github.com/flutter/flutter/issues.
+
+## command
+
+flutter pub get
+
+## exception
+
+PathNotFoundException: PathNotFoundException: Cannot create link, path = 'E:\Go\go-api\app\windows\flutter\ephemeral\.plugin_symlinks\awesome_notifications' (OS Error: 系统找不到指定的文件。
+, errno = 2)
+
+```
+#0      _Link.throwIfError (dart:io/link.dart:339:7)
+#1      _Link.createSync (dart:io/link.dart:267:5)
+#2      ForwardingLink.createSync (package:file/src/forwarding/forwarding_link.dart:20:16)
+#3      ForwardingLink.createSync (package:file/src/forwarding/forwarding_link.dart:20:16)
+#4      _createPlatformPluginSymlinks (package:flutter_tools/src/flutter_plugins.dart:981:12)
+#5      createPluginSymlinks (package:flutter_tools/src/flutter_plugins.dart:903:5)
+#6      refreshPluginsList (package:flutter_tools/src/flutter_plugins.dart:1013:5)
+<asynchronous suspension>
+#7      FlutterProject.ensureReadyForPlatformSpecificTooling (package:flutter_tools/src/project.dart:367:5)
+<asynchronous suspension>
+#8      PackagesGetCommand.runCommand (package:flutter_tools/src/commands/packages.dart:383:7)
+<asynchronous suspension>
+#9      FlutterCommand.run.<anonymous closure> (package:flutter_tools/src/runner/flutter_command.dart:1394:27)
+<asynchronous suspension>
+#10     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:153:19)
+<asynchronous suspension>
+#11     CommandRunner.runCommand (package:args/command_runner.dart:212:13)
+<asynchronous suspension>
+#12     FlutterCommandRunner.runCommand.<anonymous closure> (package:flutter_tools/src/runner/flutter_command_runner.dart:372:9)
+<asynchronous suspension>
+#13     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:153:19)
+<asynchronous suspension>
+#14     FlutterCommandRunner.runCommand (package:flutter_tools/src/runner/flutter_command_runner.dart:308:5)
+<asynchronous suspension>
+#15     run.<anonymous closure>.<anonymous closure> (package:flutter_tools/runner.dart:130:9)
+<asynchronous suspension>
+#16     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:153:19)
+<asynchronous suspension>
+#17     main (package:flutter_tools/executable.dart:93:3)
+<asynchronous suspension>
+```
+
+## flutter doctor
+
+```
+[✓] Flutter (Channel stable, 3.22.2, on Microsoft Windows [版本 10.0.22631.4169], locale zh-CN)
+    • Flutter version 3.22.2 on channel stable at C:\flutter
+    • Upstream repository https://github.com/flutter/flutter.git
+    • Framework revision 761747bfc5 (1 year, 11 months ago), 2024-06-05 22:15:13 +0200
+    • Engine revision edd8546116
+    • Dart version 3.4.3
+    • DevTools version 2.34.3
+    • Pub download mirror https://pub.flutter-io.cn
+    • Flutter download mirror https://storage.flutter-io.cn
+
+[✓] Windows Version (Installed version of Windows is version 10 or higher)
+
+[✓] Android toolchain - develop for Android devices (Android SDK version 36.1.0)
+    • Android SDK at C:\Users\Administrator\AppData\Local\Android\sdk
+    • Platform android-36, build-tools 36.1.0
+    • Java binary at: C:\Android Studio\jbr\bin\java
+    • Java version OpenJDK Runtime Environment (build 17.0.6+0-b2043.56-10027231)
+    • All Android licenses accepted.
+
+[✓] Chrome - develop for the web
+    • Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[✓] Visual Studio - develop Windows apps (Visual Studio Community 2019 16.11.54)
+    • Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\2019\Community
+    • Visual Studio Community 2019 version 16.11.37027.11
+    • Windows 10 SDK version 10.0.19041.0
+
+[✓] Android Studio (version 2022.3)
+    • Android Studio at C:\Android Studio
+    • Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    • Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+    • Java version OpenJDK Runtime Environment (build 17.0.6+0-b2043.56-10027231)
+
+[✓] IntelliJ IDEA Ultimate Edition (version 2025.1)
+    • IntelliJ at C:\Program Files\JetBrains\IntelliJ IDEA 2025.1
+    • Flutter plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/9212-flutter
+    • Dart plugin can be installed from:
+      🔨 https://plugins.jetbrains.com/plugin/6351-dart
+
+[✓] VS Code (version 1.96.4)
+    • VS Code at C:\Users\Administrator\AppData\Local\Programs\Microsoft VS Code
+    • Flutter extension version 3.132.0
+
+[✓] Connected device (5 available)
+    • sprdisk (mobile)    • 97255128068925 • android-arm    • Android null (API null)
+    • 23116PN5BC (mobile) • emulator-5554  • android-x64    • Android 9 (API 28)
+    • Windows (desktop)   • windows        • windows-x64    • Microsoft Windows [版本 10.0.22631.4169]
+    • Chrome (web)        • chrome         • web-javascript • Google Chrome 147.0.7727.116
+    • Edge (web)          • edge           • web-javascript • Microsoft Edge 123.0.2420.97 (unsupported)
+
+[!] Network resources
+    ✗ An HTTP error occurred while checking "https://github.com/": 信号灯超时时间已到
+
+
+! Doctor found issues in 1 category.
+```

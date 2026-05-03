@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserMinerMapper">
+
+    <resultMap type="SysUserMiner" id="SysUserMinerResult">
+        <id     property="userMinerId"    column="user_miner_id" />
+        <result property="userId"         column="user_id" />
+        <result property="minerId"        column="miner_id" />
+        <result property="isCurrent"      column="is_current" />
+        <result property="claimTime"      column="claim_time" />
+        <result property="activeTime"     column="active_time" />
+        <result property="inactiveTime"   column="inactive_time" />
+        <result property="totalOutputWag" column="total_output_wag" />
+        <result property="status"         column="status" />
+        <result property="createTime"     column="create_time" />
+        <result property="updateTime"     column="update_time" />
+
+        <result property="minerName"      column="miner_name" />
+        <result property="minerLevel"     column="miner_level" />
+        <result property="power"          column="power" />
+        <result property="wagPerDay"      column="wag_per_day" />
+        <result property="coverImage"     column="cover_image" />
+    </resultMap>
+
+    <sql id="selectUserMinerVo">
+        select um.user_miner_id, um.user_id, um.miner_id, um.is_current, um.claim_time, um.active_time, um.inactive_time,
+               um.total_output_wag, um.status, um.create_time, um.update_time,
+               m.miner_name, m.miner_level, m.power, m.wag_per_day, m.cover_image
+        from sys_user_miner um
+        left join sys_miner m on m.miner_id = um.miner_id
+    </sql>
+
+    <select id="selectUserMinerById" parameterType="Long" resultMap="SysUserMinerResult">
+        <include refid="selectUserMinerVo"/>
+        where um.user_miner_id = #{userMinerId}
+    </select>
+
+    <select id="selectCurrentUserMiner" resultMap="SysUserMinerResult">
+        <include refid="selectUserMinerVo"/>
+        where um.user_id = #{userId} and um.is_current = '1' and um.status = '0'
+        order by um.user_miner_id desc
+        limit 1
+    </select>
+
+    <select id="selectUserMinerByUserAndMiner" resultMap="SysUserMinerResult">
+        <include refid="selectUserMinerVo"/>
+        where um.user_id = #{userId} and um.miner_id = #{minerId}
+        limit 1
+    </select>
+
+    <select id="selectUserMinerList" parameterType="SysUserMiner" resultMap="SysUserMinerResult">
+        <include refid="selectUserMinerVo"/>
+        <where>
+            <if test="userId != null">and um.user_id = #{userId}</if>
+            <if test="minerId != null">and um.miner_id = #{minerId}</if>
+            <if test="status != null and status != ''">and um.status = #{status}</if>
+            <if test="isCurrent != null and isCurrent != ''">and um.is_current = #{isCurrent}</if>
+        </where>
+        order by um.is_current desc, um.user_miner_id desc
+    </select>
+
+    <insert id="insertUserMiner" parameterType="SysUserMiner" useGeneratedKeys="true" keyProperty="userMinerId">
+        insert into sys_user_miner(user_id, miner_id, is_current, claim_time, active_time, inactive_time, total_output_wag, status, create_time, update_time)
+        values(#{userId}, #{minerId}, #{isCurrent}, #{claimTime}, #{activeTime}, #{inactiveTime}, #{totalOutputWag}, #{status}, now(), now())
+        on duplicate key update user_miner_id = last_insert_id(user_miner_id),
+            update_time = now()
+    </insert>
+
+    <update id="updateUserMiner" parameterType="SysUserMiner">
+        update sys_user_miner
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="isCurrent != null">is_current = #{isCurrent},</if>
+            <if test="activeTime != null">active_time = #{activeTime},</if>
+            <if test="inactiveTime != null">inactive_time = #{inactiveTime},</if>
+            <if test="totalOutputWag != null">total_output_wag = #{totalOutputWag},</if>
+            <if test="status != null">status = #{status},</if>
+            update_time = now(),
+        </trim>
+        where user_miner_id = #{userMinerId}
+    </update>
+
+    <update id="updateUserCurrentMiner">
+        update sys_user_miner
+        set is_current = case when user_miner_id = #{currentUserMinerId} then '1' else '0' end,
+            active_time = case when user_miner_id = #{currentUserMinerId} then #{now} else active_time end,
+            inactive_time = case when user_miner_id = #{currentUserMinerId} then inactive_time else (case when is_current = '1' then #{now} else inactive_time end) end,
+            update_time = now()
+        where user_id = #{userId} and status = '0'
+    </update>
+
+</mapper>

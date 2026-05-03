@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysLevelTrialTemplateMapper">
+
+    <resultMap type="SysLevelTrialTemplate" id="SysLevelTrialTemplateResult">
+        <id property="trialId" column="trial_id"/>
+        <result property="trialName" column="trial_name"/>
+        <result property="trialLevel" column="trial_level"/>
+        <result property="bonusRate" column="bonus_rate"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="totalCount" column="total_count"/>
+        <result property="receivedCount" column="received_count"/>
+        <result property="status" column="status"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectLevelTrialTemplateVo">
+        select trial_id, trial_name, trial_level, bonus_rate, valid_days, total_count, received_count,
+               status, create_by, create_time, update_by, update_time, remark
+        from sys_level_trial_template
+    </sql>
+
+    <select id="selectLevelTrialTemplateById" parameterType="Long" resultMap="SysLevelTrialTemplateResult">
+        <include refid="selectLevelTrialTemplateVo"/>
+        where trial_id = #{trialId}
+    </select>
+
+    <select id="selectLevelTrialTemplateList" parameterType="SysLevelTrialTemplate" resultMap="SysLevelTrialTemplateResult">
+        <include refid="selectLevelTrialTemplateVo"/>
+        <where>
+            <if test="trialName != null and trialName != ''">and trial_name like concat('%', #{trialName}, '%')</if>
+            <if test="trialLevel != null">and trial_level = #{trialLevel}</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+        </where>
+        order by trial_id desc
+    </select>
+
+    <insert id="insertLevelTrialTemplate" parameterType="SysLevelTrialTemplate" useGeneratedKeys="true" keyProperty="trialId">
+        insert into sys_level_trial_template(trial_name, trial_level, bonus_rate, valid_days, total_count, received_count, status, create_by, create_time, remark)
+        values (#{trialName}, #{trialLevel}, #{bonusRate}, #{validDays}, #{totalCount}, #{receivedCount}, #{status}, #{createBy}, now(), #{remark})
+    </insert>
+
+    <update id="updateLevelTrialTemplate" parameterType="SysLevelTrialTemplate">
+        update sys_level_trial_template
+        <trim prefix="set" suffixOverrides=",">
+            <if test="trialName != null and trialName != ''">trial_name = #{trialName},</if>
+            <if test="trialLevel != null">trial_level = #{trialLevel},</if>
+            <if test="bonusRate != null">bonus_rate = #{bonusRate},</if>
+            <if test="validDays != null">valid_days = #{validDays},</if>
+            <if test="totalCount != null">total_count = #{totalCount},</if>
+            <if test="receivedCount != null">received_count = #{receivedCount},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_by = #{updateBy},
+            update_time = now()
+        </trim>
+        where trial_id = #{trialId}
+    </update>
+
+    <delete id="deleteLevelTrialTemplateById" parameterType="Long">
+        delete from sys_level_trial_template where trial_id = #{trialId}
+    </delete>
+
+    <delete id="deleteLevelTrialTemplateByIds" parameterType="Long">
+        delete from sys_level_trial_template where trial_id in
+        <foreach collection="array" item="trialId" open="(" separator="," close=")">
+            #{trialId}
+        </foreach>
+    </delete>
+
+    <insert id="insertUserTrial">
+        insert into sys_level_trial_user(trial_id, user_id, user_name, grant_type, status, start_time, end_time, create_by, create_time, remark)
+        values (#{trialId}, #{userId}, #{userName}, #{grantType}, '1', now(), date_add(now(), interval #{validDays} day), #{operator}, now(), #{remark})
+    </insert>
+</mapper>

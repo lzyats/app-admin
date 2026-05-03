@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserPointAccountMapper">
+
+    <resultMap type="SysUserPointAccount" id="SysUserPointAccountResult">
+        <id property="pointAccountId" column="point_account_id" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="availablePoints" column="available_points" />
+        <result property="frozenPoints" column="frozen_points" />
+        <result property="totalEarned" column="total_earned" />
+        <result property="totalSpent" column="total_spent" />
+        <result property="totalAdjusted" column="total_adjusted" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectPointAccountVo">
+        select p.point_account_id, p.user_id, p.user_name, p.available_points, p.frozen_points,
+               p.total_earned, p.total_spent, p.total_adjusted, p.create_time, p.update_time
+        from sys_user_point_account p
+        left join sys_user u on p.user_id = u.user_id
+    </sql>
+
+    <select id="selectPointAccountById" parameterType="Long" resultMap="SysUserPointAccountResult">
+        <include refid="selectPointAccountVo" />
+        where p.point_account_id = #{pointAccountId}
+    </select>
+
+    <select id="selectPointAccountByUserId" parameterType="Long" resultMap="SysUserPointAccountResult">
+        <include refid="selectPointAccountVo" />
+        where p.user_id = #{userId}
+        limit 1
+    </select>
+
+    <select id="selectPointAccountByUserIdAndUserName" resultMap="SysUserPointAccountResult">
+        <include refid="selectPointAccountVo" />
+        where p.user_id = #{userId}
+          and p.user_name = #{userName}
+        limit 1
+    </select>
+
+    <select id="selectPointAccountList" parameterType="SysUserPointAccount" resultMap="SysUserPointAccountResult">
+        <include refid="selectPointAccountVo" />
+        <where>
+            <if test="userId != null">
+                and p.user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and p.user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="availablePoints != null">
+                and p.available_points = #{availablePoints}
+            </if>
+            <if test="frozenPoints != null">
+                and p.frozen_points = #{frozenPoints}
+            </if>
+            <if test="totalEarned != null">
+                and p.total_earned = #{totalEarned}
+            </if>
+            <if test="totalSpent != null">
+                and p.total_spent = #{totalSpent}
+            </if>
+            <if test="totalAdjusted != null">
+                and p.total_adjusted = #{totalAdjusted}
+            </if>
+        </where>
+        order by p.point_account_id desc
+    </select>
+
+    <insert id="insertPointAccount" parameterType="SysUserPointAccount" useGeneratedKeys="true" keyProperty="pointAccountId">
+        insert into sys_user_point_account
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="availablePoints != null">available_points,</if>
+            <if test="frozenPoints != null">frozen_points,</if>
+            <if test="totalEarned != null">total_earned,</if>
+            <if test="totalSpent != null">total_spent,</if>
+            <if test="totalAdjusted != null">total_adjusted,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="availablePoints != null">#{availablePoints},</if>
+            <if test="frozenPoints != null">#{frozenPoints},</if>
+            <if test="totalEarned != null">#{totalEarned},</if>
+            <if test="totalSpent != null">#{totalSpent},</if>
+            <if test="totalAdjusted != null">#{totalAdjusted},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updatePointAccount" parameterType="SysUserPointAccount">
+        update sys_user_point_account
+        <set>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="availablePoints != null">available_points = #{availablePoints},</if>
+            <if test="frozenPoints != null">frozen_points = #{frozenPoints},</if>
+            <if test="totalEarned != null">total_earned = #{totalEarned},</if>
+            <if test="totalSpent != null">total_spent = #{totalSpent},</if>
+            <if test="totalAdjusted != null">total_adjusted = #{totalAdjusted},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where point_account_id = #{pointAccountId}
+    </update>
+
+    <update id="increasePoints">
+        update sys_user_point_account
+        set available_points = available_points + #{points},
+            total_earned = total_earned + #{earnedPoints},
+            total_adjusted = total_adjusted + #{adjustedPoints},
+            total_spent = total_spent + #{spentPoints},
+            update_time = sysdate()
+        where point_account_id = #{pointAccountId}
+    </update>
+
+    <update id="deductPoints">
+        update sys_user_point_account
+        set available_points = available_points - #{points},
+            total_spent = total_spent + #{spentPoints},
+            update_time = sysdate()
+        where point_account_id = #{pointAccountId}
+          and available_points >= #{points}
+    </update>
+
+    <delete id="deletePointAccountById" parameterType="Long">
+        delete from sys_user_point_account where point_account_id = #{pointAccountId}
+    </delete>
+
+    <delete id="deletePointAccountByIds" parameterType="Long[]">
+        delete from sys_user_point_account where point_account_id in
+        <foreach item="pointAccountId" collection="array" open="(" separator="," close=")">
+            #{pointAccountId}
+        </foreach>
+    </delete>
+
+</mapper>

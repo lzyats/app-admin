@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysTeamLevelMapper">
+
+    <resultMap type="SysTeamLevel" id="SysTeamLevelResult">
+        <id property="teamLevelId" column="team_level_id"/>
+        <result property="teamLevel" column="team_level"/>
+        <result property="teamLevelName" column="team_level_name"/>
+        <result property="requiredUserLevel" column="required_user_level"/>
+        <result property="requiredDirectUsers" column="required_direct_users"/>
+        <result property="requiredTeamUsers" column="required_team_users"/>
+        <result property="requiredTeamInvest" column="required_team_invest"/>
+        <result property="rewardAmount" column="reward_amount"/>
+        <result property="teamBonusRate" column="team_bonus_rate"/>
+        <result property="status" column="status"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectTeamLevelVo">
+        select team_level_id, team_level, team_level_name, required_user_level, required_direct_users, required_team_users,
+               required_team_invest, reward_amount, team_bonus_rate, status, create_by, create_time, update_by, update_time, remark
+        from sys_team_level
+    </sql>
+
+    <select id="selectTeamLevelById" parameterType="Long" resultMap="SysTeamLevelResult">
+        <include refid="selectTeamLevelVo"/>
+        where team_level_id = #{teamLevelId}
+    </select>
+
+    <select id="selectTeamLevelList" parameterType="SysTeamLevel" resultMap="SysTeamLevelResult">
+        <include refid="selectTeamLevelVo"/>
+        <where>
+            <if test="teamLevel != null">and team_level = #{teamLevel}</if>
+            <if test="teamLevelName != null and teamLevelName != ''">and team_level_name like concat('%', #{teamLevelName}, '%')</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+        </where>
+        order by team_level asc, team_level_id asc
+    </select>
+
+    <insert id="insertTeamLevel" parameterType="SysTeamLevel" useGeneratedKeys="true" keyProperty="teamLevelId">
+        insert into sys_team_level(team_level, team_level_name, required_user_level, required_direct_users, required_team_users,
+                                   required_team_invest, reward_amount, team_bonus_rate, status, create_by, create_time, remark)
+        values (#{teamLevel}, #{teamLevelName}, #{requiredUserLevel}, #{requiredDirectUsers}, #{requiredTeamUsers},
+                #{requiredTeamInvest}, #{rewardAmount}, #{teamBonusRate}, #{status}, #{createBy}, now(), #{remark})
+    </insert>
+
+    <update id="updateTeamLevel" parameterType="SysTeamLevel">
+        update sys_team_level
+        <trim prefix="set" suffixOverrides=",">
+            <if test="teamLevel != null">team_level = #{teamLevel},</if>
+            <if test="teamLevelName != null and teamLevelName != ''">team_level_name = #{teamLevelName},</if>
+            <if test="requiredUserLevel != null">required_user_level = #{requiredUserLevel},</if>
+            <if test="requiredDirectUsers != null">required_direct_users = #{requiredDirectUsers},</if>
+            <if test="requiredTeamUsers != null">required_team_users = #{requiredTeamUsers},</if>
+            <if test="requiredTeamInvest != null">required_team_invest = #{requiredTeamInvest},</if>
+            <if test="rewardAmount != null">reward_amount = #{rewardAmount},</if>
+            <if test="teamBonusRate != null">team_bonus_rate = #{teamBonusRate},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_by = #{updateBy},
+            update_time = now()
+        </trim>
+        where team_level_id = #{teamLevelId}
+    </update>
+
+    <delete id="deleteTeamLevelById" parameterType="Long">
+        delete from sys_team_level where team_level_id = #{teamLevelId}
+    </delete>
+
+    <delete id="deleteTeamLevelByIds" parameterType="Long">
+        delete from sys_team_level where team_level_id in
+        <foreach collection="array" item="teamLevelId" open="(" separator="," close=")">
+            #{teamLevelId}
+        </foreach>
+    </delete>
+
+    <select id="countDirectValidUsers" parameterType="Long" resultType="int">
+        select count(1)
+        from sys_user u
+        where u.del_flag = '0'
+          and u.status = '0'
+          and cast(substring_index(ifnull(u.level_detail, '0'), ',', -1) as signed) = #{userId}
+    </select>
+
+    <select id="countTeamValidUsers" parameterType="Long" resultType="int">
+        select count(1)
+        from sys_user u
+        where u.del_flag = '0'
+          and u.status = '0'
+          and u.user_id != #{userId}
+          and find_in_set(cast(#{userId} as char), ifnull(u.level_detail, '')) > 0
+    </select>
+
+    <select id="sumTeamInvestAmount" parameterType="Long" resultType="java.math.BigDecimal">
+        select ifnull(sum(o.principal_amount), 0)
+        from sys_yebao_order o
+        where o.user_id in (
+            select u.user_id
+            from sys_user u
+            where u.del_flag = '0'
+              and u.user_id != #{userId}
+              and find_in_set(cast(#{userId} as char), ifnull(u.level_detail, '')) > 0
+        )
+          and o.status in ('HOLDING', 'REDEEMED')
+    </select>
+
+    <update id="updateUserTeamLeaderLevel">
+        update sys_user
+        set team_leader_level = #{teamLeaderLevel},
+            update_time = sysdate()
+        where user_id = #{userId}
+    </update>
+
+</mapper>

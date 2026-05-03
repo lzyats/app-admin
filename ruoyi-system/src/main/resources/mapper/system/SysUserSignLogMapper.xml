@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserSignLogMapper">
+
+    <resultMap type="SysUserSignLog" id="SysUserSignLogResult">
+        <id property="signId" column="sign_id" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="signDate" column="sign_date" />
+        <result property="consecutiveDays" column="consecutive_days" />
+        <result property="rewardType" column="reward_type" />
+        <result property="rewardAmount" column="reward_amount" />
+        <result property="sourceType" column="source_type" />
+        <result property="sourceNo" column="source_no" />
+        <result property="status" column="status" />
+        <result property="remark" column="remark" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectSignLogVo">
+        select sign_id, user_id, user_name, sign_date, consecutive_days, reward_type, reward_amount,
+               source_type, source_no, status, remark, create_time, update_time
+        from sys_user_sign_log
+    </sql>
+
+    <select id="selectSignLogById" parameterType="Long" resultMap="SysUserSignLogResult">
+        <include refid="selectSignLogVo" />
+        where sign_id = #{signId}
+    </select>
+
+    <select id="selectLatestSignLogByUserId" parameterType="Long" resultMap="SysUserSignLogResult">
+        <include refid="selectSignLogVo" />
+        where user_id = #{userId}
+        order by sign_date desc, sign_id desc
+        limit 1
+    </select>
+
+    <select id="selectSignLogByUserIdAndSignDate" resultMap="SysUserSignLogResult">
+        <include refid="selectSignLogVo" />
+        where user_id = #{userId}
+          and sign_date = #{signDate}
+        limit 1
+    </select>
+
+    <select id="selectSignLogList" parameterType="SysUserSignLog" resultMap="SysUserSignLogResult">
+        <include refid="selectSignLogVo" />
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="consecutiveDays != null">
+                and consecutive_days = #{consecutiveDays}
+            </if>
+            <if test="rewardType != null and rewardType != ''">
+                and reward_type = #{rewardType}
+            </if>
+            <if test="sourceType != null and sourceType != ''">
+                and source_type = #{sourceType}
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+        </where>
+        order by sign_date desc, sign_id desc
+    </select>
+
+    <select id="selectRecentSignLogList" resultMap="SysUserSignLogResult">
+        <include refid="selectSignLogVo" />
+        where user_id = #{userId}
+        order by sign_date desc, sign_id desc
+        limit #{limit}
+    </select>
+
+    <insert id="insertSignLog" parameterType="SysUserSignLog" useGeneratedKeys="true" keyProperty="signId">
+        insert into sys_user_sign_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="signDate != null">sign_date,</if>
+            <if test="consecutiveDays != null">consecutive_days,</if>
+            <if test="rewardType != null and rewardType != ''">reward_type,</if>
+            <if test="rewardAmount != null">reward_amount,</if>
+            <if test="sourceType != null and sourceType != ''">source_type,</if>
+            <if test="sourceNo != null and sourceNo != ''">source_no,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="signDate != null">#{signDate},</if>
+            <if test="consecutiveDays != null">#{consecutiveDays},</if>
+            <if test="rewardType != null and rewardType != ''">#{rewardType},</if>
+            <if test="rewardAmount != null">#{rewardAmount},</if>
+            <if test="sourceType != null and sourceType != ''">#{sourceType},</if>
+            <if test="sourceNo != null and sourceNo != ''">#{sourceNo},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="createTableIfNotExists">
+        create table if not exists sys_user_sign_log (
+            sign_id bigint not null auto_increment comment '签到ID',
+            user_id bigint not null comment '用户ID',
+            user_name varchar(64) not null comment '用户名',
+            sign_date date not null comment '签到日期',
+            consecutive_days int not null default 1 comment '连续签到天数',
+            reward_type varchar(16) not null default 'POINT' comment '奖励类型',
+            reward_amount decimal(18,2) not null default 0.00 comment '奖励金额',
+            source_type varchar(32) not null default 'sign' comment '来源类型',
+            source_no varchar(64) not null comment '来源单号',
+            status varchar(16) not null default 'success' comment '状态',
+            remark varchar(255) default null comment '备注',
+            create_time datetime default current_timestamp comment '创建时间',
+            update_time datetime default current_timestamp on update current_timestamp comment '更新时间',
+            primary key (sign_id),
+            unique key uk_user_sign_date (user_id, sign_date),
+            key idx_user_sign_date (user_id, sign_date),
+            key idx_source_no (source_no)
+        ) engine=InnoDB default charset=utf8mb4 comment='用户签到记录表'
+    </update>
+
+    <update id="updateSignLog" parameterType="SysUserSignLog">
+        update sys_user_sign_log
+        <set>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="signDate != null">sign_date = #{signDate},</if>
+            <if test="consecutiveDays != null">consecutive_days = #{consecutiveDays},</if>
+            <if test="rewardType != null and rewardType != ''">reward_type = #{rewardType},</if>
+            <if test="rewardAmount != null">reward_amount = #{rewardAmount},</if>
+            <if test="sourceType != null and sourceType != ''">source_type = #{sourceType},</if>
+            <if test="sourceNo != null and sourceNo != ''">source_no = #{sourceNo},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null and remark != ''">remark = #{remark},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where sign_id = #{signId}
+    </update>
+
+    <delete id="deleteSignLogById" parameterType="Long">
+        delete from sys_user_sign_log where sign_id = #{signId}
+    </delete>
+
+    <delete id="deleteSignLogByIds" parameterType="Long[]">
+        delete from sys_user_sign_log where sign_id in
+        <foreach item="signId" collection="array" open="(" separator="," close=")">
+            #{signId}
+        </foreach>
+    </delete>
+</mapper>

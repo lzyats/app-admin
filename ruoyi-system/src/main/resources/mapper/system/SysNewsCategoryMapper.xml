@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysNewsCategoryMapper">
+
+    <resultMap type="SysNewsCategory" id="SysNewsCategoryResult">
+        <id property="categoryId" column="category_id" />
+        <result property="categoryCode" column="category_code" />
+        <result property="categoryName" column="category_name" />
+        <result property="sortOrder" column="sort_order" />
+        <result property="status" column="status" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectNewsCategoryVo">
+        select category_id, category_code, category_name, sort_order, status, create_time, update_time, remark
+        from sys_news_category
+    </sql>
+
+    <select id="selectNewsCategoryList" parameterType="SysNewsCategory" resultMap="SysNewsCategoryResult">
+        <include refid="selectNewsCategoryVo"/>
+        <where>
+            <if test="categoryCode != null and categoryCode != ''">
+                and category_code like concat('%', #{categoryCode}, '%')
+            </if>
+            <if test="categoryName != null and categoryName != ''">
+                and category_name like concat('%', #{categoryName}, '%')
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+        </where>
+        order by sort_order asc, category_id asc
+    </select>
+
+    <select id="selectNewsCategoryAll" resultMap="SysNewsCategoryResult">
+        <include refid="selectNewsCategoryVo"/>
+        where status = '0'
+        order by sort_order asc, category_id asc
+    </select>
+
+    <select id="selectNewsCategoryById" parameterType="Long" resultMap="SysNewsCategoryResult">
+        <include refid="selectNewsCategoryVo"/>
+        where category_id = #{categoryId}
+    </select>
+
+    <insert id="insertNewsCategory" parameterType="SysNewsCategory" useGeneratedKeys="true" keyProperty="categoryId">
+        insert into sys_news_category (
+            <if test="categoryCode != null and categoryCode != ''">category_code,</if>
+            <if test="categoryName != null and categoryName != ''">category_name,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_by, create_time
+        ) values (
+            <if test="categoryCode != null and categoryCode != ''">#{categoryCode},</if>
+            <if test="categoryName != null and categoryName != ''">#{categoryName},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            #{createBy}, now()
+        )
+    </insert>
+
+    <update id="updateNewsCategory" parameterType="SysNewsCategory">
+        update sys_news_category
+        <set>
+            <if test="categoryCode != null and categoryCode != ''">category_code = #{categoryCode},</if>
+            <if test="categoryName != null and categoryName != ''">category_name = #{categoryName},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_by = #{updateBy},
+            update_time = now()
+        </set>
+        where category_id = #{categoryId}
+    </update>
+
+    <delete id="deleteNewsCategoryById" parameterType="Long">
+        delete from sys_news_category where category_id = #{categoryId}
+    </delete>
+
+    <delete id="deleteNewsCategoryByIds" parameterType="Long">
+        delete from sys_news_category where category_id in
+        <foreach item="categoryId" collection="array" open="(" separator="," close=")">
+            #{categoryId}
+        </foreach>
+    </delete>
+</mapper>

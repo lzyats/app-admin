@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserGrowthLogMapper">
+
+    <resultMap type="SysUserGrowthLog" id="SysUserGrowthLogResult">
+        <id property="logId" column="log_id" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="changeValue" column="change_value" />
+        <result property="growthValueBefore" column="growth_value_before" />
+        <result property="growthValueAfter" column="growth_value_after" />
+        <result property="changeType" column="change_type" />
+        <result property="sourceType" column="source_type" />
+        <result property="sourceId" column="source_id" />
+        <result property="sourceNo" column="source_no" />
+        <result property="status" column="status" />
+        <result property="operatorName" column="operator_name" />
+        <result property="remark" column="remark" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectGrowthLogVo">
+        select g.log_id, g.user_id, g.user_name, g.change_value, g.growth_value_before, g.growth_value_after,
+               g.change_type, g.source_type, g.source_id, g.source_no, g.status, g.operator_name, g.remark,
+               g.create_time, g.update_time
+        from sys_user_growth_log g
+    </sql>
+
+    <select id="selectGrowthLogList" parameterType="SysUserGrowthLog" resultMap="SysUserGrowthLogResult">
+        <include refid="selectGrowthLogVo" />
+        <where>
+            <if test="userId != null">
+                and g.user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and g.user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="changeType != null and changeType != ''">
+                and g.change_type = #{changeType}
+            </if>
+            <if test="sourceType != null and sourceType != ''">
+                and g.source_type = #{sourceType}
+            </if>
+            <if test="status != null and status != ''">
+                and g.status = #{status}
+            </if>
+            <if test="params.beginTime != null and params.beginTime != ''">
+                and date_format(g.create_time, '%Y%m%d') &gt;= date_format(#{params.beginTime}, '%Y%m%d')
+            </if>
+            <if test="params.endTime != null and params.endTime != ''">
+                and date_format(g.create_time, '%Y%m%d') &lt;= date_format(#{params.endTime}, '%Y%m%d')
+            </if>
+        </where>
+        order by g.log_id desc
+    </select>
+
+    <insert id="insertGrowthLog" parameterType="SysUserGrowthLog" useGeneratedKeys="true" keyProperty="logId">
+        insert into sys_user_growth_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="changeValue != null">change_value,</if>
+            <if test="growthValueBefore != null">growth_value_before,</if>
+            <if test="growthValueAfter != null">growth_value_after,</if>
+            <if test="changeType != null and changeType != ''">change_type,</if>
+            <if test="sourceType != null and sourceType != ''">source_type,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="sourceNo != null and sourceNo != ''">source_no,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="operatorName != null and operatorName != ''">operator_name,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="changeValue != null">#{changeValue},</if>
+            <if test="growthValueBefore != null">#{growthValueBefore},</if>
+            <if test="growthValueAfter != null">#{growthValueAfter},</if>
+            <if test="changeType != null and changeType != ''">#{changeType},</if>
+            <if test="sourceType != null and sourceType != ''">#{sourceType},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="sourceNo != null and sourceNo != ''">#{sourceNo},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="operatorName != null and operatorName != ''">#{operatorName},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+</mapper>

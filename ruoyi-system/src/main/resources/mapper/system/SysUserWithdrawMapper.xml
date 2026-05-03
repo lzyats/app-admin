@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserWithdrawMapper">
+
+    <resultMap type="SysUserWithdraw" id="SysUserWithdrawResult">
+        <id property="withdrawId" column="withdraw_id" />
+        <result property="orderNo" column="order_no" />
+        <result property="requestNo" column="request_no" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="currencyType" column="currency_type" />
+        <result property="withdrawMethod" column="withdraw_method" />
+        <result property="bankCardId" column="bank_card_id" />
+        <result property="bankName" column="bank_name" />
+        <result property="accountNo" column="account_no" />
+        <result property="accountName" column="account_name" />
+        <result property="walletAddress" column="wallet_address" />
+        <result property="amount" column="amount" />
+        <result property="walletId" column="wallet_id" />
+        <result property="status" column="status" />
+        <result property="rejectReason" column="reject_reason" />
+        <result property="submitTime" column="submit_time" />
+        <result property="reviewTime" column="review_time" />
+        <result property="reviewUserId" column="review_user_id" />
+        <result property="reviewUserName" column="review_user_name" />
+        <result property="remark" column="remark" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectWithdrawVo">
+        select withdraw_id, order_no, request_no, user_id, user_name, currency_type, withdraw_method, bank_card_id,
+               bank_name, account_no, account_name, wallet_address, amount, wallet_id, status,
+               reject_reason, submit_time, review_time, review_user_id, review_user_name, remark,
+               create_by, create_time, update_by, update_time
+        from sys_user_withdraw
+    </sql>
+
+    <select id="selectWithdrawById" parameterType="Long" resultMap="SysUserWithdrawResult">
+        <include refid="selectWithdrawVo" />
+        where withdraw_id = #{withdrawId}
+    </select>
+
+    <select id="selectWithdrawByRequestNo" parameterType="String" resultMap="SysUserWithdrawResult">
+        <include refid="selectWithdrawVo" />
+        where request_no = #{requestNo}
+        limit 1
+    </select>
+
+    <select id="selectWithdrawList" parameterType="SysUserWithdraw" resultMap="SysUserWithdrawResult">
+        <include refid="selectWithdrawVo" />
+        <where>
+            <if test="withdrawId != null">
+                and withdraw_id = #{withdrawId}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="currencyType != null and currencyType != ''">
+                and currency_type = #{currencyType}
+            </if>
+            <if test="withdrawMethod != null and withdrawMethod != ''">
+                and withdraw_method = #{withdrawMethod}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+        order by submit_time desc, withdraw_id desc
+    </select>
+
+    <insert id="insertWithdraw" parameterType="SysUserWithdraw" useGeneratedKeys="true" keyProperty="withdrawId">
+        insert into sys_user_withdraw
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">order_no,</if>
+            <if test="requestNo != null and requestNo != ''">request_no,</if>
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="currencyType != null and currencyType != ''">currency_type,</if>
+            <if test="withdrawMethod != null and withdrawMethod != ''">withdraw_method,</if>
+            <if test="bankCardId != null">bank_card_id,</if>
+            <if test="bankName != null and bankName != ''">bank_name,</if>
+            <if test="accountNo != null and accountNo != ''">account_no,</if>
+            <if test="accountName != null and accountName != ''">account_name,</if>
+            <if test="walletAddress != null and walletAddress != ''">wallet_address,</if>
+            <if test="amount != null">amount,</if>
+            <if test="walletId != null">wallet_id,</if>
+            <if test="status != null">status,</if>
+            <if test="rejectReason != null and rejectReason != ''">reject_reason,</if>
+            <if test="submitTime != null">submit_time,</if>
+            <if test="reviewTime != null">review_time,</if>
+            <if test="reviewUserId != null">review_user_id,</if>
+            <if test="reviewUserName != null and reviewUserName != ''">review_user_name,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null and updateBy != ''">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="orderNo != null and orderNo != ''">#{orderNo},</if>
+            <if test="requestNo != null and requestNo != ''">#{requestNo},</if>
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="currencyType != null and currencyType != ''">#{currencyType},</if>
+            <if test="withdrawMethod != null and withdrawMethod != ''">#{withdrawMethod},</if>
+            <if test="bankCardId != null">#{bankCardId},</if>
+            <if test="bankName != null and bankName != ''">#{bankName},</if>
+            <if test="accountNo != null and accountNo != ''">#{accountNo},</if>
+            <if test="accountName != null and accountName != ''">#{accountName},</if>
+            <if test="walletAddress != null and walletAddress != ''">#{walletAddress},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="walletId != null">#{walletId},</if>
+            <if test="status != null">#{status},</if>
+            <if test="rejectReason != null and rejectReason != ''">#{rejectReason},</if>
+            <if test="submitTime != null">#{submitTime},</if>
+            <if test="reviewTime != null">#{reviewTime},</if>
+            <if test="reviewUserId != null">#{reviewUserId},</if>
+            <if test="reviewUserName != null and reviewUserName != ''">#{reviewUserName},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateWithdraw" parameterType="SysUserWithdraw">
+        update sys_user_withdraw
+        <set>
+            <if test="orderNo != null and orderNo != ''">order_no = #{orderNo},</if>
+            <if test="requestNo != null and requestNo != ''">request_no = #{requestNo},</if>
+            <if test="userId != null">user_id = #{userId},</if>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="currencyType != null and currencyType != ''">currency_type = #{currencyType},</if>
+            <if test="withdrawMethod != null and withdrawMethod != ''">withdraw_method = #{withdrawMethod},</if>
+            <if test="bankCardId != null">bank_card_id = #{bankCardId},</if>
+            <if test="bankName != null and bankName != ''">bank_name = #{bankName},</if>
+            <if test="accountNo != null and accountNo != ''">account_no = #{accountNo},</if>
+            <if test="accountName != null and accountName != ''">account_name = #{accountName},</if>
+            <if test="walletAddress != null and walletAddress != ''">wallet_address = #{walletAddress},</if>
+            <if test="amount != null">amount = #{amount},</if>
+            <if test="walletId != null">wallet_id = #{walletId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="rejectReason != null">reject_reason = #{rejectReason},</if>
+            <if test="submitTime != null">submit_time = #{submitTime},</if>
+            <if test="reviewTime != null">review_time = #{reviewTime},</if>
+            <if test="reviewUserId != null">review_user_id = #{reviewUserId},</if>
+            <if test="reviewUserName != null and reviewUserName != ''">review_user_name = #{reviewUserName},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where withdraw_id = #{withdrawId}
+    </update>
+
+    <delete id="deleteWithdrawById" parameterType="Long">
+        delete from sys_user_withdraw where withdraw_id = #{withdrawId}
+    </delete>
+
+    <delete id="deleteWithdrawByIds" parameterType="Long[]">
+        delete from sys_user_withdraw where withdraw_id in
+        <foreach item="withdrawId" collection="array" open="(" separator="," close=")">
+            #{withdrawId}
+        </foreach>
+    </delete>
+
+</mapper>

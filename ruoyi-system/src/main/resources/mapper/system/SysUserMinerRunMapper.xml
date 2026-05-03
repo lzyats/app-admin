@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserMinerRunMapper">
+
+    <resultMap type="SysUserMinerRun" id="SysUserMinerRunResult">
+        <id     property="runId"       column="run_id" />
+        <result property="userId"      column="user_id" />
+        <result property="userMinerId" column="user_miner_id" />
+        <result property="minerId"     column="miner_id" />
+        <result property="rewardMode"  column="reward_mode" />
+        <result property="runStatus"   column="run_status" />
+        <result property="startTime"   column="start_time" />
+        <result property="cycleEndTime" column="cycle_end_time" />
+        <result property="lastCalcTime" column="last_calc_time" />
+        <result property="cycleWag"    column="cycle_wag" />
+        <result property="producedWag" column="produced_wag" />
+        <result property="creditedFlag" column="credited_flag" />
+        <result property="collectTime" column="collect_time" />
+        <result property="version"     column="version" />
+        <result property="createTime"  column="create_time" />
+        <result property="updateTime"  column="update_time" />
+    </resultMap>
+
+    <sql id="selectRunVo">
+        select run_id, user_id, user_miner_id, miner_id, reward_mode, run_status, start_time, cycle_end_time,
+               last_calc_time, cycle_wag, produced_wag, credited_flag, collect_time, version, create_time, update_time
+        from sys_user_miner_run
+    </sql>
+
+    <select id="selectRunById" parameterType="Long" resultMap="SysUserMinerRunResult">
+        <include refid="selectRunVo"/>
+        where run_id = #{runId}
+    </select>
+
+    <select id="selectRunByIdForUpdate" resultMap="SysUserMinerRunResult">
+        <include refid="selectRunVo"/>
+        where run_id = #{runId}
+        limit 1
+        for update
+    </select>
+
+    <select id="selectLatestRunByUserId" resultMap="SysUserMinerRunResult">
+        <include refid="selectRunVo"/>
+        where user_id = #{userId}
+        order by run_id desc
+        limit 1
+    </select>
+
+    <select id="selectActiveRunByUserIdForUpdate" resultMap="SysUserMinerRunResult">
+        <include refid="selectRunVo"/>
+        where user_id = #{userId} and run_status in ('0','1')
+        order by run_id desc
+        limit 1
+        for update
+    </select>
+
+    <select id="selectRunsForCalc" resultMap="SysUserMinerRunResult">
+        <include refid="selectRunVo"/>
+        where run_status = '0'
+          and cycle_end_time &lt;= #{now}
+        order by cycle_end_time asc, run_id asc
+        <if test="limit != null">limit #{limit}</if>
+    </select>
+
+    <insert id="insertRun" parameterType="SysUserMinerRun" useGeneratedKeys="true" keyProperty="runId">
+        insert into sys_user_miner_run(user_id, user_miner_id, miner_id, reward_mode, run_status, start_time, cycle_end_time,
+            last_calc_time, cycle_wag, produced_wag, credited_flag, collect_time, version, create_time, update_time)
+        values(#{userId}, #{userMinerId}, #{minerId}, #{rewardMode}, #{runStatus}, #{startTime}, #{cycleEndTime},
+            #{lastCalcTime}, #{cycleWag}, #{producedWag}, #{creditedFlag}, #{collectTime}, #{version}, now(), now())
+    </insert>
+
+    <update id="updateRun" parameterType="SysUserMinerRun">
+        update sys_user_miner_run
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="rewardMode != null">reward_mode = #{rewardMode},</if>
+            <if test="runStatus != null">run_status = #{runStatus},</if>
+            <if test="startTime != null">start_time = #{startTime},</if>
+            <if test="cycleEndTime != null">cycle_end_time = #{cycleEndTime},</if>
+            <if test="lastCalcTime != null">last_calc_time = #{lastCalcTime},</if>
+            <if test="cycleWag != null">cycle_wag = #{cycleWag},</if>
+            <if test="producedWag != null">produced_wag = #{producedWag},</if>
+            <if test="creditedFlag != null">credited_flag = #{creditedFlag},</if>
+            <if test="collectTime != null">collect_time = #{collectTime},</if>
+            <if test="version != null">version = #{version},</if>
+            update_time = now(),
+        </trim>
+        where run_id = #{runId}
+    </update>
+
+    <update id="markRunEndedByUserId">
+        update sys_user_miner_run
+        set run_status = '2',
+            update_time = now()
+        where user_id = #{userId} and run_status in ('0','1')
+    </update>
+
+</mapper>

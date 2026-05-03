@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysSecurityQuestionMapper">
+
+    <resultMap type="SysSecurityQuestion" id="SysSecurityQuestionResult">
+        <id     property="questionId"      column="question_id"      />
+        <result property="questionCode"     column="question_code"     />
+        <result property="questionText"    column="question_text"   />
+        <result property="questionOrder"   column="question_order"    />
+        <result property="status"          column="status"    />
+        <result property="createTime"     column="create_time"    />
+        <result property="updateTime"     column="update_time"    />
+        <result property="remark"         column="remark"    />
+    </resultMap>
+
+    <sql id="selectQuestionVo">
+        select question_id, question_code, question_text, question_order, status, create_time, update_time, remark
+        from sys_security_question
+    </sql>
+
+    <select id="selectQuestionList" parameterType="SysSecurityQuestion" resultMap="SysSecurityQuestionResult">
+        <include refid="selectQuestionVo"/>
+        <where>
+            <if test="status != null and status != ''">
+                AND status = #{status}
+            </if>
+        </where>
+        order by question_order asc
+    </select>
+
+    <select id="selectQuestionAll" resultMap="SysSecurityQuestionResult">
+        <include refid="selectQuestionVo"/>
+        where status = '0'
+        order by question_order asc
+    </select>
+
+    <select id="selectQuestionById" parameterType="Long" resultMap="SysSecurityQuestionResult">
+        <include refid="selectQuestionVo"/>
+        where question_id = #{questionId}
+    </select>
+
+    <insert id="insertQuestion" parameterType="SysSecurityQuestion">
+        insert into sys_security_question (
+            <if test="questionCode != null and questionCode != '' ">question_code,</if>
+            <if test="questionText != null and questionText != '' ">question_text,</if>
+            <if test="questionOrder != null ">question_order,</if>
+            <if test="status != null and status != '' ">status,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            create_time
+        )values(
+            <if test="questionCode != null and questionCode != ''">#{questionCode},</if>
+            <if test="questionText != null and questionText != ''">#{questionText},</if>
+            <if test="questionOrder != null ">#{questionOrder},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            sysdate()
+        )
+    </insert>
+
+    <update id="updateQuestion" parameterType="SysSecurityQuestion">
+        update sys_security_question
+        <set>
+            <if test="questionText != null and questionText != ''">question_text = #{questionText},</if>
+            <if test="questionOrder != null ">question_order = #{questionOrder},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where question_id = #{questionId}
+    </update>
+
+    <delete id="deleteQuestionById" parameterType="Long">
+        delete from sys_security_question where question_id = #{questionId}
+    </delete>
+
+    <delete id="deleteQuestionByIds" parameterType="Long">
+        delete from sys_security_question where question_id in
+        <foreach item="questionId" collection="array" open="(" separator="," close=")">
+            #{questionId}
+        </foreach>
+    </delete>
+
+</mapper>

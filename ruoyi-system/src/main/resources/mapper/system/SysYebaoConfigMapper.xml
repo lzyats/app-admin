@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysYebaoConfigMapper">
+
+    <resultMap type="SysYebaoConfig" id="SysYebaoConfigResult">
+        <id property="configId" column="config_id" />
+        <result property="configName" column="config_name" />
+        <result property="annualRate" column="annual_rate" />
+        <result property="unitAmount" column="unit_amount" />
+        <result property="growthValuePerUnit" column="growth_value_per_unit" />
+        <result property="status" column="status" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <sql id="selectYebaoConfigVo">
+        select config_id, config_name, annual_rate, unit_amount, growth_value_per_unit, status, create_by, create_time, update_by, update_time, remark
+        from sys_yebao_config
+    </sql>
+
+    <select id="selectYebaoConfigList" parameterType="SysYebaoConfig" resultMap="SysYebaoConfigResult">
+        <include refid="selectYebaoConfigVo" />
+        <where>
+            <if test="configName != null and configName != ''">
+                and config_name like concat('%', #{configName}, '%')
+            </if>
+            <if test="annualRate != null">
+                and annual_rate = #{annualRate}
+            </if>
+            <if test="unitAmount != null">
+                and unit_amount = #{unitAmount}
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+        </where>
+        order by config_id desc
+    </select>
+
+    <select id="selectYebaoConfigAll" resultMap="SysYebaoConfigResult">
+        <include refid="selectYebaoConfigVo" />
+        order by config_id desc
+    </select>
+
+    <select id="selectYebaoConfigById" parameterType="Long" resultMap="SysYebaoConfigResult">
+        <include refid="selectYebaoConfigVo" />
+        where config_id = #{configId}
+    </select>
+
+    <select id="selectCurrentYebaoConfig" resultMap="SysYebaoConfigResult">
+        <include refid="selectYebaoConfigVo" />
+        where status = '0'
+        order by config_id desc
+        limit 1
+    </select>
+
+    <insert id="insertYebaoConfig" parameterType="SysYebaoConfig" useGeneratedKeys="true" keyProperty="configId">
+        insert into sys_yebao_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="configName != null and configName != ''">config_name,</if>
+            <if test="annualRate != null">annual_rate,</if>
+            <if test="unitAmount != null">unit_amount,</if>
+            <if test="growthValuePerUnit != null">growth_value_per_unit,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="configName != null and configName != ''">#{configName},</if>
+            <if test="annualRate != null">#{annualRate},</if>
+            <if test="unitAmount != null">#{unitAmount},</if>
+            <if test="growthValuePerUnit != null">#{growthValuePerUnit},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateYebaoConfig" parameterType="SysYebaoConfig">
+        update sys_yebao_config
+        <set>
+            <if test="configName != null and configName != ''">config_name = #{configName},</if>
+            <if test="annualRate != null">annual_rate = #{annualRate},</if>
+            <if test="unitAmount != null">unit_amount = #{unitAmount},</if>
+            <if test="growthValuePerUnit != null">growth_value_per_unit = #{growthValuePerUnit},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_time = sysdate()
+        </set>
+        where config_id = #{configId}
+    </update>
+
+    <delete id="deleteYebaoConfigById" parameterType="Long">
+        delete from sys_yebao_config where config_id = #{configId}
+    </delete>
+
+    <delete id="deleteYebaoConfigByIds" parameterType="Long[]">
+        delete from sys_yebao_config where config_id in
+        <foreach item="configId" collection="array" open="(" separator="," close=")">
+            #{configId}
+        </foreach>
+    </delete>
+</mapper>

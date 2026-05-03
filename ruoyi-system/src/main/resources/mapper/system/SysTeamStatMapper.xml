@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysTeamStatMapper">
+
+    <resultMap id="SysTeamStatUserResult" type="SysTeamStatUser">
+        <id property="userId" column="user_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="nickName" column="nick_name"/>
+        <result property="teamLevel" column="team_level"/>
+        <result property="calcDate" column="calc_date"/>
+        <result property="calcDepth" column="calc_depth"/>
+        <result property="directUserCount" column="direct_user_count"/>
+        <result property="directValidUserCount" column="direct_valid_user_count"/>
+        <result property="teamUserCount" column="team_user_count"/>
+        <result property="teamValidUserCount" column="team_valid_user_count"/>
+        <result property="teamTotalAsset" column="team_total_asset"/>
+        <result property="teamTotalInvest" column="team_total_invest"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="SysTeamStatEventResult" type="SysTeamStatEvent">
+        <id property="eventId" column="event_id"/>
+        <result property="statDate" column="stat_date"/>
+        <result property="ownerUserId" column="owner_user_id"/>
+        <result property="memberUserId" column="member_user_id"/>
+        <result property="relationDepth" column="relation_depth"/>
+        <result property="eventType" column="event_type"/>
+        <result property="eventAmount" column="event_amount"/>
+        <result property="isValidUser" column="is_valid_user"/>
+        <result property="bizKey" column="biz_key"/>
+        <result property="eventTime" column="event_time"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+
+    <delete id="clearTeamRelation">
+        delete from sys_team_relation
+    </delete>
+
+    <insert id="insertTeamRelationFromUser">
+        insert into sys_team_relation(ancestor_user_id, descendant_user_id, depth, is_direct, create_time, update_time)
+        with relation_src as (
+            select
+                u.user_id as descendant_user_id,
+                cast(jt.ancestor as unsigned) as ancestor_user_id,
+                row_number() over(partition by u.user_id order by jt.ord) as pos,
+                count(1) over(partition by u.user_id) as total_cnt
+            from sys_user u
+            join json_table(
+                concat('["', replace(ifnull(u.level_detail, ''), ',', '","'), '"]'),
+                '$[*]' columns (
+                    ord for ordinality,
+                    ancestor varchar(32) path '$'
+                )
+            ) jt
+            where u.del_flag = '0'
+              and ifnull(u.level_detail, '') != ''
+              and cast(jt.ancestor as unsigned) > 0
+              and cast(jt.ancestor as unsigned) != u.user_id
+        )
+        select
+            ancestor_user_id,
+            descendant_user_id,
+            total_cnt - pos + 1 as depth,
+            case when total_cnt - pos + 1 = 1 then 1 else 0 end as is_direct,
+            now(),
+            now()
+        from relation_src
+    </insert>
+
+    <delete id="deleteEventsByDate">
+        delete from sys_team_stat_event where stat_date = #{statDate}
+    </delete>
+
+    <insert id="insertRegisterEvents">
+        insert into sys_team_stat_event(
+            stat_date, owner_user_id, member_user_id, relation_depth, event_type,
+            event_amount, is_valid_user, biz_key, event_time, create_time
+        )
+        select
+            #{statDate},
+            r.ancestor_user_id,
+            u.user_id,
+            r.depth,
+            'REGISTER',
+            0.00,
+            case when ifnull(u.total_recharge_amount, 0) > 0 or ifnull(u.total_invest_amount, 0) > 0 then 1 else 0 end,
+            concat('REG:', u.user_id),
+            u.create_time,
+            now()
+        from sys_user u
+        join sys_team_relation r on r.descendant_user_id = u.user_id
+        where u.del_flag = '0'
+          and r.depth between 1 and #{calcDepth}
+          and date(u.create_time) = #{statDate}
+    </insert>
+
+    <insert id="insertRechargeEvents">
+        insert into sys_team_stat_event(
+            stat_date, owner_user_id, member_user_id, relation_depth, event_type,
+            event_amount, is_valid_user, biz_key, event_time, create_time
+        )
+        select
+            #{statDate},
+            r.ancestor_user_id,
+            rc.user_id,
+            r.depth,
+            'RECHARGE',
+            rc.amount,
+            case when ifnull(u.total_recharge_amount, 0) > 0 or ifnull(u.total_invest_amount, 0) > 0 then 1 else 0 end,
+            concat('RC:', rc.recharge_id),
+            ifnull(rc.review_time, rc.submit_time),
+            now()
+        from sys_user_recharge rc
+        join sys_team_relation r on r.descendant_user_id = rc.user_id
+        join sys_user u on u.user_id = rc.user_id
+        where rc.status = 1
+          and u.del_flag = '0'
+          and r.depth between 1 and #{calcDepth}
+          and date(ifnull(rc.review_time, rc.submit_time)) = #{statDate}
+    </insert>
+
+    <insert id="insertInvestEvents">
+        insert into sys_team_stat_event(
+            stat_date, owner_user_id, member_user_id, relation_depth, event_type,
+            event_amount, is_valid_user, biz_key, event_time, create_time
+        )
+        select
+            #{statDate},
+            r.ancestor_user_id,
+            o.user_id,
+            r.depth,
+            'INVEST',
+            o.principal_amount,
+            case when ifnull(u.total_recharge_amount, 0) > 0 or ifnull(u.total_invest_amount, 0) > 0 then 1 else 0 end,
+            concat('INV:', o.order_id),
+            o.invest_time,
+            now()
+        from sys_yebao_order o
+        join sys_team_relation r on r.descendant_user_id = o.user_id
+        join sys_user u on u.user_id = o.user_id
+        where o.status in ('0', '1')
+          and u.del_flag = '0'
+          and r.depth between 1 and #{calcDepth}
+          and date(o.invest_time) = #{statDate}
+    </insert>
+
+    <delete id="deleteDailyByDate">
+        delete from sys_team_stat_daily where stat_date = #{statDate}
+    </delete>
+
+    <insert id="buildDailySnapshot">
+        insert into sys_team_stat_daily(
+            stat_date, user_id, team_level, calc_depth, direct_user_count, direct_valid_user_count,
+            team_user_count, team_valid_user_count, team_total_asset, team_total_invest, create_time, update_time
+        )
+        select
+            #{statDate} as stat_date,
+            u.user_id,
+            ifnull(u.team_leader_level, 0) as team_level,
+            #{calcDepth} as calc_depth,
+            (
+                select count(1)
+                from sys_team_relation r
+                join sys_user d on d.user_id = r.descendant_user_id and d.del_flag = '0'
+                where r.ancestor_user_id = u.user_id
+                  and r.depth = 1
+                  and d.create_time <![CDATA[<=]]> #{dayEnd}
+            ) as direct_user_count,
+            (
+                select count(1)
+                from sys_team_relation r
+                join sys_user d on d.user_id = r.descendant_user_id and d.del_flag = '0'
+                where r.ancestor_user_id = u.user_id
+                  and r.depth = 1
+                  and d.create_time <![CDATA[<=]]> #{dayEnd}
+                  and (ifnull(d.total_recharge_amount, 0) > 0 or ifnull(d.total_invest_amount, 0) > 0)
+            ) as direct_valid_user_count,
+            (
+                select count(1)
+                from sys_team_relation r
+                join sys_user d on d.user_id = r.descendant_user_id and d.del_flag = '0'
+                where r.ancestor_user_id = u.user_id
+                  and r.depth between 1 and #{calcDepth}
+                  and d.create_time <![CDATA[<=]]> #{dayEnd}
+            ) as team_user_count,
+            (
+                select count(1)
+                from sys_team_relation r
+                join sys_user d on d.user_id = r.descendant_user_id and d.del_flag = '0'
+                where r.ancestor_user_id = u.user_id
+                  and r.depth between 1 and #{calcDepth}
+                  and d.create_time <![CDATA[<=]]> #{dayEnd}
+                  and (ifnull(d.total_recharge_amount, 0) > 0 or ifnull(d.total_invest_amount, 0) > 0)
+            ) as team_valid_user_count,
+            (
+                select ifnull(sum(rc.amount), 0)
+                from sys_user_recharge rc
+                where rc.status = 1
+                  and ifnull(rc.review_time, rc.submit_time) <![CDATA[<=]]> #{dayEnd}
+                  and rc.user_id in (
+                    select r2.descendant_user_id
+                    from sys_team_relation r2
+                    where r2.ancestor_user_id = u.user_id
+                      and r2.depth between 1 and #{calcDepth}
+                  )
+            ) as team_total_asset,
+            (
+                select ifnull(sum(o.principal_amount), 0)
+                from sys_yebao_order o
+                where o.status in ('0', '1')
+                  and o.invest_time <![CDATA[<=]]> #{dayEnd}
+                  and o.user_id in (
+                    select r3.descendant_user_id
+                    from sys_team_relation r3
+                    where r3.ancestor_user_id = u.user_id
+                      and r3.depth between 1 and #{calcDepth}
+                  )
+            ) as team_total_invest,
+            now(),
+            now()
+        from sys_user u
+        where u.del_flag = '0'
+    </insert>
+
+    <insert id="refreshUserSnapshot">
+        replace into sys_team_stat_user(
+            user_id, team_level, calc_date, calc_depth, direct_user_count, direct_valid_user_count,
+            team_user_count, team_valid_user_count, team_total_asset, team_total_invest, create_time, update_time
+        )
+        select
+            d.user_id,
+            d.team_level,
+            d.stat_date,
+            d.calc_depth,
+            d.direct_user_count,
+            d.direct_valid_user_count,
+            d.team_user_count,
+            d.team_valid_user_count,
+            d.team_total_asset,
+            d.team_total_invest,
+            now(),
+            now()
+        from sys_team_stat_daily d
+        where d.stat_date = #{statDate}
+    </insert>
+
+    <select id="selectTeamStatUserList" parameterType="SysTeamStatUser" resultMap="SysTeamStatUserResult">
+        select
+            s.user_id, u.user_name, u.nick_name,
+            s.team_level, s.calc_date, s.calc_depth,
+            s.direct_user_count, s.direct_valid_user_count,
+            s.team_user_count, s.team_valid_user_count,
+            s.team_total_asset, s.team_total_invest,
+            s.create_time, s.update_time
+        from sys_team_stat_user s
+        left join sys_user u on u.user_id = s.user_id
+        <where>
+            <if test="userId != null">and s.user_id = #{userId}</if>
+            <if test="userName != null and userName != ''">and u.user_name like concat('%', #{userName}, '%')</if>
+            <if test="teamLevel != null">and s.team_level = #{teamLevel}</if>
+            <if test="params != null and params.beginTime != null and params.beginTime != ''">and s.calc_date <![CDATA[>=]]> #{params.beginTime}</if>
+            <if test="params != null and params.endTime != null and params.endTime != ''">and s.calc_date <![CDATA[<=]]> #{params.endTime}</if>
+        </where>
+        order by s.calc_date desc, s.team_total_invest desc, s.user_id asc
+    </select>
+
+    <select id="selectTeamStatEventList" parameterType="SysTeamStatEvent" resultMap="SysTeamStatEventResult">
+        select
+            e.event_id, e.stat_date, e.owner_user_id, e.member_user_id, e.relation_depth,
+            e.event_type, e.event_amount, e.is_valid_user, e.biz_key, e.event_time, e.create_time
+        from sys_team_stat_event e
+        <where>
+            <if test="ownerUserId != null">and e.owner_user_id = #{ownerUserId}</if>
+            <if test="memberUserId != null">and e.member_user_id = #{memberUserId}</if>
+            <if test="eventType != null and eventType != ''">and e.event_type = #{eventType}</if>
+            <if test="statDate != null">and e.stat_date = #{statDate}</if>
+            <if test="params != null and params.beginTime != null and params.beginTime != ''">and e.event_time <![CDATA[>=]]> #{params.beginTime}</if>
+            <if test="params != null and params.endTime != null and params.endTime != ''">and e.event_time <![CDATA[<=]]> #{params.endTime}</if>
+        </where>
+        order by e.event_id desc
+    </select>
+
+</mapper>

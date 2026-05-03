@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserBankCardMapper">
+
+    <resultMap type="SysUserBankCard" id="SysUserBankCardResult">
+        <id property="bankCardId" column="bank_card_id" />
+        <result property="userId" column="user_id" />
+        <result property="userName" column="user_name" />
+        <result property="currencyType" column="currency_type" />
+        <result property="bankName" column="bank_name" />
+        <result property="accountNo" column="account_no" />
+        <result property="accountName" column="account_name" />
+        <result property="walletAddress" column="wallet_address" />
+        <result property="remark" column="remark" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectBankCardVo">
+        select bank_card_id, user_id, user_name, currency_type, bank_name, account_no, account_name,
+               wallet_address, remark, create_by, create_time, update_by, update_time
+        from sys_user_bank_card
+    </sql>
+
+    <select id="selectBankCardById" parameterType="Long" resultMap="SysUserBankCardResult">
+        <include refid="selectBankCardVo" />
+        where bank_card_id = #{bankCardId}
+    </select>
+
+    <select id="selectBankCardList" parameterType="SysUserBankCard" resultMap="SysUserBankCardResult">
+        <include refid="selectBankCardVo" />
+        <where>
+            <if test="bankCardId != null">
+                and bank_card_id = #{bankCardId}
+            </if>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="userName != null and userName != ''">
+                and user_name like concat('%', #{userName}, '%')
+            </if>
+            <if test="currencyType != null and currencyType != ''">
+                and currency_type = #{currencyType}
+            </if>
+            <if test="bankName != null and bankName != ''">
+                and bank_name like concat('%', #{bankName}, '%')
+            </if>
+            <if test="accountNo != null and accountNo != ''">
+                and account_no like concat('%', #{accountNo}, '%')
+            </if>
+            <if test="accountName != null and accountName != ''">
+                and account_name like concat('%', #{accountName}, '%')
+            </if>
+            <if test="walletAddress != null and walletAddress != ''">
+                and wallet_address like concat('%', #{walletAddress}, '%')
+            </if>
+        </where>
+        order by create_time desc, bank_card_id desc
+    </select>
+
+    <select id="countBankCardByUserIdAndCurrencyType" resultType="int">
+        select count(1)
+        from sys_user_bank_card
+        where user_id = #{userId}
+          and currency_type = #{currencyType}
+    </select>
+
+    <insert id="insertBankCard" parameterType="SysUserBankCard" useGeneratedKeys="true" keyProperty="bankCardId">
+        insert into sys_user_bank_card
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="currencyType != null and currencyType != ''">currency_type,</if>
+            <if test="bankName != null and bankName != ''">bank_name,</if>
+            <if test="accountNo != null and accountNo != ''">account_no,</if>
+            <if test="accountName != null and accountName != ''">account_name,</if>
+            <if test="walletAddress != null and walletAddress != ''">wallet_address,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null and updateBy != ''">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="currencyType != null and currencyType != ''">#{currencyType},</if>
+            <if test="bankName != null and bankName != ''">#{bankName},</if>
+            <if test="accountNo != null and accountNo != ''">#{accountNo},</if>
+            <if test="accountName != null and accountName != ''">#{accountName},</if>
+            <if test="walletAddress != null and walletAddress != ''">#{walletAddress},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <delete id="deleteBankCardById" parameterType="Long">
+        delete from sys_user_bank_card where bank_card_id = #{bankCardId}
+    </delete>
+
+    <delete id="deleteBankCardByIds" parameterType="Long[]">
+        delete from sys_user_bank_card where bank_card_id in
+        <foreach item="bankCardId" collection="array" open="(" separator="," close=")">
+            #{bankCardId}
+        </foreach>
+    </delete>
+
+</mapper>

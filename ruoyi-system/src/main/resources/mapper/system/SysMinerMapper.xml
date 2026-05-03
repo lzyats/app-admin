@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysMinerMapper">
+
+    <resultMap type="SysMiner" id="SysMinerResult">
+        <id     property="minerId"      column="miner_id" />
+        <result property="minerName"    column="miner_name" />
+        <result property="minerLevel"   column="miner_level" />
+        <result property="power"        column="power" />
+        <result property="wagPerDay"    column="wag_per_day" />
+        <result property="minUserLevel" column="min_user_level" />
+        <result property="maxUserLevel" column="max_user_level" />
+        <result property="coverImage"   column="cover_image" />
+        <result property="sortOrder"    column="sort_order" />
+        <result property="status"       column="status" />
+        <result property="createBy"     column="create_by" />
+        <result property="createTime"   column="create_time" />
+        <result property="updateBy"     column="update_by" />
+        <result property="updateTime"   column="update_time" />
+        <result property="remark"       column="remark" />
+    </resultMap>
+
+    <sql id="selectMinerVo">
+        select miner_id, miner_name, miner_level, power, wag_per_day, min_user_level, max_user_level,
+               cover_image, sort_order, status, create_by, create_time, update_by, update_time, remark
+        from sys_miner
+    </sql>
+
+    <select id="selectMinerById" parameterType="Long" resultMap="SysMinerResult">
+        <include refid="selectMinerVo"/>
+        where miner_id = #{minerId}
+    </select>
+
+    <select id="selectMinerList" parameterType="SysMiner" resultMap="SysMinerResult">
+        <include refid="selectMinerVo"/>
+        <where>
+            <if test="minerName != null and minerName != ''">and miner_name like concat('%', #{minerName}, '%')</if>
+            <if test="minerLevel != null">and miner_level = #{minerLevel}</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+        </where>
+        order by sort_order asc, miner_id desc
+    </select>
+
+    <insert id="insertMiner" parameterType="SysMiner" useGeneratedKeys="true" keyProperty="minerId">
+        insert into sys_miner
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="minerName != null">miner_name,</if>
+            <if test="minerLevel != null">miner_level,</if>
+            <if test="power != null">power,</if>
+            <if test="wagPerDay != null">wag_per_day,</if>
+            <if test="minUserLevel != null">min_user_level,</if>
+            <if test="maxUserLevel != null">max_user_level,</if>
+            <if test="coverImage != null">cover_image,</if>
+            <if test="sortOrder != null">sort_order,</if>
+            <if test="status != null">status,</if>
+            create_by,
+            create_time,
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="minerName != null">#{minerName},</if>
+            <if test="minerLevel != null">#{minerLevel},</if>
+            <if test="power != null">#{power},</if>
+            <if test="wagPerDay != null">#{wagPerDay},</if>
+            <if test="minUserLevel != null">#{minUserLevel},</if>
+            <if test="maxUserLevel != null">#{maxUserLevel},</if>
+            <if test="coverImage != null">#{coverImage},</if>
+            <if test="sortOrder != null">#{sortOrder},</if>
+            <if test="status != null">#{status},</if>
+            #{createBy},
+            now(),
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateMiner" parameterType="SysMiner">
+        update sys_miner
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="minerName != null">miner_name = #{minerName},</if>
+            <if test="minerLevel != null">miner_level = #{minerLevel},</if>
+            <if test="power != null">power = #{power},</if>
+            <if test="wagPerDay != null">wag_per_day = #{wagPerDay},</if>
+            <if test="minUserLevel != null">min_user_level = #{minUserLevel},</if>
+            <if test="maxUserLevel != null">max_user_level = #{maxUserLevel},</if>
+            <if test="coverImage != null">cover_image = #{coverImage},</if>
+            <if test="sortOrder != null">sort_order = #{sortOrder},</if>
+            <if test="status != null">status = #{status},</if>
+            update_by = #{updateBy},
+            update_time = now(),
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where miner_id = #{minerId}
+    </update>
+
+    <delete id="deleteMinerById" parameterType="Long">
+        delete from sys_miner where miner_id = #{minerId}
+    </delete>
+
+    <delete id="deleteMinerByIds" parameterType="Long">
+        delete from sys_miner where miner_id in
+        <foreach collection="array" item="minerId" open="(" separator="," close=")">
+            #{minerId}
+        </foreach>
+    </delete>
+
+</mapper>
+

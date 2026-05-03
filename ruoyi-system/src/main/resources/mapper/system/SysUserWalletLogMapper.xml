@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserWalletLogMapper">
+
+    <resultMap type="SysUserWalletLog" id="SysUserWalletLogResult">
+        <id property="logId" column="log_id" />
+        <result property="userId" column="user_id" />
+        <result property="walletId" column="wallet_id" />
+        <result property="currencyType" column="currency_type" />
+        <result property="amount" column="amount" />
+        <result property="type" column="type" />
+        <result property="status" column="status" />
+        <result property="balanceBefore" column="balance_before" />
+        <result property="balanceAfter" column="balance_after" />
+        <result property="orderNo" column="order_no" />
+        <result property="operatorName" column="operator_name" />
+        <result property="remark" column="remark" />
+        <result property="createTime" column="create_time" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="selectLogVo">
+        select log_id, user_id, wallet_id, currency_type, amount, type, status,
+               balance_before, balance_after, order_no, operator_name, remark,
+               create_time, update_time
+        from sys_user_wallet_log
+    </sql>
+
+    <select id="selectLogsByUserId" parameterType="Long" resultMap="SysUserWalletLogResult">
+        <include refid="selectLogVo" />
+        where user_id = #{userId}
+        order by create_time desc
+    </select>
+
+    <select id="selectLogsByWalletId" parameterType="Long" resultMap="SysUserWalletLogResult">
+        <include refid="selectLogVo" />
+        where wallet_id = #{walletId}
+        order by create_time desc
+    </select>
+
+    <select id="selectLogById" parameterType="Long" resultMap="SysUserWalletLogResult">
+        <include refid="selectLogVo" />
+        where log_id = #{logId}
+    </select>
+
+    <select id="selectLogList" parameterType="SysUserWalletLog" resultMap="SysUserWalletLogResult">
+        <include refid="selectLogVo" />
+        <where>
+            <if test="userId != null">
+                and user_id = #{userId}
+            </if>
+            <if test="walletId != null">
+                and wallet_id = #{walletId}
+            </if>
+            <if test="currencyType != null and currencyType != ''">
+                and currency_type = #{currencyType}
+            </if>
+            <if test="type != null and type != ''">
+                and type = #{type}
+            </if>
+            <if test="status != null and status != ''">
+                and status = #{status}
+            </if>
+            <if test="orderNo != null and orderNo != ''">
+                and order_no like concat('%', #{orderNo}, '%')
+            </if>
+            <if test="operatorName != null and operatorName != ''">
+                and operator_name like concat('%', #{operatorName}, '%')
+            </if>
+            <if test="createTime != null">
+                and create_time >= #{createTime}
+            </if>
+        </where>
+        order by create_time desc
+    </select>
+
+    <insert id="insertLog" parameterType="SysUserWalletLog">
+        insert into sys_user_wallet_log
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">user_id,</if>
+            <if test="walletId != null">wallet_id,</if>
+            <if test="currencyType != null and currencyType != ''">currency_type,</if>
+            <if test="amount != null">amount,</if>
+            <if test="type != null">type,</if>
+            <if test="status != null">status,</if>
+            <if test="balanceBefore != null">balance_before,</if>
+            <if test="balanceAfter != null">balance_after,</if>
+            <if test="orderNo != null">order_no,</if>
+            <if test="operatorName != null and operatorName != ''">operator_name,</if>
+            <if test="remark != null">remark,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">#{userId},</if>
+            <if test="walletId != null">#{walletId},</if>
+            <if test="currencyType != null and currencyType != ''">#{currencyType},</if>
+            <if test="amount != null">#{amount},</if>
+            <if test="type != null">#{type},</if>
+            <if test="status != null">#{status},</if>
+            <if test="balanceBefore != null">#{balanceBefore},</if>
+            <if test="balanceAfter != null">#{balanceAfter},</if>
+            <if test="orderNo != null">#{orderNo},</if>
+            <if test="operatorName != null and operatorName != ''">#{operatorName},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+
+    <update id="updateLog" parameterType="SysUserWalletLog">
+        update sys_user_wallet_log
+        <set>
+            <if test="type != null">type = #{type},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="orderNo != null">order_no = #{orderNo},</if>
+            <if test="operatorName != null and operatorName != ''">operator_name = #{operatorName},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where log_id = #{logId}
+    </update>
+
+    <delete id="deleteLogById" parameterType="Long">
+        delete from sys_user_wallet_log where log_id = #{logId}
+    </delete>
+
+    <delete id="deleteLogByIds" parameterType="Long[]">
+        delete from sys_user_wallet_log where log_id in
+        <foreach item="logId" collection="array" open="(" separator="," close=")">
+            #{logId}
+        </foreach>
+    </delete>
+
+</mapper>

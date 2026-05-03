@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysCouponTemplateMapper">
+
+    <resultMap type="SysCouponTemplate" id="SysCouponTemplateResult">
+        <id property="couponId" column="coupon_id"/>
+        <result property="couponName" column="coupon_name"/>
+        <result property="couponType" column="coupon_type"/>
+        <result property="scopeType" column="scope_type"/>
+        <result property="productIdsJson" column="product_ids_json"/>
+        <result property="minAmount" column="min_amount"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="bonusPrincipal" column="bonus_principal"/>
+        <result property="bonusRate" column="bonus_rate"/>
+        <result property="experiencePrincipal" column="experience_principal"/>
+        <result property="minExperienceUnits" column="min_experience_units"/>
+        <result property="maxExperienceUnits" column="max_experience_units"/>
+        <result property="validDays" column="valid_days"/>
+        <result property="totalCount" column="total_count"/>
+        <result property="receivedCount" column="received_count"/>
+        <result property="status" column="status"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectCouponTemplateVo">
+        select coupon_id, coupon_name, coupon_type, scope_type, product_ids_json, min_amount, discount_amount,
+               bonus_principal, bonus_rate, experience_principal, min_experience_units, max_experience_units,
+               valid_days, total_count, received_count, status, create_by, create_time, update_by, update_time, remark
+        from sys_coupon_template
+    </sql>
+
+    <select id="selectCouponTemplateById" parameterType="Long" resultMap="SysCouponTemplateResult">
+        <include refid="selectCouponTemplateVo"/>
+        where coupon_id = #{couponId}
+    </select>
+
+    <select id="selectCouponTemplateList" parameterType="SysCouponTemplate" resultMap="SysCouponTemplateResult">
+        <include refid="selectCouponTemplateVo"/>
+        <where>
+            <if test="couponName != null and couponName != ''">and coupon_name like concat('%', #{couponName}, '%')</if>
+            <if test="couponType != null and couponType != ''">and coupon_type = #{couponType}</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+        </where>
+        order by coupon_id desc
+    </select>
+
+    <insert id="insertCouponTemplate" parameterType="SysCouponTemplate" useGeneratedKeys="true" keyProperty="couponId">
+        insert into sys_coupon_template(coupon_name, coupon_type, scope_type, product_ids_json, min_amount, discount_amount,
+                                        bonus_principal, bonus_rate, experience_principal, min_experience_units, max_experience_units,
+                                        valid_days, total_count, received_count, status, create_by, create_time, remark)
+        values (#{couponName}, #{couponType}, #{scopeType}, #{productIdsJson}, #{minAmount}, #{discountAmount},
+                #{bonusPrincipal}, #{bonusRate}, #{experiencePrincipal}, #{minExperienceUnits}, #{maxExperienceUnits},
+                #{validDays}, #{totalCount}, #{receivedCount}, #{status}, #{createBy}, now(), #{remark})
+    </insert>
+
+    <update id="updateCouponTemplate" parameterType="SysCouponTemplate">
+        update sys_coupon_template
+        <trim prefix="set" suffixOverrides=",">
+            <if test="couponName != null and couponName != ''">coupon_name = #{couponName},</if>
+            <if test="couponType != null and couponType != ''">coupon_type = #{couponType},</if>
+            <if test="scopeType != null and scopeType != ''">scope_type = #{scopeType},</if>
+            <if test="productIdsJson != null">product_ids_json = #{productIdsJson},</if>
+            <if test="minAmount != null">min_amount = #{minAmount},</if>
+            <if test="discountAmount != null">discount_amount = #{discountAmount},</if>
+            <if test="bonusPrincipal != null">bonus_principal = #{bonusPrincipal},</if>
+            <if test="bonusRate != null">bonus_rate = #{bonusRate},</if>
+            <if test="experiencePrincipal != null">experience_principal = #{experiencePrincipal},</if>
+            <if test="minExperienceUnits != null">min_experience_units = #{minExperienceUnits},</if>
+            <if test="maxExperienceUnits != null">max_experience_units = #{maxExperienceUnits},</if>
+            <if test="validDays != null">valid_days = #{validDays},</if>
+            <if test="totalCount != null">total_count = #{totalCount},</if>
+            <if test="receivedCount != null">received_count = #{receivedCount},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            update_by = #{updateBy},
+            update_time = now()
+        </trim>
+        where coupon_id = #{couponId}
+    </update>
+
+    <delete id="deleteCouponTemplateById" parameterType="Long">
+        delete from sys_coupon_template where coupon_id = #{couponId}
+    </delete>
+
+    <delete id="deleteCouponTemplateByIds" parameterType="Long">
+        delete from sys_coupon_template where coupon_id in
+        <foreach collection="array" item="couponId" open="(" separator="," close=")">
+            #{couponId}
+        </foreach>
+    </delete>
+
+    <insert id="insertUserCoupon">
+        insert into sys_coupon_user(coupon_id, user_id, user_name, grant_type, status, start_time, end_time, create_by, create_time, remark)
+        values (#{couponId}, #{userId}, #{userName}, #{grantType}, '0', now(), date_add(now(), interval #{validDays} day), #{operator}, now(), #{remark})
+    </insert>
+
+    <select id="selectUserIdsByLevel" resultType="Long">
+        select user_id
+        from sys_user
+        where del_flag = '0' and level &gt;= #{level}
+    </select>
+</mapper>

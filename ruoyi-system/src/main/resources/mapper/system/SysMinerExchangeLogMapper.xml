@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysMinerExchangeLogMapper">
+
+    <resultMap type="SysMinerExchangeLog" id="SysMinerExchangeLogResult">
+        <id     property="exchangeId"    column="exchange_id" />
+        <result property="userId"        column="user_id" />
+        <result property="requestNo"     column="request_no" />
+        <result property="wagAmount"     column="wag_amount" />
+        <result property="rate"          column="rate" />
+        <result property="targetCurrency" column="target_currency" />
+        <result property="targetAmount"  column="target_amount" />
+        <result property="status"        column="status" />
+        <result property="errorMsg"      column="error_msg" />
+        <result property="createTime"    column="create_time" />
+        <result property="updateTime"    column="update_time" />
+    </resultMap>
+
+    <select id="selectByRequestNo" parameterType="String" resultMap="SysMinerExchangeLogResult">
+        select exchange_id, user_id, request_no, wag_amount, rate, target_currency, target_amount, status, error_msg, create_time, update_time
+        from sys_miner_exchange_log
+        where request_no = #{requestNo}
+        limit 1
+    </select>
+
+    <insert id="insertExchangeLog" parameterType="SysMinerExchangeLog" useGeneratedKeys="true" keyProperty="exchangeId">
+        insert into sys_miner_exchange_log(user_id, request_no, wag_amount, rate, target_currency, target_amount, status, error_msg, create_time, update_time)
+        values(#{userId}, #{requestNo}, #{wagAmount}, #{rate}, #{targetCurrency}, #{targetAmount}, #{status}, #{errorMsg}, now(), now())
+    </insert>
+
+    <update id="updateExchangeLog" parameterType="SysMinerExchangeLog">
+        update sys_miner_exchange_log
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="wagAmount != null">wag_amount = #{wagAmount},</if>
+            <if test="rate != null">rate = #{rate},</if>
+            <if test="targetCurrency != null">target_currency = #{targetCurrency},</if>
+            <if test="targetAmount != null">target_amount = #{targetAmount},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="errorMsg != null">error_msg = #{errorMsg},</if>
+            update_time = now(),
+        </trim>
+        where exchange_id = #{exchangeId}
+    </update>
+
+    <select id="selectExchangeLogList" parameterType="SysMinerExchangeLog" resultMap="SysMinerExchangeLogResult">
+        select exchange_id, user_id, request_no, wag_amount, rate, target_currency, target_amount, status, error_msg, create_time, update_time
+        from sys_miner_exchange_log
+        <where>
+            <if test="userId != null">and user_id = #{userId}</if>
+            <if test="status != null and status != ''">and status = #{status}</if>
+            <if test="requestNo != null and requestNo != ''">and request_no = #{requestNo}</if>
+        </where>
+        order by exchange_id desc
+    </select>
+
+</mapper>
+
