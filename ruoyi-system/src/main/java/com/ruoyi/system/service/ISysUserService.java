@@ -187,6 +187,16 @@ public interface ISysUserService
     public int updateUserRealNameStatus(Long userId, Integer realNameStatus);
 
     /**
+     * 审核通过后更新用户真实姓名与实名状态
+     *
+     * @param userId 用户ID
+     * @param realName 真实姓名
+     * @param realNameStatus 实名状态
+     * @return 结果
+     */
+    public int updateUserVerifiedRealName(Long userId, String realName, Integer realNameStatus);
+
+    /**
      * 修改用户头像
      * 
      * @param userId 用户ID

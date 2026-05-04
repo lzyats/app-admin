@@ -1,9 +1,12 @@
 package com.ruoyi.web.controller.system;
 
 import java.util.Map;
+import java.util.Base64;
+import java.util.EnumMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.FastByteArrayOutputStream;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -12,6 +15,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.config.CloudStorageConfig;
 import com.ruoyi.common.config.RuoYiConfig;
@@ -28,6 +39,7 @@ import com.ruoyi.common.utils.file.MimeTypeUtils;
 import com.ruoyi.framework.security.crypto.ApiCryptoService;
 import com.ruoyi.framework.web.service.TokenService;
 import com.ruoyi.system.service.ICloudStorageService;
+import com.ruoyi.system.service.ISysGoogleAuthService;
 import com.ruoyi.system.service.ISysUserService;
 import tools.jackson.databind.ObjectMapper;
 
@@ -58,6 +70,9 @@ public class SysProfileController extends BaseController
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
+    private ISysGoogleAuthService googleAuthService;
+
     @GetMapping
     public AjaxResult profile()
     {
@@ -67,6 +82,46 @@ public class SysProfileController extends BaseController
         ajax.put("roleGroup", userService.selectUserRoleGroup(loginUser.getUsername()));
         ajax.put("postGroup", userService.selectUserPostGroup(loginUser.getUsername()));
         return ajax;
+    }
+
+    @GetMapping("/google2fa/status")
+    public AjaxResult google2faStatus()
+    {
+        LoginUser loginUser = getLoginUser();
+        return AjaxResult.success(googleAuthService.status(loginUser.getUserId(), loginUser.getUsername()));
+    }
+
+    @PostMapping("/google2fa/init")
+    public AjaxResult google2faInit()
+    {
+        LoginUser loginUser = getLoginUser();
+        Map<String, Object> data = googleAuthService.initBind(loginUser.getUserId(), loginUser.getUsername());
+        Object otpAuthUrl = data.get("otpAuthUrl");
+        if (otpAuthUrl != null)
+        {
+            String qrImageBase64 = generateQrBase64(String.valueOf(otpAuthUrl));
+            if (StringUtils.isNotBlank(qrImageBase64))
+            {
+                data.put("qrImageBase64", qrImageBase64);
+            }
+        }
+        return AjaxResult.success(data);
+    }
+
+    @PostMapping("/google2fa/bind")
+    public AjaxResult google2faBind(@RequestBody Map<String, String> body)
+    {
+        LoginUser loginUser = getLoginUser();
+        googleAuthService.bind(loginUser.getUserId(), loginUser.getUsername(), body.get("code"));
+        return success("绑定成功");
+    }
+
+    @PostMapping("/google2fa/unbind")
+    public AjaxResult google2faUnbind(@RequestBody Map<String, String> body)
+    {
+        LoginUser loginUser = getLoginUser();
+        googleAuthService.unbind(loginUser.getUserId(), body.get("code"));
+        return success("解绑成功");
     }
 
     @Log(title = "个人信息", businessType = BusinessType.UPDATE)
@@ -200,6 +255,27 @@ public class SysProfileController extends BaseController
         }
 
         return objectMapper.convertValue(bodyMap, SysUser.class);
+    }
+
+    private String generateQrBase64(String content)
+    {
+        try
+        {
+            Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+            hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
+            hints.put(EncodeHintType.MARGIN, 1);
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(content, BarcodeFormat.QR_CODE, 280, 280, hints);
+            BufferedImage image = MatrixToImageWriter.toBufferedImage(bitMatrix);
+            FastByteArrayOutputStream os = new FastByteArrayOutputStream();
+            ImageIO.write(image, "png", os);
+            return Base64.getEncoder().encodeToString(os.toByteArray());
+        }
+        catch (Exception e)
+        {
+            log.warn("generate google qr failed: {}", e.getMessage());
+            return null;
+        }
     }
 
     private void syncLoginUserCache(LoginUser loginUser, SysUser latestUser)

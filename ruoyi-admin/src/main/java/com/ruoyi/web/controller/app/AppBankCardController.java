@@ -61,8 +61,9 @@ public class AppBankCardController extends BaseController
 
     @PostMapping("/delete")
     @Log(title = "Bank card delete", businessType = BusinessType.DELETE)
-    public AjaxResult delete(@RequestBody SysUserBankCard bankCard)
+    public AjaxResult delete(@RequestBody(required = false) Map<String, Object> bodyMap)
     {
+        SysUserBankCard bankCard = resolveBankCardBody(bodyMap);
         if (bankCard == null || bankCard.getBankCardId() == null)
         {
             return AjaxResult.error("Bank card ID cannot be empty.");

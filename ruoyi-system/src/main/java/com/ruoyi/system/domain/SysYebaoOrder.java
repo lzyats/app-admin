@@ -9,6 +9,7 @@ public class SysYebaoOrder extends BaseEntity
 
     private Long orderId;
     private String orderNo;
+    private String clientReqNo;
     private Long userId;
     private String userName;
     private Integer shares;
@@ -39,6 +40,16 @@ public class SysYebaoOrder extends BaseEntity
     public void setOrderNo(String orderNo)
     {
         this.orderNo = orderNo;
+    }
+
+    public String getClientReqNo()
+    {
+        return clientReqNo;
+    }
+
+    public void setClientReqNo(String clientReqNo)
+    {
+        this.clientReqNo = clientReqNo;
     }
 
     public Long getUserId()

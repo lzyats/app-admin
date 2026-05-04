@@ -91,9 +91,19 @@
         </template>
       </el-table-column>
       <el-table-column label="拒绝原因" align="center" key="rejectReason" prop="rejectReason" :show-overflow-tooltip="true" />
-      <el-table-column label="操作" align="center" width="180" class-name="small-padding fixed-width">
+      <el-table-column label="操作" align="center" width="240" class-name="small-padding fixed-width">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleView(scope.row)">查看</el-button>
+          <el-button
+            v-if="scope.row.status !== 0"
+            size="mini"
+            type="text"
+            icon="el-icon-refresh-left"
+            style="color: #909399"
+            @click="handleReReview(scope.row)"
+          >
+            重新审核
+          </el-button>
           <el-button
             v-if="scope.row.status === 0"
             size="mini"
@@ -287,6 +297,29 @@ export default {
         this.getList()
       }).catch(() => {})
     },
+    handleReReview(row) {
+      this.$confirm('确认将该实名认证重置为待审核？', '操作确认', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        return this.$prompt('请输入 Google 验证码后提交', 'Google 验证', {
+          confirmButtonText: '确认提交',
+          cancelButtonText: '取消',
+          inputPattern: /^\d{6}$/,
+          inputErrorMessage: '请输入 6 位数字验证码'
+        })
+      }).then(({ value }) => {
+        return updateRealNameAuth({
+          authId: row.authId,
+          status: 0,
+          googleCode: value
+        })
+      }).then(() => {
+        this.$modal.msgSuccess('已重置为待审核')
+        this.getList()
+      }).catch(() => {})
+    },
     handleReject(row) {
       this.rejectForm.authId = row.authId
       this.rejectForm.rejectReason = ''
@@ -305,7 +338,7 @@ export default {
           this.$modal.msgSuccess('已拒绝')
           this.rejectDialogVisible = false
           this.getList()
-        })
+        }).catch(() => {})
       })
     },
     parseTime(time) {

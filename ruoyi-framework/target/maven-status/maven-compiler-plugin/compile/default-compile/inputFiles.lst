@@ -1,5 +1,6 @@
 E:\Go\go-api\ruoyi-framework\src\main\java\com\ruoyi\framework\aspectj\DataScopeAspect.java
 E:\Go\go-api\ruoyi-framework\src\main\java\com\ruoyi\framework\aspectj\DataSourceAspect.java
+E:\Go\go-api\ruoyi-framework\src\main\java\com\ruoyi\framework\aspectj\GoogleVerifyAspect.java
 E:\Go\go-api\ruoyi-framework\src\main\java\com\ruoyi\framework\aspectj\LogAspect.java
 E:\Go\go-api\ruoyi-framework\src\main\java\com\ruoyi\framework\aspectj\RateLimiterAspect.java
 E:\Go\go-api\ruoyi-framework\src\main\java\com\ruoyi\framework\config\ApplicationConfig.java

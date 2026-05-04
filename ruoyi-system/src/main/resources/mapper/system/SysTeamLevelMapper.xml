@@ -98,16 +98,37 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </select>
 
     <select id="sumTeamInvestAmount" parameterType="Long" resultType="java.math.BigDecimal">
-        select ifnull(sum(o.principal_amount), 0)
-        from sys_yebao_order o
-        where o.user_id in (
-            select u.user_id
-            from sys_user u
-            where u.del_flag = '0'
-              and u.user_id != #{userId}
-              and find_in_set(cast(#{userId} as char), ifnull(u.level_detail, '')) > 0
-        )
-          and o.status in ('HOLDING', 'REDEEMED')
+        select
+            <choose>
+                <when test="yebaoLevelBonusEnabled != null and yebaoLevelBonusEnabled">
+                    ifnull((
+                        select sum(o.principal_amount)
+                        from sys_yebao_order o
+                        where o.user_id in (
+                            select u.user_id
+                            from sys_user u
+                            where u.del_flag = '0'
+                              and u.user_id != #{userId}
+                              and find_in_set(cast(#{userId} as char), ifnull(u.level_detail, '')) > 0
+                        )
+                          and o.status in ('HOLDING', 'REDEEMED')
+                    ), 0)
+                </when>
+                <otherwise>0</otherwise>
+            </choose>
+            +
+            ifnull((
+                select sum(io.invest_amount)
+                from sys_invest_order io
+                where io.user_id in (
+                    select u.user_id
+                    from sys_user u
+                    where u.del_flag = '0'
+                      and u.user_id != #{userId}
+                      and find_in_set(cast(#{userId} as char), ifnull(u.level_detail, '')) > 0
+                )
+                  and io.status in ('0', '1')
+            ), 0)
     </select>
 
     <update id="updateUserTeamLeaderLevel">

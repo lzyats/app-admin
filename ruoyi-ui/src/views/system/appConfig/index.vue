@@ -12,7 +12,7 @@
       </template>
 
       <el-alert
-        title="直接读取数据库中已勾选“是否APP配置”的参数，JSON、数字、文本都会按参数表原值展示和保存。"
+        title="直接读取数据库中已勾选“是否APP配置”的参数，支持文本、图片、文件、日期、开关等类型并按原值保存。"
         type="info"
         :closable="false"
         show-icon
@@ -36,7 +36,20 @@
             <el-table-column label="配置键" prop="configKey" min-width="240" />
             <el-table-column label="数据库值" min-width="200">
               <template slot-scope="scope">
-                <template v-if="scope.row.valueType === 'bool'">
+                <template v-if="scope.row.valueType === 'image'">
+                  <el-image
+                    :src="resolveAssetUrl(scope.row.configValueText)"
+                    fit="cover"
+                    style="width: 40px; height: 40px; border-radius: 4px"
+                    :preview-src-list="[resolveAssetUrl(scope.row.configValueText)]"
+                  />
+                </template>
+                <template v-else-if="scope.row.valueType === 'file'">
+                  <el-link type="primary" :underline="false" :href="resolveAssetUrl(scope.row.configValueText)" target="_blank">
+                    查看文件
+                  </el-link>
+                </template>
+                <template v-else-if="scope.row.valueType === 'bool' || scope.row.valueType === 'switch'">
                   <el-tag :type="scope.row.currentValue ? 'success' : 'info'">
                     {{ scope.row.currentValue ? '开启' : '关闭' }}
                   </el-tag>
@@ -49,13 +62,51 @@
             <el-table-column label="操作" min-width="280">
               <template slot-scope="scope">
                 <el-select
-                  v-if="scope.row.valueType === 'bool'"
+                  v-if="scope.row.valueType === 'bool' || scope.row.valueType === 'switch'"
                   v-model="scope.row.currentValue"
                   size="mini"
                   style="width: 160px;"
                 >
                   <el-option label="开启" :value="true" />
                   <el-option label="关闭" :value="false" />
+                </el-select>
+                <image-upload
+                  v-else-if="scope.row.valueType === 'image'"
+                  v-model="scope.row.currentValue"
+                  :limit="1"
+                  :file-type="['png','jpg','jpeg','gif','webp']"
+                  :is-show-tip="true"
+                />
+                <file-upload
+                  v-else-if="scope.row.valueType === 'file'"
+                  v-model="scope.row.currentValue"
+                  :limit="1"
+                  :file-type="['pdf','doc','docx','xls','xlsx','ppt','pptx','txt','zip','rar']"
+                  :is-show-tip="true"
+                />
+                <el-date-picker
+                  v-else-if="scope.row.valueType === 'date'"
+                  v-model="scope.row.currentValue"
+                  type="datetime"
+                  value-format="yyyy-MM-dd HH:mm:ss"
+                  format="yyyy-MM-dd HH:mm:ss"
+                  placeholder="请选择日期时间"
+                  size="mini"
+                  style="width: 240px;"
+                />
+                <el-select
+                  v-else-if="scope.row.valueType === 'select'"
+                  v-model="scope.row.currentValue"
+                  size="mini"
+                  style="width: 220px;"
+                  filterable
+                >
+                  <el-option
+                    v-for="item in scope.row.selectOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
                 </el-select>
                 <el-input-number
                   v-else-if="scope.row.valueType === 'number'"
@@ -66,24 +117,6 @@
                   size="mini"
                   style="width: 140px;"
                 />
-                <el-select
-                  v-else-if="scope.row.item === 'signRewardType'"
-                  v-model="scope.row.currentValue"
-                  size="mini"
-                  style="width: 180px;"
-                >
-                  <el-option label="积分" value="POINT" />
-                  <el-option label="现金" value="MONEY" />
-                </el-select>
-                <el-select
-                  v-else-if="scope.row.item === 'investCurrencyMode'"
-                  v-model="scope.row.currentValue"
-                  size="mini"
-                  style="width: 180px;"
-                >
-                  <el-option label="1 - 单币种" :value="1" />
-                  <el-option label="2 - 双币种" :value="2" />
-                </el-select>
                 <el-button
                   v-else-if="scope.row.valueType === 'json'"
                   type="primary"
@@ -162,9 +195,12 @@ export default {
   },
   computed: {
     optionGroups() {
-      const order = ['bool', 'number', 'select', 'json', 'text']
+      const order = ['switch', 'image', 'file', 'date', 'number', 'select', 'json', 'text']
       const labels = {
-        bool: '开关类',
+        switch: '开关类',
+        image: '图片类',
+        file: '文件类',
+        date: '日期类',
         number: '数值类',
         select: '选择类',
         json: 'JSON 配置类',
@@ -173,7 +209,7 @@ export default {
       const grouped = new Map()
       for (const option of this.options) {
         const type = String(option.valueType || 'text').toLowerCase()
-        const key = order.includes(type) ? type : 'text'
+        const key = type === 'bool' ? 'switch' : (order.includes(type) ? type : 'text')
         if (!grouped.has(key)) {
           grouped.set(key, [])
         }
@@ -240,26 +276,42 @@ export default {
       const valueType = this.inferValueType({
         item: configKey,
         configKey,
-        defaultValue: configValueText
+        defaultValue: configValueText,
+        configValueType: record.configValueType
       }, record.valueType)
-      return {
+      const option = {
         configId: record.configId,
         item: configKey,
         name: String(record.configName ?? '').trim() || configKey,
         configKey,
         configValueText,
         defaultValue: configValueText,
+        configValueType: this.normalizeConfigValueType(record.configValueType),
         valueType,
+        selectOptions: this.buildSelectOptions(record.remark, configKey),
         currentValue: this.parseValue(configValueText, valueType, configValueText, configKey),
         remark: String(record.remark ?? ''),
         isAppConfig: String(record.isAppConfig ?? '1')
       }
+      if (option.valueType === 'select' && option.selectOptions.length > 0) {
+        const values = option.selectOptions.map(item => item.value)
+        if (!values.includes(String(option.currentValue || ''))) {
+          option.currentValue = option.selectOptions[0].value
+        }
+      }
+      return option
     },
     inferValueType(option, remoteType) {
       const explicitType = String(remoteType ?? '').trim().toLowerCase()
-      if (['bool', 'number', 'json', 'select', 'text'].includes(explicitType)) {
+      if (['bool', 'switch', 'image', 'file', 'date', 'number', 'json', 'select', 'text'].includes(explicitType)) {
         return explicitType
       }
+      const configValueType = this.normalizeConfigValueType(option.configValueType)
+      if (configValueType === 'IMAGE') return 'image'
+      if (configValueType === 'FILE') return 'file'
+      if (configValueType === 'DATE') return 'date'
+      if (configValueType === 'SWITCH') return 'switch'
+      if (configValueType === 'SELECT') return 'select'
       const item = String(option.item ?? '')
       const raw = option.defaultValue
       if (item === 'signRewardType' || item === 'investCurrencyMode') {
@@ -269,7 +321,7 @@ export default {
         return 'json'
       }
       if (this.looksLikeBool(raw)) {
-        return 'bool'
+        return 'switch'
       }
       if (this.looksLikeNumber(raw)) {
         return 'number'
@@ -303,7 +355,7 @@ export default {
       }
       if (item === 'investCurrencyMode') {
         const num = parseInt(raw, 10)
-        return num === 2 ? 2 : 1
+        return num === 2 ? '2' : '1'
       }
       if (item === 'signRewardType') {
         const text = String(raw).trim().toUpperCase()
@@ -312,9 +364,18 @@ export default {
       if (valueType === 'json' || item === 'inviteRewardRule' || item === 'signContinuousRewardRule') {
         return String(raw)
       }
-      if (valueType === 'bool') {
+      if (valueType === 'bool' || valueType === 'switch') {
         const text = String(raw).trim().toLowerCase()
         return text === 'true'
+      }
+      if (valueType === 'date') {
+        return String(raw)
+      }
+      if (valueType === 'image' || valueType === 'file') {
+        return String(raw)
+      }
+      if (valueType === 'select') {
+        return String(raw)
       }
       if (valueType === 'number') {
         const num = parseFloat(raw)
@@ -324,7 +385,7 @@ export default {
     },
     buildConfigValue(option) {
       if (option.item === 'investCurrencyMode') {
-        return option.currentValue === 2 ? '2' : '1'
+        return String(option.currentValue) === '2' ? '2' : '1'
       }
       if (option.item === 'signRewardType') {
         return option.currentValue === 'MONEY' ? 'MONEY' : 'POINT'
@@ -332,7 +393,7 @@ export default {
       if (option.valueType === 'json' || option.item === 'inviteRewardRule' || option.item === 'signContinuousRewardRule') {
         return String(option.currentValue || '')
       }
-      if (option.valueType === 'bool') {
+      if (option.valueType === 'bool' || option.valueType === 'switch') {
         return option.currentValue ? 'true' : 'false'
       }
       return String(option.currentValue)
@@ -374,6 +435,7 @@ export default {
             configName: option.name,
             configKey: option.configKey,
             configValue: this.buildConfigValue(option),
+            configValueType: option.configValueType || this.toConfigValueType(option.valueType),
             remark: option.remark || '后台 APP 配置管理保存',
             isAppConfig: '1'
           }))
@@ -386,6 +448,58 @@ export default {
       } finally {
         this.saving = false
       }
+    },
+    normalizeConfigValueType(value) {
+      const type = String(value || '').trim().toUpperCase()
+      if (['IMAGE', 'FILE', 'DATE', 'SWITCH', 'SELECT', 'TEXT'].includes(type)) {
+        return type
+      }
+      return 'TEXT'
+    },
+    toConfigValueType(valueType) {
+      const key = String(valueType || '').toLowerCase()
+      if (key === 'switch' || key === 'bool') return 'SWITCH'
+      if (key === 'image') return 'IMAGE'
+      if (key === 'file') return 'FILE'
+      if (key === 'date') return 'DATE'
+      if (key === 'select') return 'SELECT'
+      return 'TEXT'
+    },
+    buildSelectOptions(remark, item) {
+      const raw = String(remark || '').trim()
+      let options = []
+      if (raw) {
+        const blocks = raw
+          .split(/\r?\n|[,;；，]/g)
+          .map(e => e.trim())
+          .filter(Boolean)
+        options = blocks.map((block) => {
+          const idx = block.includes(':') ? block.indexOf(':') : block.indexOf('=')
+          if (idx > 0) {
+            const value = block.slice(0, idx).trim()
+            const label = block.slice(idx + 1).trim() || value
+            return { value, label }
+          }
+          return { value: block, label: block }
+        }).filter(option => option.value)
+      }
+      if (options.length === 0 && item === 'signRewardType') {
+        options = [{ value: 'POINT', label: '积分' }, { value: 'MONEY', label: '现金' }]
+      }
+      if (options.length === 0 && item === 'investCurrencyMode') {
+        options = [{ value: '1', label: '1 - 单币种' }, { value: '2', label: '2 - 双币种' }]
+      }
+      return options
+    },
+    resolveAssetUrl(url) {
+      const raw = String(url || '').trim()
+      if (!raw) {
+        return ''
+      }
+      if (/^https?:\/\//i.test(raw)) {
+        return raw
+      }
+      return process.env.VUE_APP_BASE_API + raw
     }
   }
 }

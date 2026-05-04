@@ -1,5 +1,6 @@
 package com.ruoyi.system.service.impl;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -24,6 +25,7 @@ public class SysTeamStatServiceImpl implements ISysTeamStatService
 {
     private static final String CONFIG_CALC_DEPTH = "team.stats.calc.depth";
     private static final String CONFIG_LAST_CALC_DATE = "team.stats.last.calc.date";
+    private static final String CONFIG_YEBAO_LEVEL_BONUS_ENABLED = "app.yebao.levelBonusEnabled";
 
     @Autowired
     private SysTeamStatMapper teamStatMapper;
@@ -39,6 +41,7 @@ public class SysTeamStatServiceImpl implements ISysTeamStatService
         Date statDay = toDate(targetDate.atStartOfDay());
         Date dayEnd = toDate(LocalDateTime.of(targetDate, LocalTime.MAX));
         Integer calcDepth = getCalcDepth();
+        boolean yebaoLevelBonusEnabled = isYebaoLevelBonusEnabled();
 
         teamStatMapper.clearTeamRelation();
         teamStatMapper.insertTeamRelationFromUser();
@@ -46,10 +49,10 @@ public class SysTeamStatServiceImpl implements ISysTeamStatService
         teamStatMapper.deleteEventsByDate(statDay);
         teamStatMapper.insertRegisterEvents(statDay, calcDepth);
         teamStatMapper.insertRechargeEvents(statDay, calcDepth);
-        teamStatMapper.insertInvestEvents(statDay, calcDepth);
+        teamStatMapper.insertInvestEvents(statDay, calcDepth, yebaoLevelBonusEnabled);
 
         teamStatMapper.deleteDailyByDate(statDay);
-        teamStatMapper.buildDailySnapshot(statDay, calcDepth, dayEnd);
+        teamStatMapper.buildDailySnapshot(statDay, calcDepth, dayEnd, yebaoLevelBonusEnabled);
         teamStatMapper.refreshUserSnapshot(statDay);
 
         saveLastCalcDate(targetDate);
@@ -65,6 +68,31 @@ public class SysTeamStatServiceImpl implements ISysTeamStatService
     public List<SysTeamStatEvent> selectTeamStatEventList(SysTeamStatEvent query)
     {
         return teamStatMapper.selectTeamStatEventList(query);
+    }
+
+    @Override
+    public void recordInvestOrderEvent(Long memberUserId, Long orderId, BigDecimal investAmount, Date eventTime)
+    {
+        if (memberUserId == null || memberUserId <= 0L || orderId == null || orderId <= 0L)
+        {
+            return;
+        }
+        if (investAmount == null || investAmount.compareTo(BigDecimal.ZERO) <= 0)
+        {
+            return;
+        }
+        Date safeEventTime = eventTime == null ? new Date() : eventTime;
+        teamStatMapper.insertInvestOrderEvents(memberUserId, orderId, investAmount, safeEventTime, getCalcDepth());
+    }
+
+    @Override
+    public void revokeInvestOrderEvent(Long orderId)
+    {
+        if (orderId == null || orderId <= 0L)
+        {
+            return;
+        }
+        teamStatMapper.deleteInvestOrderEvents(orderId);
     }
 
     @Override
@@ -117,5 +145,18 @@ public class SysTeamStatServiceImpl implements ISysTeamStatService
     private Date toDate(LocalDateTime dateTime)
     {
         return Date.from(dateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    private boolean isYebaoLevelBonusEnabled()
+    {
+        try
+        {
+            String raw = configService.selectConfigByKey(CONFIG_YEBAO_LEVEL_BONUS_ENABLED);
+            return "true".equalsIgnoreCase(StringUtils.trim(raw)) || "1".equals(StringUtils.trim(raw));
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
     }
 }

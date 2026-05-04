@@ -2,6 +2,7 @@ package com.ruoyi.system.service.impl;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -121,10 +122,14 @@ public class SysConfigServiceImpl implements ISysConfigService
     @Override
     public int insertConfig(SysConfig config)
     {
+        if (StringUtils.isBlank(config.getConfigValueType()))
+        {
+            config.setConfigValueType("TEXT");
+        }
         int row = configMapper.insertConfig(config);
         if (row > 0)
         {
-            resetConfigCache();
+            refreshConfigCacheAsync();
         }
         return row;
     }
@@ -135,6 +140,10 @@ public class SysConfigServiceImpl implements ISysConfigService
     @Override
     public int updateConfig(SysConfig config)
     {
+        if (StringUtils.isBlank(config.getConfigValueType()))
+        {
+            config.setConfigValueType("TEXT");
+        }
         SysConfig temp = selectConfigById(config.getConfigId());
         if (temp != null && !StringUtils.equals(temp.getConfigKey(), config.getConfigKey()))
         {
@@ -150,7 +159,7 @@ public class SysConfigServiceImpl implements ISysConfigService
         int row = configMapper.updateConfig(config);
         if (row > 0)
         {
-            resetConfigCache();
+            refreshConfigCacheAsync();
         }
         return row;
     }
@@ -188,6 +197,10 @@ public class SysConfigServiceImpl implements ISysConfigService
                 {
                     config.setIsAppConfig(existing.getIsAppConfig());
                 }
+                if (StringUtils.isBlank(config.getConfigValueType()))
+                {
+                    config.setConfigValueType(StringUtils.defaultIfBlank(existing.getConfigValueType(), "TEXT"));
+                }
                 config.setUpdateBy(operator);
                 rows += configMapper.updateConfig(config);
             }
@@ -201,6 +214,10 @@ public class SysConfigServiceImpl implements ISysConfigService
                 {
                     config.setIsAppConfig("0");
                 }
+                if (StringUtils.isBlank(config.getConfigValueType()))
+                {
+                    config.setConfigValueType("TEXT");
+                }
                 config.setCreateBy(operator);
                 rows += configMapper.insertConfig(config);
             }
@@ -208,7 +225,7 @@ public class SysConfigServiceImpl implements ISysConfigService
 
         if (rows > 0)
         {
-            resetConfigCache();
+            refreshConfigCacheAsync();
         }
         return rows;
     }
@@ -232,7 +249,7 @@ public class SysConfigServiceImpl implements ISysConfigService
             }
             configMapper.deleteConfigById(configId);
         }
-        resetConfigCache();
+        refreshConfigCacheAsync();
     }
 
     /**
@@ -315,6 +332,21 @@ public class SysConfigServiceImpl implements ISysConfigService
     {
         clearConfigCache();
         loadingConfigCache();
+    }
+
+    private void refreshConfigCacheAsync()
+    {
+        CompletableFuture.runAsync(() ->
+        {
+            try
+            {
+                resetConfigCache();
+            }
+            catch (Exception ignored)
+            {
+                // 缓存重建失败不影响参数主流程（数据库已成功）
+            }
+        });
     }
 
     /**

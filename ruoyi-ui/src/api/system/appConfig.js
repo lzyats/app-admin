@@ -24,12 +24,13 @@ export function getConfigRecordByKey(configKey) {
   return listConfig({ pageNum: 1, pageSize: 1, configKey })
 }
 
-export function saveConfigByKey({ configId, configName, configKey, configValue, remark }) {
+export function saveConfigByKey({ configId, configName, configKey, configValue, configValueType, remark }) {
   const payload = {
     configId,
     configName,
     configKey,
     configValue,
+    configValueType: configValueType || 'TEXT',
     configType: 'N',
     remark
   }

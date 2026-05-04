@@ -7,11 +7,13 @@ class CurrencyBrandBadge extends StatelessWidget {
     required this.currencyType,
     this.size = 52,
     this.usePurpleVariant = false,
+    this.useUnionPayForCny = false,
   });
 
   final String currencyType;
   final double size;
   final bool usePurpleVariant;
+  final bool useUnionPayForCny;
 
   bool get _isUsd => currencyType.toUpperCase() == 'USD';
 
@@ -20,10 +22,12 @@ class CurrencyBrandBadge extends StatelessWidget {
     final bool isUsd = _isUsd;
     final Color primary = isUsd ? const Color(0xFF2FD28F) : const Color(0xFF2D7BFF);
     final Color secondary = isUsd ? const Color(0xFF0E9F65) : const Color(0xFF184CB8);
-    final String imagePath = AppImages.currencyBrand(
-      currencyType,
-      usePurpleVariant: usePurpleVariant,
-    );
+    final String imagePath = (!isUsd && useUnionPayForCny)
+        ? AppImages.unionPay
+        : AppImages.currencyBrand(
+            currencyType,
+            usePurpleVariant: usePurpleVariant,
+          );
 
     return Container(
       width: size,

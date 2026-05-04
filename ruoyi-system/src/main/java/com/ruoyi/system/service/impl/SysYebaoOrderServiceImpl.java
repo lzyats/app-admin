@@ -183,6 +183,13 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
     @Transactional(rollbackFor = Exception.class)
     public int purchase(Long userId, Integer shares, String remark)
     {
+        return purchase(userId, shares, remark, null);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public int purchase(Long userId, Integer shares, String remark, String clientReqNo)
+    {
         if (userId == null || userId <= 0)
         {
             throw new ServiceException("User ID cannot be empty");
@@ -190,6 +197,14 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
         if (shares == null || shares <= 0)
         {
             throw new ServiceException("Shares must be greater than 0");
+        }
+        if (StringUtils.isNotBlank(clientReqNo))
+        {
+            SysYebaoOrder existing = orderMapper.selectYebaoOrderByUserAndClientReqNo(userId, clientReqNo.trim());
+            if (existing != null)
+            {
+                return 1;
+            }
         }
         SysYebaoConfig config = yebaoConfigService.selectCurrentYebaoConfig();
         if (config == null)
@@ -224,6 +239,7 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
         Date now = new Date();
         SysYebaoOrder order = new SysYebaoOrder();
         order.setOrderNo(orderNo);
+        order.setClientReqNo(StringUtils.isBlank(clientReqNo) ? null : clientReqNo.trim());
         order.setUserId(userId);
         order.setUserName(SecurityUtils.getUsername());
         order.setShares(shares);
@@ -380,11 +396,20 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
         {
             return 0;
         }
+        SysYebaoOrder lockedOrder = orderMapper.selectYebaoOrderByIdForUpdate(order.getOrderId());
+        if (lockedOrder == null || !"0".equals(lockedOrder.getStatus()))
+        {
+            return 0;
+        }
         Date now = new Date();
-        Date lastSettleTime = order.getLastSettleTime() == null ? order.getInvestTime() : order.getLastSettleTime();
+        if (lockedOrder.getNextSettleTime() != null && now.before(lockedOrder.getNextSettleTime()))
+        {
+            return 0;
+        }
+        Date lastSettleTime = lockedOrder.getLastSettleTime() == null ? lockedOrder.getInvestTime() : lockedOrder.getLastSettleTime();
         if (lastSettleTime == null)
         {
-            lastSettleTime = order.getCreateTime() == null ? now : order.getCreateTime();
+            lastSettleTime = lockedOrder.getCreateTime() == null ? now : lockedOrder.getCreateTime();
         }
         long diffMillis = now.getTime() - lastSettleTime.getTime();
         long settleDays = diffMillis / MILLIS_PER_DAY;
@@ -393,8 +418,8 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
             return 0;
         }
 
-        BigDecimal principal = bd(order.getPrincipalAmount());
-        BigDecimal annualRate = bd(order.getAnnualRate());
+        BigDecimal principal = bd(lockedOrder.getPrincipalAmount());
+        BigDecimal annualRate = bd(lockedOrder.getAnnualRate());
         BigDecimal income = principal
                 .multiply(annualRate)
                 .divide(BigDecimal.valueOf(100), 8, RoundingMode.DOWN)
@@ -402,7 +427,7 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
                 .divide(BigDecimal.valueOf(365), 2, RoundingMode.DOWN);
         if (isYebaoLevelBonusEnabled())
         {
-            BigDecimal bonusPercent = resolveInvestBonusPercent(order.getUserId());
+            BigDecimal bonusPercent = resolveInvestBonusPercent(lockedOrder.getUserId());
             if (bonusPercent.compareTo(BigDecimal.ZERO) > 0)
             {
                 BigDecimal multiplier = BigDecimal.ONE.add(bonusPercent.divide(BigDecimal.valueOf(100), 8, RoundingMode.DOWN));
@@ -417,36 +442,36 @@ public class SysYebaoOrderServiceImpl implements ISysYebaoOrderService
         {
             // 计算本次结算应增加的成长值（成长值总账仍为整数，按向下取整入账）
             Long growthValueToAdd = yebaoConfig.getGrowthValuePerUnit()
-                    .multiply(BigDecimal.valueOf(order.getShares()))
+                    .multiply(BigDecimal.valueOf(lockedOrder.getShares()))
                     .setScale(0, RoundingMode.DOWN)
                     .longValue();
             if (growthValueToAdd > 0) {
                 // 调用成长值服务增加用户成长值
                 growthValueService.increaseGrowthValue(
-                        order.getUserId(),
+                        lockedOrder.getUserId(),
                         growthValueToAdd,
                         "yebao_settlement", // 来源类型
-                        order.getOrderId(),  // 来源ID
-                        order.getOrderNo(),  // 来源单号
+                        lockedOrder.getOrderId(),  // 来源ID
+                        lockedOrder.getOrderNo(),  // 来源单号
                         "余额宝结算增加成长值" // 备注
                 );
             }
         }
 
         Date periodEndTime = new Date(lastSettleTime.getTime() + settleDays * MILLIS_PER_DAY);
-        order.setSettledIncome(scale2(bd(order.getSettledIncome()).add(income).doubleValue()));
-        order.setLastSettleTime(periodEndTime);
-        order.setNextSettleTime(new Date(periodEndTime.getTime() + MILLIS_PER_DAY));
-        order.setUpdateBy("system");
-        orderMapper.updateYebaoOrder(order);
+        lockedOrder.setSettledIncome(scale2(bd(lockedOrder.getSettledIncome()).add(income).doubleValue()));
+        lockedOrder.setLastSettleTime(periodEndTime);
+        lockedOrder.setNextSettleTime(new Date(periodEndTime.getTime() + MILLIS_PER_DAY));
+        lockedOrder.setUpdateBy("system");
+        orderMapper.updateYebaoOrder(lockedOrder);
 
         SysYebaoIncomeLog log = new SysYebaoIncomeLog();
         log.setIncomeNo(buildNo("YI"));
-        log.setOrderId(order.getOrderId());
-        log.setOrderNo(order.getOrderNo());
-        log.setUserId(order.getUserId());
-        log.setUserName(order.getUserName());
-        log.setShares(order.getShares());
+        log.setOrderId(lockedOrder.getOrderId());
+        log.setOrderNo(lockedOrder.getOrderNo());
+        log.setUserId(lockedOrder.getUserId());
+        log.setUserName(lockedOrder.getUserName());
+        log.setShares(lockedOrder.getShares());
         log.setPrincipalAmount(scale2(principal.doubleValue()));
         log.setAnnualRate(scale2(annualRate.doubleValue()));
         log.setSettleDays((int) settleDays);

@@ -1,6 +1,7 @@
 package com.ruoyi.system.domain;
 
 import java.math.BigDecimal;
+import java.util.Date;
 import com.ruoyi.common.core.domain.BaseEntity;
 
 public class SysInvestProduct extends BaseEntity
@@ -13,6 +14,10 @@ public class SysInvestProduct extends BaseEntity
     private String currency;
     private String cardTheme;
     private String riskTag;
+    private String coverImage;
+    private String galleryImages;
+    private String productContent;
+    private String tradeRuleContent;
     private BigDecimal singleRate;
     private BigDecimal groupRate;
     private Integer cycleDays;
@@ -21,10 +26,14 @@ public class SysInvestProduct extends BaseEntity
     private Integer interestStageCount;
     private Integer principalStageCount;
     private String stageConfigJson;
+    private String investMode;
     private BigDecimal minInvestAmount;
     private BigDecimal maxInvestAmount;
     private Long totalShares;
     private Long soldShares;
+    private BigDecimal totalAmount;
+    private BigDecimal soldAmount;
+    private BigDecimal progressPercent;
     private BigDecimal pointPerUnit;
     private BigDecimal growthPerUnit;
     private BigDecimal redPacketPerUnit;
@@ -34,6 +43,8 @@ public class SysInvestProduct extends BaseEntity
     private String autoGroup;
     private Integer limitLevel;
     private Integer limitTimes;
+    private Date startTime;
+    private Date endTime;
     private String status;
     private Long[] tagIds;
 
@@ -95,6 +106,46 @@ public class SysInvestProduct extends BaseEntity
     public void setRiskTag(String riskTag)
     {
         this.riskTag = riskTag;
+    }
+
+    public String getCoverImage()
+    {
+        return coverImage;
+    }
+
+    public void setCoverImage(String coverImage)
+    {
+        this.coverImage = coverImage;
+    }
+
+    public String getGalleryImages()
+    {
+        return galleryImages;
+    }
+
+    public void setGalleryImages(String galleryImages)
+    {
+        this.galleryImages = galleryImages;
+    }
+
+    public String getProductContent()
+    {
+        return productContent;
+    }
+
+    public void setProductContent(String productContent)
+    {
+        this.productContent = productContent;
+    }
+
+    public String getTradeRuleContent()
+    {
+        return tradeRuleContent;
+    }
+
+    public void setTradeRuleContent(String tradeRuleContent)
+    {
+        this.tradeRuleContent = tradeRuleContent;
     }
 
     public BigDecimal getSingleRate()
@@ -182,6 +233,16 @@ public class SysInvestProduct extends BaseEntity
         return minInvestAmount;
     }
 
+    public String getInvestMode()
+    {
+        return investMode;
+    }
+
+    public void setInvestMode(String investMode)
+    {
+        this.investMode = investMode;
+    }
+
     public void setMinInvestAmount(BigDecimal minInvestAmount)
     {
         this.minInvestAmount = minInvestAmount;
@@ -215,6 +276,36 @@ public class SysInvestProduct extends BaseEntity
     public void setSoldShares(Long soldShares)
     {
         this.soldShares = soldShares;
+    }
+
+    public BigDecimal getProgressPercent()
+    {
+        return progressPercent;
+    }
+
+    public BigDecimal getTotalAmount()
+    {
+        return totalAmount;
+    }
+
+    public void setTotalAmount(BigDecimal totalAmount)
+    {
+        this.totalAmount = totalAmount;
+    }
+
+    public BigDecimal getSoldAmount()
+    {
+        return soldAmount;
+    }
+
+    public void setSoldAmount(BigDecimal soldAmount)
+    {
+        this.soldAmount = soldAmount;
+    }
+
+    public void setProgressPercent(BigDecimal progressPercent)
+    {
+        this.progressPercent = progressPercent;
     }
 
     public BigDecimal getPointPerUnit()
@@ -305,6 +396,26 @@ public class SysInvestProduct extends BaseEntity
     public void setLimitTimes(Integer limitTimes)
     {
         this.limitTimes = limitTimes;
+    }
+
+    public Date getStartTime()
+    {
+        return startTime;
+    }
+
+    public void setStartTime(Date startTime)
+    {
+        this.startTime = startTime;
+    }
+
+    public Date getEndTime()
+    {
+        return endTime;
+    }
+
+    public void setEndTime(Date endTime)
+    {
+        this.endTime = endTime;
     }
 
     public String getStatus()

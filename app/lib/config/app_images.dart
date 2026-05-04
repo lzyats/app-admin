@@ -11,12 +11,15 @@ class AppImages {
   static const String signSuccess = 'assets/images/sign-success.webp';
   static const String inviteTitle = 'assets/images/invite_friend_title.webp';
   static const String teamRewardBanner = 'assets/images/team_reward_banner.webp';
+  static const String investCardBg = 'assets/images/bg.webp';
+  static const String investToken = 'assets/images/t.webp';
+  static const String investContractStamp = 'assets/images/2.webp';
 
   static String currencyBrand(String currencyType, {bool usePurpleVariant = false}) {
     final String code = currencyType.toUpperCase();
-    if (code == 'USD') {
+    if (code == 'USD' || code == 'USDT') {
       return usePurpleVariant ? usdtPurple : usdt;
     }
-    return usePurpleVariant ? rmbPurple : unionPay;
+    return usePurpleVariant ? rmbPurple : rmb;
   }
 }

@@ -528,6 +528,8 @@ class AppConfigOptionItem {
   static const String yebaoRedeemAfter24h = 'app.yebao.redeemAfter24h';
   static const String signRewardType = 'app.sign.rewardType';
   static const String signRewardAmount = 'app.sign.rewardAmount';
+  static const String htimg1 = 'app.htimg1';
+  static const String htimg2 = 'app.htimg2';
 
   @Deprecated('Use supportRmbToUsd')
   static const String supportRmbToUsdExchange = supportRmbToUsd;
@@ -553,6 +555,8 @@ class AppConfigOptionItem {
     yebaoRedeemAfter24h,
     signRewardType,
     signRewardAmount,
+    htimg1,
+    htimg2,
   ];
 }
 
@@ -650,6 +654,18 @@ class AppConfigOptionItemMeta {
       configKey: 'app.sign.rewardAmount',
       name: 'Sign reward amount',
       defaultValue: 1.0,
+    ),
+    AppConfigOptionItemMeta(
+      item: AppConfigOptionItem.htimg1,
+      configKey: 'app.htimg1',
+      name: 'Invest Contract Stamp 1',
+      defaultValue: '',
+    ),
+    AppConfigOptionItemMeta(
+      item: AppConfigOptionItem.htimg2,
+      configKey: 'app.htimg2',
+      name: 'Invest Contract Stamp 2',
+      defaultValue: '',
     ),
   ];
 }

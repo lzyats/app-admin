@@ -136,6 +136,7 @@ class AuthUserProfile {
     required this.userId,
     required this.username,
     required this.nickName,
+    this.realName,
     this.balance,
     this.usdBalance,
     this.usdExchangeQuota,
@@ -159,6 +160,7 @@ class AuthUserProfile {
   final int userId;
   final String username;
   final String nickName;
+  final String? realName;
   final String? balance;
   final String? usdBalance;
   final String? usdExchangeQuota;
@@ -184,6 +186,7 @@ class AuthUserProfile {
     int? userId,
     String? username,
     String? nickName,
+    String? realName,
     String? balance,
     String? usdBalance,
     String? usdExchangeQuota,
@@ -207,6 +210,7 @@ class AuthUserProfile {
       userId: userId ?? this.userId,
       username: username ?? this.username,
       nickName: nickName ?? this.nickName,
+      realName: realName ?? this.realName,
       balance: balance ?? this.balance,
       usdBalance: usdBalance ?? this.usdBalance,
       usdExchangeQuota: usdExchangeQuota ?? this.usdExchangeQuota,
@@ -233,6 +237,7 @@ class AuthUserProfile {
       'userId': userId,
       'userName': username,
       'nickName': nickName,
+      if (realName != null) 'realName': realName,
       if (balance != null) 'balance': balance,
       if (usdBalance != null) 'usdBalance': usdBalance,
       if (usdExchangeQuota != null) 'usdExchangeQuota': usdExchangeQuota,
@@ -266,6 +271,10 @@ class AuthUserProfile {
       userId: _getIntValue(user?['userId'] ?? json['userId']),
       username: _getStringValue(user?['userName'] ?? json['userName']),
       nickName: _getStringValue(user?['nickName'] ?? json['nickName']),
+      realName: _getStringValue(
+        user?['realName'] ?? user?['real_name'] ?? json['realName'] ?? json['real_name'],
+        allowEmpty: true,
+      ),
       balance: _getStringValue(user?['balance'] ?? json['balance'],
           allowEmpty: true),
       usdBalance: _getStringValue(user?['usdBalance'] ?? json['usdBalance'],
@@ -650,6 +659,16 @@ class AuthApi {
         'answers': answers.map((a) => a.toJson()).toList(),
       },
       encrypt: true,
+    );
+  }
+
+  static Future<ApiResponse<dynamic>> setPayPasswordWithSecurityQuestions({
+    required String newPassword,
+    required List<SecurityAnswerBody> answers,
+  }) async {
+    return updatePayPasswordWithSecurityQuestions(
+      newPassword: newPassword,
+      answers: answers,
     );
   }
 

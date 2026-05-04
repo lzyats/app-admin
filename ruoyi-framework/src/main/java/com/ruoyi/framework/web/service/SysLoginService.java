@@ -151,6 +151,7 @@ public class SysLoginService
         u.put("userId", user.getUserId());
         u.put("userName", user.getUserName());
         u.put("nickName", user.getNickName());
+        u.put("realName", user.getRealName());
         u.put("avatar", user.getAvatar());
         u.put("email", user.getEmail());
         u.put("phonenumber", user.getPhonenumber());

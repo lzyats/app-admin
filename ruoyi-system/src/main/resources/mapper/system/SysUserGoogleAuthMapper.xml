@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysUserGoogleAuthMapper">
+
+    <resultMap id="GoogleAuthResult" type="com.ruoyi.system.domain.SysUserGoogleAuth">
+        <id property="userId" column="user_id"/>
+        <result property="secret" column="secret"/>
+        <result property="enabled" column="enabled"/>
+        <result property="bindTime" column="bind_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="selectByUserId" resultMap="GoogleAuthResult">
+        select user_id, secret, enabled, bind_time, update_time
+        from sys_user_google_auth
+        where user_id = #{userId}
+        limit 1
+    </select>
+
+    <insert id="upsert">
+        insert into sys_user_google_auth(user_id, secret, enabled, bind_time, update_time)
+        values(#{userId}, #{secret}, #{enabled}, now(), now())
+        on duplicate key update
+                                secret = values(secret),
+                                enabled = values(enabled),
+                                bind_time = case when values(enabled) = 1 then now() else bind_time end,
+                                update_time = now()
+    </insert>
+
+    <delete id="deleteByUserId">
+        delete from sys_user_google_auth where user_id = #{userId}
+    </delete>
+</mapper>

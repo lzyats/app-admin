@@ -268,11 +268,15 @@ class YebaoApi {
 
   static Future<void> purchase({
     required int shares,
+    required String payPwd,
   }) async {
+    final String clientReqNo = 'YB_REQ_${DateTime.now().microsecondsSinceEpoch}_$shares';
     await HttpClient.post(
       RuoYiEndpoints.appYebaoPurchase,
       data: <String, dynamic>{
         'shares': shares,
+        'payPwd': payPwd,
+        'clientReqNo': clientReqNo,
       },
       encrypt: true,
       retry: false,

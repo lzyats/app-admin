@@ -179,8 +179,14 @@ class _WithdrawPageState extends State<WithdrawPage> {
 
   Future<void> _submit() async {
     final AppLocalizations i18n = AppLocalizations.of(context);
-    final double? amount = double.tryParse(_amountController.text.trim());
-    if (amount == null || amount <= 0) {
+    final String rawAmount = _amountController.text.trim().replaceAll(',', '');
+    final double? parsedAmount = double.tryParse(rawAmount);
+    if (parsedAmount == null || parsedAmount <= 0) {
+      _showSnackBar(i18n.t('withdrawNeedAmount'), error: true);
+      return;
+    }
+    final double amount = double.parse(parsedAmount.toStringAsFixed(2));
+    if (amount <= 0) {
       _showSnackBar(i18n.t('withdrawNeedAmount'), error: true);
       return;
     }
@@ -388,6 +394,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
                                 CurrencyBrandBadge(
                                   currencyType: option.currencyType,
                                   size: 54,
+                                  useUnionPayForCny: true,
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(
@@ -701,6 +708,7 @@ class _WithdrawPageState extends State<WithdrawPage> {
               child: CurrencyBrandBadge(
                 currencyType: _selectedCurrencyType,
                 size: 52,
+                useUnionPayForCny: true,
               ),
             ),
             const SizedBox(width: 14),
@@ -939,6 +947,7 @@ class _AccountPickerSheet extends StatelessWidget {
                               child: CurrencyBrandBadge(
                                 currencyType: currencyType,
                                 size: 44,
+                                useUnionPayForCny: true,
                               ),
                             ),
                             const SizedBox(width: 12),

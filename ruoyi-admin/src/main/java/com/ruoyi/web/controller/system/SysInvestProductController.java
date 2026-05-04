@@ -67,4 +67,12 @@ public class SysInvestProductController extends BaseController
     {
         return toAjax(productService.deleteInvestProductByIds(productIds));
     }
+
+    @PreAuthorize("@ss.hasPermi('system:invest:add')")
+    @Log(title = "投资产品", businessType = BusinessType.INSERT)
+    @PostMapping("/copy/{productId}")
+    public AjaxResult copy(@PathVariable Long productId)
+    {
+        return toAjax(productService.copyInvestProduct(productId, getUsername()));
+    }
 }

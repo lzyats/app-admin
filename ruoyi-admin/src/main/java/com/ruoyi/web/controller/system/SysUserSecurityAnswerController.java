@@ -127,10 +127,11 @@ public class SysUserSecurityAnswerController extends BaseController
      * 通过安全问题更新登录密码。
      */
     @PostMapping("/updatePwd")
-    public AjaxResult updatePasswordBySecurity(@RequestBody UpdatePwdBySecurityBody body)
+    public AjaxResult updatePasswordBySecurity(@RequestBody(required = false) Object body)
     {
-        String newPassword = StringUtils.trim(body.getNewPassword());
-        List<SecurityAnswerBody> answers = body.getAnswers();
+        UpdatePwdBySecurityBody request = parseUpdatePwdBody(body);
+        String newPassword = StringUtils.trim(request.getNewPassword());
+        List<SecurityAnswerBody> answers = request.getAnswers();
 
         if (StringUtils.isEmpty(newPassword))
         {
@@ -178,10 +179,11 @@ public class SysUserSecurityAnswerController extends BaseController
      * 通过安全问题更新支付密码。
      */
     @PostMapping("/updatePayPwd")
-    public AjaxResult updatePayPasswordBySecurity(@RequestBody UpdatePwdBySecurityBody body)
+    public AjaxResult updatePayPasswordBySecurity(@RequestBody(required = false) Object body)
     {
-        String newPassword = StringUtils.trim(body.getNewPassword());
-        List<SecurityAnswerBody> answers = body.getAnswers();
+        UpdatePwdBySecurityBody request = parseUpdatePwdBody(body);
+        String newPassword = StringUtils.trim(request.getNewPassword());
+        List<SecurityAnswerBody> answers = request.getAnswers();
 
         if (StringUtils.isEmpty(newPassword))
         {
@@ -313,6 +315,53 @@ public class SysUserSecurityAnswerController extends BaseController
             }
         }
         return List.of();
+    }
+
+    private UpdatePwdBySecurityBody parseUpdatePwdBody(Object body)
+    {
+        if (body == null)
+        {
+            return new UpdatePwdBySecurityBody();
+        }
+        if (body instanceof UpdatePwdBySecurityBody requestBody)
+        {
+            return requestBody;
+        }
+        if (body instanceof Map<?, ?> map)
+        {
+            Object dataNode = map.get("data");
+            if (dataNode instanceof String cipherText && StringUtils.isNotBlank(cipherText))
+            {
+                try
+                {
+                    String plainJson = apiCryptoService.decryptText(cipherText);
+                    if (StringUtils.isNotBlank(plainJson))
+                    {
+                        return objectMapper.readValue(plainJson, UpdatePwdBySecurityBody.class);
+                    }
+                }
+                catch (Exception ignored)
+                {
+                    // ignore and fallback to plain map parse
+                }
+            }
+            try
+            {
+                return objectMapper.convertValue(new LinkedHashMap<>(map), UpdatePwdBySecurityBody.class);
+            }
+            catch (Exception ignored)
+            {
+                return new UpdatePwdBySecurityBody();
+            }
+        }
+        try
+        {
+            return objectMapper.convertValue(body, UpdatePwdBySecurityBody.class);
+        }
+        catch (Exception ignored)
+        {
+            return new UpdatePwdBySecurityBody();
+        }
     }
 
     private List<SysUserSecurityAnswer> convertAnswerList(List<?> source)

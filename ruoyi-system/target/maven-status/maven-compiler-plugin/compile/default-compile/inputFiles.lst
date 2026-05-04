@@ -23,6 +23,7 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysTeamLevel.jav
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysTeamStatEvent.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysTeamStatUser.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysUserBankCard.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysUserGoogleAuth.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysUserLevel.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysUserMiner.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysUserMinerRun.java
@@ -38,6 +39,7 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysYebaoIncomeLo
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysYebaoOrder.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\vo\MetaVo.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\vo\RouterVo.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysAppInvestOrderMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysAppRealNameAuthMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysConfigMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysCouponTemplateMapper.java
@@ -65,6 +67,7 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysSecurityQuest
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysTeamLevelMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysTeamStatMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysUserBankCardMapper.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysUserGoogleAuthMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysUserGrowthLogMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysUserLevelMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysUserMapper.java
@@ -93,7 +96,9 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysCouponT
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDeptServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDictDataServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDictTypeServiceImpl.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysGoogleAuthServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysGrowthValueServiceImpl.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysInvestOrderServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysInvestProductServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysInvestTagServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysLevelTrialTemplateServiceImpl.java
@@ -136,7 +141,9 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysCouponTempl
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDeptService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDictDataService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDictTypeService.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysGoogleAuthService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysGrowthValueService.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysInvestOrderService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysInvestProductService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysInvestTagService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysLevelTrialTemplateService.java

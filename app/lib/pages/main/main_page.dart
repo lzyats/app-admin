@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/pages/mine/miner_page.dart';
+import 'package:myapp/pages/product/invest_product_list_page.dart';
 import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/tools/auth_tool.dart';
 import 'package:myapp/widgets/app_network_image.dart';
@@ -41,8 +42,7 @@ class _MainPageState extends State<MainPage> {
       case 0:
         return _buildPlaceholder(i18n.t('tabHome'), Icons.home_rounded);
       case 1:
-        return _buildPlaceholder(
-            i18n.t('tabProduct'), Icons.calendar_view_month_rounded);
+        return const InvestProductListPage();
       case 2:
         return const MinerPage();
       case 3:
@@ -519,8 +519,9 @@ class _MineTabState extends State<_MineTab> {
                                 icon: Icons.trending_up_outlined,
                                 iconColor: const Color(0xFF9DB1C9),
                                 label: i18n.t('mineMyInvest'),
-                                onTap: () => _showComingSoonSnackBar(
-                                    context, i18n.t('mineFeatureComingSoon')),
+                                onTap: () {
+                                  Navigator.pushNamed(context, AppRouter.myInvestOrders);
+                                },
                               ),
                               _MineShortcutItem(
                                 icon: Icons.confirmation_num_outlined,

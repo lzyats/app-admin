@@ -150,7 +150,18 @@ public class SysAppRealNameAuthServiceImpl implements ISysAppRealNameAuthService
         {
             return;
         }
-        userService.updateUserRealNameStatus(userId, resolveUserRealNameStatus(authStatus));
+        int userRealNameStatus = resolveUserRealNameStatus(authStatus);
+        if (authStatus != null && (authStatus == 1 || authStatus == 3))
+        {
+            SysAppRealNameAuth latest = authMapper.selectAuthByUserId(userId);
+            String realName = latest == null ? null : latest.getRealName();
+            if (realName != null && !realName.trim().isEmpty())
+            {
+                userService.updateUserVerifiedRealName(userId, realName.trim(), userRealNameStatus);
+                return;
+            }
+        }
+        userService.updateUserRealNameStatus(userId, userRealNameStatus);
     }
 
     private int resolveUserRealNameStatus(Integer authStatus)

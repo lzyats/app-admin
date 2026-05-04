@@ -47,6 +47,18 @@ class AccountChangeRecordsPage extends StatelessWidget {
               child: Column(
                 children: <Widget>[
                   _buildMenuItem(
+                    icon: Icons.receipt_long_outlined,
+                    iconColor: const Color(0xFF39E6FF),
+                    label: isZh ? '所有账变' : 'All Records',
+                    onTap: () {
+                      Navigator.pushNamed(
+                        context,
+                        AppRouter.accountAllRecords,
+                      );
+                    },
+                  ),
+                  _buildDivider(),
+                  _buildMenuItem(
                     icon: Icons.account_balance_wallet_outlined,
                     iconColor: const Color(0xFF38FFB3),
                     label: isZh ? '充值记录' : 'Recharge Records',
@@ -87,7 +99,10 @@ class AccountChangeRecordsPage extends StatelessWidget {
                     iconColor: const Color(0xFF9DB1C9),
                     label: isZh ? '投资记录' : 'Investment Records',
                     onTap: () {
-                      _showComingSoon(context);
+                      Navigator.pushNamed(
+                        context,
+                        AppRouter.accountInvestRecords,
+                      );
                     },
                   ),
                   _buildDivider(),
@@ -187,4 +202,3 @@ class AccountChangeRecordsPage extends StatelessWidget {
     );
   }
 }
-

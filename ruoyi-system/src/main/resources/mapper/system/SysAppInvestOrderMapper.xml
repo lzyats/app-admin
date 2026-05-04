@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysAppInvestOrderMapper">
+
+    <insert id="insertInvestOrder">
+        insert into sys_invest_order
+        (order_no, client_req_no, user_id, user_name, product_id, product_name, currency, group_mode, invest_amount,
+         single_rate, group_rate, effective_rate, cycle_days, expected_income, contract_no,
+         status, create_by, create_time, remark)
+        values
+        (#{orderNo}, #{clientReqNo}, #{userId}, #{userName}, #{productId}, #{productName}, #{currency}, #{groupMode}, #{investAmount},
+         #{singleRate}, #{groupRate}, #{effectiveRate}, #{cycleDays}, #{expectedIncome}, #{contractNo},
+         '0', #{createBy}, now(), #{remark})
+    </insert>
+
+    <insert id="insertContractSign">
+        insert into sys_invest_contract_sign
+        (contract_no, order_no, user_id, product_id, contract_text, signature_data, agreed, sign_time,
+         status, create_by, create_time)
+        values
+        (#{contractNo}, #{orderNo}, #{userId}, #{productId}, #{contractText}, #{signatureData}, #{agreed}, #{signTime},
+         '1', #{createBy}, now())
+    </insert>
+
+    <insert id="insertOrderPlan">
+        insert into sys_invest_order_plan
+        (order_id, product_id, user_id, plan_type, stage_no, plan_time, plan_rate, plan_amount,
+         status, create_time, remark)
+        values
+        (#{orderId}, #{productId}, #{userId}, #{planType}, #{stageNo}, #{planTime}, #{planRate}, #{planAmount},
+         '0', now(), #{remark})
+    </insert>
+
+    <select id="selectInvestOrderIdByOrderNo" resultType="long">
+        select order_id
+        from sys_invest_order
+        where order_no = #{orderNo}
+        limit 1
+    </select>
+
+    <select id="countUserInvestOrderByProduct" resultType="int">
+        select count(1)
+        from sys_invest_order
+        where user_id = #{userId}
+          and product_id = #{productId}
+          and status in ('0', '1')
+    </select>
+
+    <select id="selectOrderByUserAndClientReqNo" resultType="map">
+        select order_no as orderNo, contract_no as contractNo, create_time as createTime
+        from sys_invest_order
+        where user_id = #{userId}
+          and client_req_no = #{clientReqNo}
+        limit 1
+    </select>
+
+    <select id="selectLatestValidContractSign" resultType="map">
+        select sign_id as signId, signature_data as signatureData, agreed, sign_time as signTime
+        from sys_invest_contract_sign
+        where user_id = #{userId}
+          and product_id = #{productId}
+          and status = '1'
+          and agreed = '1'
+        order by sign_time desc, sign_id desc
+        limit 1
+    </select>
+
+    <select id="selectAppInvestOrderList" resultType="map">
+        select order_id as orderId,
+               order_no as orderNo,
+               product_id as productId,
+               product_name as productName,
+               currency,
+               invest_amount as investAmount,
+               effective_rate as effectiveRate,
+               expected_income as expectedIncome,
+               cycle_days as cycleDays,
+               status,
+               create_time as createTime,
+               date_add(create_time, interval ifnull(cycle_days, 0) day) as endTime
+        from sys_invest_order
+        where user_id = #{userId}
+        <if test="tab == 'running'">
+            and status = '0'
+            and date_add(create_time, interval ifnull(cycle_days, 0) day) &gt; now()
+        </if>
+        <if test="tab == 'ended'">
+            and (status = '1' or date_add(create_time, interval ifnull(cycle_days, 0) day) &lt;= now())
+        </if>
+        order by create_time desc
+    </select>
+
+    <select id="selectAppInvestOrderStat" resultType="map">
+        select count(1) as totalCount,
+               sum(case when status = '0' and date_add(create_time, interval ifnull(cycle_days, 0) day) &gt; now() then 1 else 0 end) as runningCount,
+               sum(case when status = '1' or date_add(create_time, interval ifnull(cycle_days, 0) day) &lt;= now() then 1 else 0 end) as endedCount
+        from sys_invest_order
+        where user_id = #{userId}
+    </select>
+
+    <select id="selectAppInvestIncomeLogs" resultType="map">
+        select p.plan_id as planId,
+               o.order_no as orderNo,
+               o.product_name as productName,
+               o.currency,
+               p.plan_type as planType,
+               p.plan_amount as planAmount,
+               p.status,
+               p.plan_time as planTime,
+               p.exec_time as execTime,
+               p.update_time as updateTime
+        from sys_invest_order_plan p
+                 left join sys_invest_order o on o.order_id = p.order_id
+        where p.user_id = #{userId}
+          and p.plan_type = 'INTEREST'
+        order by p.plan_time desc, p.plan_id desc
+    </select>
+
+    <select id="selectAppInvestIncomeSummary" resultType="map">
+        select sum(case when p.plan_type = 'INTEREST' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedInterest,
+               sum(case when p.plan_type = 'INTEREST' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingInterest,
+               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedPrincipal,
+               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingPrincipal
+        from sys_invest_order_plan p
+        where p.user_id = #{userId}
+    </select>
+
+    <select id="selectAppInvestIncomeSummaryByCurrency" resultType="map">
+        select o.currency,
+               sum(case when p.plan_type = 'INTEREST' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedInterest,
+               sum(case when p.plan_type = 'INTEREST' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingInterest,
+               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedPrincipal,
+               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingPrincipal
+        from sys_invest_order_plan p
+                 left join sys_invest_order o on o.order_id = p.order_id
+        where p.user_id = #{userId}
+        group by o.currency
+    </select>
+
+    <select id="selectAdminInvestOrderList" resultType="map">
+        select order_id as orderId,
+               order_no as orderNo,
+               user_id as userId,
+               user_name as userName,
+               product_id as productId,
+               product_name as productName,
+               currency,
+               invest_amount as investAmount,
+               effective_rate as effectiveRate,
+               expected_income as expectedIncome,
+               cycle_days as cycleDays,
+               status,
+               create_time as createTime,
+               date_add(create_time, interval ifnull(cycle_days, 0) day) as endTime,
+               remark
+        from sys_invest_order
+        where 1 = 1
+        <if test="orderNo != null and orderNo != ''">
+            and order_no like concat('%', #{orderNo}, '%')
+        </if>
+        <if test="userId != null and userId > 0">
+            and user_id = #{userId}
+        </if>
+        <if test="userName != null and userName != ''">
+            and user_name like concat('%', #{userName}, '%')
+        </if>
+        <if test="productName != null and productName != ''">
+            and product_name like concat('%', #{productName}, '%')
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        order by order_id desc
+    </select>
+
+    <select id="selectAdminInvestOrderById" resultType="map">
+        select order_id as orderId,
+               order_no as orderNo,
+               user_id as userId,
+               user_name as userName,
+               product_id as productId,
+               product_name as productName,
+               currency,
+               invest_amount as investAmount,
+               effective_rate as effectiveRate,
+               expected_income as expectedIncome,
+               cycle_days as cycleDays,
+               status,
+               create_time as createTime,
+               update_time as updateTime,
+               remark
+        from sys_invest_order
+        where order_id = #{orderId}
+        limit 1
+    </select>
+
+    <select id="selectOrderPlansByOrderId" resultType="map">
+        select plan_id as planId,
+               order_id as orderId,
+               user_id as userId,
+               plan_type as planType,
+               stage_no as stageNo,
+               plan_time as planTime,
+               plan_rate as planRate,
+               plan_amount as planAmount,
+               status,
+               exec_time as execTime,
+               remark
+        from sys_invest_order_plan
+        where order_id = #{orderId}
+        order by stage_no asc, plan_id asc
+    </select>
+
+    <select id="selectInvestOrderByIdForUpdate" resultType="map">
+        select *
+        from sys_invest_order
+        where order_id = #{orderId}
+        limit 1
+            for update
+    </select>
+
+    <select id="selectPendingPlansByOrderId" resultType="map">
+        select *
+        from sys_invest_order_plan
+        where order_id = #{orderId}
+          and status = '0'
+        order by plan_time asc, plan_id asc
+    </select>
+
+    <update id="cancelPendingPlansByOrderId">
+        update sys_invest_order_plan
+        set status = '2',
+            update_time = now(),
+            remark = case
+                        when #{remark} is null or #{remark} = '' then remark
+                        else #{remark}
+                end
+        where order_id = #{orderId}
+          and status = '0'
+    </update>
+
+    <update id="updateInvestOrderStatus">
+        update sys_invest_order
+        set status = #{status},
+            update_by = #{updateBy},
+            update_time = now(),
+            remark = case
+                        when #{remark} is null or #{remark} = '' then remark
+                        else #{remark}
+                end
+        where order_id = #{orderId}
+    </update>
+
+    <update id="updatePlanStatus">
+        update sys_invest_order_plan
+        set status = #{status},
+            exec_time = #{execTime},
+            update_time = now(),
+            remark = case
+                        when #{remark} is null or #{remark} = '' then remark
+                        else #{remark}
+                end
+        where plan_id = #{planId}
+    </update>
+
+    <select id="countPendingPlanByOrderId" resultType="int">
+        select count(1)
+        from sys_invest_order_plan
+        where order_id = #{orderId}
+          and status = '0'
+    </select>
+
+    <select id="selectDuePlans" resultType="map">
+        select p.plan_id as planId,
+               p.order_id as orderId,
+               p.user_id as userId,
+               p.plan_type as planType,
+               p.plan_amount as planAmount,
+               p.plan_time as planTime,
+               o.order_no as orderNo,
+               o.user_name as userName,
+               o.currency,
+               o.product_id as productId,
+               o.product_name as productName,
+               o.invest_amount as investAmount
+        from sys_invest_order_plan p
+                 inner join sys_invest_order o on o.order_id = p.order_id
+        where p.status = '0'
+          and p.plan_time &lt;= #{now}
+          and o.status = '0'
+        order by p.plan_time asc, p.plan_id asc
+    </select>
+
+    <select id="selectPlanByIdForUpdate" resultType="map">
+        select *
+        from sys_invest_order_plan
+        where plan_id = #{planId}
+        limit 1
+            for update
+    </select>
+</mapper>

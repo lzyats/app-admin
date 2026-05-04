@@ -10,6 +10,7 @@ public class SysInvestTag extends BaseEntity
     private String tagCode;
     private String tagName;
     private String tagColor;
+    private String tagType;
     private Integer sortOrder;
     private String status;
 
@@ -51,6 +52,16 @@ public class SysInvestTag extends BaseEntity
     public void setTagColor(String tagColor)
     {
         this.tagColor = tagColor;
+    }
+
+    public String getTagType()
+    {
+        return tagType;
+    }
+
+    public void setTagType(String tagType)
+    {
+        this.tagType = tagType;
     }
 
     public Integer getSortOrder()

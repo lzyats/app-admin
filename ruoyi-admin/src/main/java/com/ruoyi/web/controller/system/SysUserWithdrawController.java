@@ -2,6 +2,7 @@ package com.ruoyi.web.controller.system;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.ruoyi.common.annotation.GoogleVerifyRequired;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
@@ -19,6 +21,7 @@ import com.ruoyi.common.enums.BusinessType;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.system.domain.SysUserWithdraw;
 import com.ruoyi.system.service.ISysUserWithdrawService;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * User withdraw management.
@@ -29,6 +32,9 @@ public class SysUserWithdrawController extends BaseController
 {
     @Autowired
     private ISysUserWithdrawService withdrawService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @GetMapping("/list")
     @PreAuthorize("@ss.hasPermi('operation:withdraw:list')")
@@ -48,9 +54,11 @@ public class SysUserWithdrawController extends BaseController
 
     @PutMapping
     @PreAuthorize("@ss.hasPermi('operation:withdraw:edit')")
+    @GoogleVerifyRequired
     @Log(title = "提现审核", businessType = BusinessType.UPDATE)
-    public AjaxResult audit(@RequestBody SysUserWithdraw withdraw)
+    public AjaxResult audit(@RequestBody Map<String, Object> body)
     {
+        SysUserWithdraw withdraw = objectMapper.convertValue(body, SysUserWithdraw.class);
         withdraw.setReviewTime(new Date());
         withdraw.setReviewUserId(SecurityUtils.getUserId());
         withdraw.setReviewUserName(SecurityUtils.getUsername());

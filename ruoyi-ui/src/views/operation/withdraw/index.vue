@@ -377,11 +377,18 @@ export default {
         this.$modal.msgError('请输入拒绝原因')
         return
       }
-      reviewWithdraw(this.auditForm).then(() => {
+      this.$prompt('请输入 Google 验证码后提交审核', 'Google 验证', {
+        confirmButtonText: '确认提交',
+        cancelButtonText: '取消',
+        inputPattern: /^\d{6}$/,
+        inputErrorMessage: '请输入 6 位数字验证码'
+      }).then(({ value }) => {
+        return reviewWithdraw({ ...this.auditForm, googleCode: value })
+      }).then(() => {
         this.$modal.msgSuccess('审核成功')
         this.auditVisible = false
         this.getList()
-      })
+      }).catch(() => {})
     },
     handleDelete(row) {
       this.$modal.confirm(`确认删除提现订单“${row.orderNo}”吗？`).then(() => {

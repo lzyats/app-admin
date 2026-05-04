@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
@@ -17,7 +18,6 @@ class BankCardPage extends StatefulWidget {
 
 class _BankCardPageState extends State<BankCardPage> {
   bool _loading = false;
-  bool _submitting = false;
   int _investMode = 1;
   AuthUserProfile? _profile;
   List<BankCardItem> _cards = <BankCardItem>[];
@@ -70,6 +70,7 @@ class _BankCardPageState extends State<BankCardPage> {
   }
 
   Future<void> _loadCards() async {
+    final String loadFailedText = AppLocalizations.of(context).t('bankCardLoadFailed');
     setState(() {
       _loading = true;
     });
@@ -83,7 +84,7 @@ class _BankCardPageState extends State<BankCardPage> {
       });
     } catch (_) {
       if (mounted) {
-        _showSnackBar(AppLocalizations.of(context).t('bankCardLoadFailed'), error: true);
+        _showSnackBar(loadFailedText, error: true);
       }
     } finally {
       if (mounted) {
@@ -99,10 +100,11 @@ class _BankCardPageState extends State<BankCardPage> {
   }
 
   Future<void> _handleAdd(String currencyType) async {
+    final AppLocalizations i18n = AppLocalizations.of(context);
     if (currencyType == 'CNY') {
       final int realNameStatus = _profile?.realNameStatus ?? 0;
       if (realNameStatus != 3) {
-        _showSnackBar(AppLocalizations.of(context).t('bankCardNeedRealName'), error: true);
+        _showSnackBar(i18n.t('bankCardNeedRealName'), error: true);
         if (!mounted) {
           return;
         }
@@ -110,10 +112,15 @@ class _BankCardPageState extends State<BankCardPage> {
         await _loadProfile();
         return;
       }
+      final String realName = (_profile?.realName ?? '').trim();
+      if (realName.isEmpty) {
+        _showSnackBar(i18n.t('bankCardNeedRealName'), error: true);
+        return;
+      }
     }
 
     if (_cardCountByCurrency(currencyType) >= 2) {
-      _showSnackBar(AppLocalizations.of(context).t('bankCardMaxReached'), error: true);
+      _showSnackBar(i18n.t('bankCardMaxReached'), error: true);
       return;
     }
 
@@ -121,278 +128,80 @@ class _BankCardPageState extends State<BankCardPage> {
   }
 
   Future<void> _showAddDialog(String currencyType) async {
-    final TextEditingController bankNameController = TextEditingController();
-    final TextEditingController accountNoController = TextEditingController();
-    final TextEditingController accountNameController = TextEditingController();
-    final TextEditingController walletAddressController = TextEditingController();
-    bool submitting = false;
-
-    await showDialog<void>(
+    final AppLocalizations i18n = AppLocalizations.of(context);
+    final _AddBankCardFormResult? formResult = await showDialog<_AddBankCardFormResult>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext dialogContext) {
-        return StatefulBuilder(
-          builder: (BuildContext context, void Function(void Function()) setDialogState) {
-            return Dialog(
-              backgroundColor: Colors.transparent,
-              insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: <Color>[Color(0xFF132238), Color(0xFF0C1525)],
-                  ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0x334CE3FF)),
-                  boxShadow: <BoxShadow>[
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.35),
-                      blurRadius: 28,
-                      offset: const Offset(0, 14),
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Row(
-                          children: <Widget>[
-                            Container(
-                              width: 42,
-                              height: 42,
-                              decoration: BoxDecoration(
-                                color: const Color(0x2239E6FF),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: CurrencyBrandBadge(
-                                currencyType: currencyType,
-                                size: 42,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: <Widget>[
-                                  Text(
-                                    currencyType == 'USD'
-                                        ? AppLocalizations.of(context).t('bankCardAddUsdTitle')
-                                        : AppLocalizations.of(context).t('bankCardAddRmbTitle'),
-                                    style: const TextStyle(
-                                      color: Color(0xFFEAF5FF),
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    currencyType == 'USD'
-                                        ? AppLocalizations.of(context).t('bankCardWalletAddressHint')
-                                        : AppLocalizations.of(context).t('bankCardBankNameHint'),
-                                    style: const TextStyle(
-                                      color: Color(0xFF9DB1C9),
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            GestureDetector(
-                              onTap: submitting ? null : () => Navigator.of(dialogContext).pop(),
-                              child: Container(
-                                width: 34,
-                                height: 34,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.04),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.white.withOpacity(0.08)),
-                                ),
-                                child: const Icon(Icons.close, color: Color(0xFF9DB1C9), size: 18),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 18),
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF101C30),
-                            borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: const Color(0x334CE3FF)),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: <Widget>[
-                              if (currencyType == 'CNY') ...<Widget>[
-                                _buildDialogField(
-                                  context,
-                                  controller: bankNameController,
-                                  label: AppLocalizations.of(context).t('bankCardBankName'),
-                                  hint: AppLocalizations.of(context).t('bankCardBankNameHint'),
-                                ),
-                                _buildDialogField(
-                                  context,
-                                  controller: accountNoController,
-                                  label: AppLocalizations.of(context).t('bankCardAccountNo'),
-                                  hint: AppLocalizations.of(context).t('bankCardAccountNoHint'),
-                                ),
-                                _buildDialogField(
-                                  context,
-                                  controller: accountNameController,
-                                  label: AppLocalizations.of(context).t('bankCardAccountName'),
-                                  hint: AppLocalizations.of(context).t('bankCardAccountNameHint'),
-                                ),
-                              ] else ...<Widget>[
-                                _buildDialogField(
-                                  context,
-                                  controller: walletAddressController,
-                                  label: AppLocalizations.of(context).t('bankCardWalletAddress'),
-                                  hint: AppLocalizations.of(context).t('bankCardWalletAddressHint'),
-                                  minLines: 3,
-                                  maxLines: 4,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Row(
-                          children: <Widget>[
-                            Expanded(
-                              child: TextButton(
-                                onPressed: submitting ? null : () => Navigator.of(dialogContext).pop(),
-                                style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFF9DB1C9),
-                                  backgroundColor: Colors.white.withOpacity(0.04),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: Text(AppLocalizations.of(context).t('cancel')),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: ElevatedButton(
-                                onPressed: submitting
-                                    ? null
-                                    : () async {
-                                        bool keepDialogOpen = true;
-                                        final String bankName = bankNameController.text.trim();
-                                        final String accountNo = accountNoController.text.trim();
-                                        final String accountName = accountNameController.text.trim();
-                                        final String walletAddress = walletAddressController.text.trim();
-                                        if (currencyType == 'CNY') {
-                                          if (bankName.isEmpty || accountNo.isEmpty || accountName.isEmpty) {
-                                            _showSnackBar(AppLocalizations.of(context).t('bankCardFillRequired'), error: true);
-                                            return;
-                                          }
-                                        } else if (walletAddress.isEmpty) {
-                                          _showSnackBar(AppLocalizations.of(context).t('bankCardFillRequired'), error: true);
-                                          return;
-                                        }
-
-                                        setDialogState(() {
-                                          submitting = true;
-                                        });
-                                        try {
-                                          await BankCardApi.addBankCard(
-                                            currencyType: currencyType,
-                                            bankName: currencyType == 'CNY' ? bankName : null,
-                                            accountNo: currencyType == 'CNY' ? accountNo : null,
-                                            accountName: currencyType == 'CNY' ? accountName : null,
-                                            walletAddress: currencyType == 'USD' ? walletAddress : null,
-                                          );
-                                          if (!mounted) {
-                                            return;
-                                          }
-                                          Navigator.of(dialogContext).pop();
-                                          keepDialogOpen = false;
-                                          _showSnackBar(AppLocalizations.of(context).t('bankCardSubmitSuccess'));
-                                          await _loadCards();
-                                        } catch (_) {
-                                          _showSnackBar(AppLocalizations.of(context).t('bankCardSubmitFailed'), error: true);
-                                        } finally {
-                                          if (mounted && keepDialogOpen) {
-                                            setDialogState(() {
-                                              submitting = false;
-                                            });
-                                          }
-                                        }
-                                      },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF39E6FF),
-                                  foregroundColor: const Color(0xFF0A1220),
-                                  padding: const EdgeInsets.symmetric(vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                ),
-                                child: submitting
-                                    ? const SizedBox(
-                                        width: 18,
-                                        height: 18,
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF0A1220)),
-                                      )
-                                    : Text(AppLocalizations.of(context).t('bankCardSubmit')),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            );
-          },
+        return _AddBankCardDialog(
+          currencyType: currencyType,
+          verifiedRealName: (_profile?.realName ?? '').trim(),
         );
       },
     );
 
-    bankNameController.dispose();
-    accountNoController.dispose();
-    accountNameController.dispose();
-    walletAddressController.dispose();
+    if (formResult == null) {
+      return;
+    }
+    try {
+      await BankCardApi.addBankCard(
+        currencyType: currencyType,
+        bankName: currencyType == 'CNY' ? formResult.bankName : null,
+        accountNo: currencyType == 'CNY' ? formResult.accountNo : null,
+        accountName: currencyType == 'CNY' ? formResult.accountName : null,
+        walletAddress: currencyType == 'USD' ? formResult.walletAddress : null,
+      );
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(i18n.t('bankCardSubmitSuccess'));
+      await _loadCards();
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(i18n.t('bankCardSubmitFailed'), error: true);
+    }
   }
 
-  Widget _buildDialogField(
-    BuildContext context, {
-    required TextEditingController controller,
+  Widget _buildDialogActionButton({
     required String label,
-    required String hint,
-    int minLines = 1,
-    int maxLines = 1,
+    required Color textColor,
+    required Color backgroundColor,
+    required Color borderColor,
+    required VoidCallback onTap,
+    bool enabled = true,
+    bool loading = false,
+    Color loadingColor = const Color(0xFFEAF5FF),
   }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextField(
-        controller: controller,
-        minLines: minLines,
-        maxLines: maxLines,
-        style: const TextStyle(color: Color(0xFFEAF5FF)),
-        decoration: InputDecoration(
-          labelText: label,
-          hintText: hint,
-          filled: true,
-          fillColor: const Color(0xFF0B1525),
-          labelStyle: const TextStyle(color: Color(0xFF9DB1C9)),
-          hintStyle: const TextStyle(color: Color(0xFF60748E)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0x334CE3FF)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: const BorderSide(color: Color(0xFF39E6FF)),
+    return Opacity(
+      opacity: enabled ? 1 : 0.6,
+      child: IgnorePointer(
+        ignoring: !enabled,
+        child: GestureDetector(
+          onTap: onTap,
+          child: Container(
+            height: 48,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: backgroundColor,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: borderColor),
+            ),
+            child: loading
+                ? SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: loadingColor),
+                  )
+                : Text(
+                    label,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
           ),
         ),
       ),
@@ -400,9 +209,10 @@ class _BankCardPageState extends State<BankCardPage> {
   }
 
   Future<void> _handleDelete(BankCardItem item) async {
+    final AppLocalizations i18n = AppLocalizations.of(context);
     final bool confirmed = await showDialog<bool>(
           context: context,
-          builder: (BuildContext context) {
+          builder: (BuildContext dialogContext) {
             return Dialog(
               backgroundColor: Colors.transparent,
               insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -443,7 +253,7 @@ class _BankCardPageState extends State<BankCardPage> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
-                              AppLocalizations.of(context).t('bankCardDelete'),
+                              i18n.t('bankCardDelete'),
                               style: const TextStyle(
                                 color: Color(0xFFEAF5FF),
                                 fontSize: 18,
@@ -455,7 +265,7 @@ class _BankCardPageState extends State<BankCardPage> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        AppLocalizations.of(context).t('bankCardDeleteConfirm'),
+                        i18n.t('bankCardDeleteConfirm'),
                         style: const TextStyle(
                           color: Color(0xFF9DB1C9),
                           fontSize: 13,
@@ -466,32 +276,22 @@ class _BankCardPageState extends State<BankCardPage> {
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: TextButton(
-                              onPressed: () => Navigator.of(context).pop(false),
-                              style: TextButton.styleFrom(
-                                foregroundColor: const Color(0xFF9DB1C9),
-                                backgroundColor: Colors.white.withOpacity(0.04),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Text(AppLocalizations.of(context).t('cancel')),
+                            child: _buildDialogActionButton(
+                              label: i18n.t('cancel'),
+                              textColor: const Color(0xFF9DB1C9),
+                              backgroundColor: Colors.white.withOpacity(0.04),
+                              borderColor: Colors.white.withOpacity(0.08),
+                              onTap: () => Navigator.of(dialogContext).pop(false),
                             ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
-                            child: ElevatedButton(
-                              onPressed: () => Navigator.of(context).pop(true),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFFF6B6B),
-                                foregroundColor: const Color(0xFFFFFFFF),
-                                padding: const EdgeInsets.symmetric(vertical: 14),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Text(AppLocalizations.of(context).t('delete')),
+                            child: _buildDialogActionButton(
+                              label: i18n.t('delete'),
+                              textColor: const Color(0xFFFFFFFF),
+                              backgroundColor: const Color(0xFFFF6B6B),
+                              borderColor: const Color(0x88FF6B6B),
+                              onTap: () => Navigator.of(dialogContext).pop(true),
                             ),
                           ),
                         ],
@@ -509,10 +309,16 @@ class _BankCardPageState extends State<BankCardPage> {
     }
     try {
       await BankCardApi.deleteBankCard(item.bankCardId);
-      _showSnackBar(AppLocalizations.of(context).t('bankCardDeleteSuccess'));
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(i18n.t('bankCardDeleteSuccess'));
       await _loadCards();
     } catch (_) {
-      _showSnackBar(AppLocalizations.of(context).t('bankCardDeleteFailed'), error: true);
+      if (!mounted) {
+        return;
+      }
+      _showSnackBar(i18n.t('bankCardDeleteFailed'), error: true);
     }
   }
 
@@ -535,11 +341,19 @@ class _BankCardPageState extends State<BankCardPage> {
     if (text.length <= 8) {
       return text;
     }
-    return '${text.substring(0, 4)}${'*' * (text.length - 8)}${text.substring(text.length - 4)}';
+    // 钱包地址脱敏固定中间 9 个 *，避免按真实长度展示掩码位数。
+    return '${text.substring(0, 4)}*********${text.substring(text.length - 4)}';
   }
 
   void _showSnackBar(String text, {bool error = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
+    if (!mounted) {
+      return;
+    }
+    final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger.showSnackBar(
       SnackBar(
         content: Text(text),
         backgroundColor: error ? const Color(0xFFFF6B6B) : const Color(0xFF38FFB3),
@@ -549,7 +363,7 @@ class _BankCardPageState extends State<BankCardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final AppLocalizations i18n = AppLocalizations.of(context)!;
+    final AppLocalizations i18n = AppLocalizations.of(context);
     final int total = _cards.length;
 
     return Scaffold(
@@ -884,6 +698,7 @@ class _BankCardPageState extends State<BankCardPage> {
                   CurrencyBrandBadge(
                     currencyType: item.currencyType,
                     size: 50,
+                    useUnionPayForCny: true,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1038,6 +853,7 @@ class _BankCardPageState extends State<BankCardPage> {
                   CurrencyBrandBadge(
                     currencyType: currencyType,
                     size: 46,
+                    useUnionPayForCny: true,
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -1087,6 +903,331 @@ class _SummaryInfo {
   final String value;
   final IconData icon;
   final Color color;
+}
+
+class _AddBankCardFormResult {
+  const _AddBankCardFormResult({
+    this.bankName,
+    this.accountNo,
+    this.accountName,
+    this.walletAddress,
+  });
+
+  final String? bankName;
+  final String? accountNo;
+  final String? accountName;
+  final String? walletAddress;
+}
+
+class _AddBankCardDialog extends StatefulWidget {
+  const _AddBankCardDialog({
+    required this.currencyType,
+    required this.verifiedRealName,
+  });
+
+  final String currencyType;
+  final String verifiedRealName;
+
+  @override
+  State<_AddBankCardDialog> createState() => _AddBankCardDialogState();
+}
+
+class _AddBankCardDialogState extends State<_AddBankCardDialog> {
+  final TextEditingController _bankNameController = TextEditingController();
+  final TextEditingController _accountNoController = TextEditingController();
+  final TextEditingController _accountNameController = TextEditingController();
+  final TextEditingController _walletAddressController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _accountNameController.text = widget.verifiedRealName;
+  }
+
+  @override
+  void dispose() {
+    _bankNameController.dispose();
+    _accountNoController.dispose();
+    _accountNameController.dispose();
+    _walletAddressController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final AppLocalizations i18n = AppLocalizations.of(context);
+    final String bankName = _bankNameController.text.trim();
+    final String accountNo = _accountNoController.text.trim();
+    final String accountName = widget.verifiedRealName.trim();
+    final String walletAddress = _walletAddressController.text.trim();
+    if (widget.currencyType == 'CNY') {
+      if (bankName.isEmpty || accountNo.isEmpty || accountName.isEmpty) {
+        _showSnackBar(i18n.t('bankCardFillRequired'), error: true);
+        return;
+      }
+      Navigator.of(context).pop(
+        _AddBankCardFormResult(
+          bankName: bankName,
+          accountNo: accountNo,
+          accountName: accountName,
+        ),
+      );
+      return;
+    }
+    if (walletAddress.isEmpty) {
+      _showSnackBar(i18n.t('bankCardFillRequired'), error: true);
+      return;
+    }
+    if (walletAddress.length > 34) {
+      _showSnackBar(i18n.t('bankCardWalletAddressTooLong'), error: true);
+      return;
+    }
+    Navigator.of(context).pop(_AddBankCardFormResult(walletAddress: walletAddress));
+  }
+
+  void _showSnackBar(String text, {bool error = false}) {
+    final ScaffoldMessengerState? messenger = ScaffoldMessenger.maybeOf(context);
+    if (messenger == null) {
+      return;
+    }
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: error ? const Color(0xFFFF6B6B) : const Color(0xFF38FFB3),
+      ),
+    );
+  }
+
+  Widget _buildDialogField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    int minLines = 1,
+    int maxLines = 1,
+    bool readOnly = false,
+    List<TextInputFormatter>? inputFormatters,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: TextField(
+        controller: controller,
+        minLines: minLines,
+        maxLines: maxLines,
+        readOnly: readOnly,
+        inputFormatters: inputFormatters,
+        style: const TextStyle(color: Color(0xFFEAF5FF)),
+        decoration: InputDecoration(
+          labelText: label,
+          hintText: hint,
+          filled: true,
+          fillColor: const Color(0xFF0B1525),
+          labelStyle: const TextStyle(color: Color(0xFF9DB1C9)),
+          hintStyle: const TextStyle(color: Color(0xFF60748E)),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0x334CE3FF)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(16),
+            borderSide: const BorderSide(color: Color(0xFF39E6FF)),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDialogActionButton({
+    required String label,
+    required Color textColor,
+    required Color backgroundColor,
+    required Color borderColor,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 48,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: borderColor),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            color: textColor,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations i18n = AppLocalizations.of(context);
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[Color(0xFF132238), Color(0xFF0C1525)],
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0x334CE3FF)),
+          boxShadow: <BoxShadow>[
+            BoxShadow(
+              color: Colors.black.withOpacity(0.35),
+              blurRadius: 28,
+              offset: const Offset(0, 14),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: const Color(0x2239E6FF),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: CurrencyBrandBadge(
+                        currencyType: widget.currencyType,
+                        size: 42,
+                        useUnionPayForCny: true,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            widget.currencyType == 'USD'
+                                ? i18n.t('bankCardAddUsdTitle')
+                                : i18n.t('bankCardAddRmbTitle'),
+                            style: const TextStyle(
+                              color: Color(0xFFEAF5FF),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.currencyType == 'USD'
+                                ? i18n.t('bankCardWalletAddressHint')
+                                : i18n.t('bankCardBankNameHint'),
+                            style: const TextStyle(
+                              color: Color(0xFF9DB1C9),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.of(context).pop(),
+                      child: Container(
+                        width: 34,
+                        height: 34,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.04),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white.withOpacity(0.08)),
+                        ),
+                        child: const Icon(Icons.close, color: Color(0xFF9DB1C9), size: 18),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF101C30),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0x334CE3FF)),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      if (widget.currencyType == 'CNY') ...<Widget>[
+                        _buildDialogField(
+                          controller: _bankNameController,
+                          label: i18n.t('bankCardBankName'),
+                          hint: i18n.t('bankCardBankNameHint'),
+                        ),
+                        _buildDialogField(
+                          controller: _accountNoController,
+                          label: i18n.t('bankCardAccountNo'),
+                          hint: i18n.t('bankCardAccountNoHint'),
+                        ),
+                        _buildDialogField(
+                          controller: _accountNameController,
+                          label: i18n.t('bankCardAccountName'),
+                          hint: i18n.t('bankCardAccountNameHint'),
+                          readOnly: true,
+                        ),
+                      ] else ...<Widget>[
+                        _buildDialogField(
+                          controller: _walletAddressController,
+                          label: i18n.t('bankCardWalletAddress'),
+                          hint: i18n.t('bankCardWalletAddressHint'),
+                          minLines: 3,
+                          maxLines: 4,
+                          inputFormatters: <TextInputFormatter>[
+                            LengthLimitingTextInputFormatter(34),
+                          ],
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _buildDialogActionButton(
+                        label: i18n.t('cancel'),
+                        textColor: const Color(0xFF9DB1C9),
+                        backgroundColor: Colors.white.withOpacity(0.04),
+                        borderColor: Colors.white.withOpacity(0.08),
+                        onTap: () => Navigator.of(context).pop(),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildDialogActionButton(
+                        label: i18n.t('bankCardSubmit'),
+                        textColor: const Color(0xFF0A1220),
+                        backgroundColor: const Color(0xFF39E6FF),
+                        borderColor: const Color(0x8839E6FF),
+                        onTap: _submit,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _GlowBlob extends StatelessWidget {

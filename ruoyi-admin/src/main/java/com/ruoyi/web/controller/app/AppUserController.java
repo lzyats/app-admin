@@ -95,6 +95,73 @@ public class AppUserController {
         return AjaxResult.success(wallets);
     }
 
+    @GetMapping("/wallet/log/investList")
+    public AjaxResult investWalletLogs() {
+        Long userId = SecurityUtils.getUserId();
+        List<SysUserWalletLog> all = walletLogService.selectLogsByUserId(userId);
+        List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+        if (all != null) {
+            for (SysUserWalletLog item : all) {
+                if (item == null) {
+                    continue;
+                }
+                String type = StringUtils.lowerCase(StringUtils.defaultString(item.getType()));
+                if (!"invest".equals(type) && !"redeem".equals(type) && !"profit".equals(type)) {
+                    continue;
+                }
+                Map<String, Object> row = new LinkedHashMap<String, Object>();
+                row.put("logId", item.getLogId());
+                row.put("type", type);
+                row.put("currencyType", item.getCurrencyType());
+                row.put("amount", item.getAmount());
+                row.put("status", item.getStatus());
+                row.put("orderNo", item.getOrderNo());
+                row.put("remark", item.getRemark());
+                row.put("createTime", item.getCreateTime());
+                rows.add(row);
+            }
+        }
+        return AjaxResult.success(rows);
+    }
+
+    @GetMapping("/wallet/log/list")
+    public AjaxResult walletLogs(Integer pageNum, Integer pageSize) {
+        Long userId = SecurityUtils.getUserId();
+        int safePageNum = pageNum == null || pageNum < 1 ? 1 : pageNum;
+        int safePageSize = pageSize == null || pageSize < 1 ? 10 : Math.min(pageSize, 100);
+        List<SysUserWalletLog> all = walletLogService.selectLogsByUserId(userId);
+        if (all == null) {
+            all = new ArrayList<SysUserWalletLog>();
+        }
+        int total = all.size();
+        int from = (safePageNum - 1) * safePageSize;
+        int to = Math.min(from + safePageSize, total);
+        List<SysUserWalletLog> page = from >= total ? new ArrayList<SysUserWalletLog>() : all.subList(from, to);
+
+        List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+        for (SysUserWalletLog item : page) {
+            if (item == null) {
+                continue;
+            }
+            Map<String, Object> row = new LinkedHashMap<String, Object>();
+            row.put("logId", item.getLogId());
+            row.put("type", item.getType());
+            row.put("currencyType", item.getCurrencyType());
+            row.put("amount", item.getAmount());
+            row.put("status", item.getStatus());
+            row.put("orderNo", item.getOrderNo());
+            row.put("remark", item.getRemark());
+            row.put("createTime", item.getCreateTime());
+            rows.add(row);
+        }
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("pageNum", safePageNum);
+        data.put("pageSize", safePageSize);
+        data.put("total", total);
+        data.put("rows", rows);
+        return AjaxResult.success(data);
+    }
+
     /**
      * 获取当前登录用户已设置的安全问题答案。
      */

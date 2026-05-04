@@ -9,6 +9,27 @@
 
 ---
 
+## 投资认购签约复用（新增）
+
+### 模块说明
+
+- 认购流程新增“同用户同产品已签约复用”能力：若已存在有效签约记录，再次认购无需重复手写签名与勾选合同。
+
+### 后端改动
+
+- `AppInvestOrderController.previewContract` 返回 `signedBefore` 字段，供前端决定是否展示签约弹窗。
+- `AppInvestOrderController.submit` 增加签约复用逻辑：
+  - 若存在该用户该产品的有效签约记录，则允许本次提交不传签名；
+  - 若本次未传 `signatureData`，自动复用历史签名；
+  - 仍保留支付密码校验与订单幂等逻辑。
+- `SysAppInvestOrderMapper` 新增 `selectLatestValidContractSign(userId, productId)` 查询。
+
+### 前端改动
+
+- `InvestOrderApi.previewContract` 解析 `signedBefore`。
+- `InvestPurchasePage` 在 `signedBefore=true` 时跳过合同签约弹窗，直接走支付提交；未签约用户保持原先签约流程。
+
+
 ## 1. 每日签到
 
 ### 1.1 模块目标
@@ -176,10 +197,6 @@ APP 端验证建议:
 7. `zh-CN.json`
 8. `en-US.json`
 9. 数据库 `sys_config` 中的签到配置项
-
----
-
-## 2. 待补充模块
 
 ---
 
@@ -2116,6 +2133,134 @@ APP 查询:
 - [SysTeamLevelMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysTeamLevelMapper.java)
 - [SysTeamLevelMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysTeamLevelMapper.xml)
 
+## 42. 投资订单后台详情与强制结算
+
+### 42.1 页面能力补充
+
+- 后台 `system/yebao/order` 新增“详情”操作：可查看订单基础信息、计划明细、未结算本金/收益与已结算收益汇总。
+- 同页新增“结算”操作：与赎回一致采用二次确认 + Google 验证后执行。
+
+### 42.2 强制结算逻辑
+
+- 新增后台接口 `/system/invest/order/settle`，确认文案固定为“确认结算”，仅允许持有中订单执行。
+- 结算时直接处理该订单全部未结算计划（未到期也执行）：未结算本金一次返还、未结算收益一次入账。
+- 执行后统一将订单状态置为已完成，并把计划状态更新为已执行（写执行时间与备注）。
+- 在原有积分/成长值发放基础上，补充产品红包发放（按产品配置 `redPacketPerUnit` 与奖励单位折算）。
+- 新增等级加成发放：按用户等级 `invest_bonus` 计算 `订单本金 * 等级加成%`，入账到用户同币种钱包（可用余额+收益）。
+- 新增上级团队加成发放：按直属上级团队长等级 `team_bonus_rate` 计算 `订单本金 * 团队加成%`，入账到上级同币种钱包（可用余额+收益）。
+- 全链路补齐钱包账变记录（本金返还、收益入账、产品红包、等级加成、团队加成）并写服务日志摘要。
+
+### 42.3 关键文件
+
+- [SysInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/system/SysInvestOrderController.java)
+- [ISysInvestOrderService.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/ISysInvestOrderService.java)
+- [SysInvestOrderServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestOrderServiceImpl.java)
+- [SysAppInvestOrderMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysAppInvestOrderMapper.java)
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+- [order.js](../ruoyi-ui/src/api/system/yebao/order.js)
+- [index.vue](../ruoyi-ui/src/views/system/yebao/order/index.vue)
+
+## 43. APP 我的投资/收益明细文案与卡片排版微调
+
+### 43.1 我的投资页
+
+- 将卡片字段文案“年化利率”统一调整为“投资利率”。
+
+### 43.2 收益明细页
+
+- 收益卡片顶部布局调整为“标题居左、状态标签（未收取/待收取/已收取）居右”。
+- 币种图片从收益金额左侧移动至卡片右下角固定展示，避免干扰金额阅读。
+
+涉及文件：
+
+- [my_invest_orders_page.dart](../app/lib/pages/mine/my_invest_orders_page.dart)
+- [my_invest_income_page.dart](../app/lib/pages/mine/my_invest_income_page.dart)
+
+## 44. 账变记录新增“所有账变”分页页签
+
+### 44.1 需求落地
+
+- 在“账变记录”菜单中新增“所有账变”，并放在“充值记录”上方第一项。
+- 新页面展示用户全部账变类型，不再只看充值/提现/投资子项。
+- 列表按每页 10 条加载，滚动触底自动继续加载，直到全部加载完成。
+
+### 44.2 后端接口
+
+- 新增 APP 接口：`GET /app/user/wallet/log/list?pageNum=&pageSize=`
+- 返回结构：`rows + total + pageNum + pageSize`，用于前端分页滚动加载。
+
+涉及文件：
+
+- [AppUserController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppUserController.java)
+
+### 44.3 前端改造
+
+- 新增页面 `AccountAllRecordsPage`，展示所有账变明细并支持下拉刷新/触底加载。
+- 路由新增 `/mine/account/records/all` 并接入路由表。
+- 账变菜单页新增“所有账变”入口并置顶。
+- 请求层新增 `appUserWalletLogList` endpoint 与分页请求方法 `fetchWalletLogs(...)`。
+
+涉及文件：
+
+- [account_all_records_page.dart](../app/lib/pages/mine/account_all_records_page.dart)
+- [account_change_records_page.dart](../app/lib/pages/mine/account_change_records_page.dart)
+- [app_router.dart](../app/lib/routers/app_router.dart)
+- [invest_order_api.dart](../app/lib/request/invest_order_api.dart)
+- [ruoyi_endpoints.dart](../app/lib/request/ruoyi_endpoints.dart)
+
+## 45. 银行卡添加弹窗崩溃修复
+
+### 45.1 问题现象
+
+- 在“添加银行卡”提交后，出现 Flutter 断言：`InheritedElement debugDeactivated _dependents.isEmpty`。
+
+### 45.2 根因与修复
+
+- 根因：弹窗内部 `StatefulBuilder` 的局部 `context` 在弹窗 `pop` 后仍被用于 `AppLocalizations.of(context)` 等依赖访问，触发已销毁上下文依赖断言。
+- 修复：
+  - 在进入弹窗前从页面级 `context` 预取 `i18n`，弹窗内部文案统一使用该实例；
+  - 提交后改为使用预先获取的 `NavigatorState` 关闭弹窗，避免跨 async gap 再访问已失效的弹窗 `context`；
+  - 删除银行卡成功/失败提示前补充 `mounted` 判断，避免页面销毁后继续操作 UI 上下文。
+
+涉及文件：
+
+- [bank_card_page.dart](../app/lib/pages/mine/bank_card_page.dart)
+
+## 46. 银行卡图标与删除接口参数兼容修复
+
+### 46.1 人民币银行卡图标
+
+- 银行卡页面中人民币卡片/新增入口图标统一改为银联图标 `unionpay.webp`。
+- 通过 `CurrencyBrandBadge(useUnionPayForCny: true)` 生效，USD 保持原图标逻辑。
+
+### 46.2 删除银行卡报“Bank card ID cannot be empty”修复
+
+- 后端 `POST /app/bankCard/delete` 由直接绑定 `SysUserBankCard` 改为接收 `Map` 并复用 `resolveBankCardBody(...)`。
+- 兼容加密请求体（`data` 解密）与明文字段（`bankCardId/bank_card_id`），避免因参数解析失败导致 `bankCardId` 为空。
+
+涉及文件：
+
+- [AppBankCardController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppBankCardController.java)
+- [bank_card_page.dart](../app/lib/pages/mine/bank_card_page.dart)
+
+### 46.3 钱包地址脱敏规则调整
+
+- 银行卡页中的“钱包地址（USD）”显示改为固定脱敏：仅展示前4位+后4位，中间固定 `*********`（9个*）。
+- 不再按原始地址真实长度计算星号数量，避免泄露地址长度特征。
+- 该规则仅用于钱包地址；人民币银行卡号仍使用原有尾号脱敏逻辑。
+
+### 46.4 银行卡页卡死（InheritedElement 断言）兜底修复
+
+- 针对银行卡页在异步回调期间触发 `_dependents.isEmpty` 断言，调整为在方法入口预取文案，避免 `await` 后再次直接读取 `AppLocalizations.of(context)`。
+- `SnackBar` 统一改为 `ScaffoldMessenger.maybeOf(context)` + `mounted` 判定，避免页面/弹窗销毁瞬间继续访问失效 `context`。
+- 覆盖加载失败、删除成功/失败、实名校验/数量上限等提示路径。
+
+### 46.5 银行卡弹窗焦点链路卡死修复（InkResponse）
+
+- 针对 `Looking up a deactivated widget's ancestor is unsafe` 且堆栈落在 `InkResponse` 焦点高亮回调的问题，移除银行卡页弹窗中的 `TextButton/ElevatedButton`。
+- 改为 `GestureDetector + Container` 自定义动作按钮，规避 `InkResponse` 在销毁瞬间触发的祖先查找。
+- 删除确认弹窗同时改为预取 `i18n` 文案，不在弹窗 builder 内反复取 `AppLocalizations.of(context)`。
+
 ### 14.4 自动升级规则
 
 系统在团队奖励查询时会执行一次“检查并升级”：
@@ -2290,3 +2435,706 @@ GET /app/team/stats/me
 - TTL：10 分钟
 - 读取策略：优先返回缓存；缓存过期时先返回旧缓存并后台静默刷新
 - 强制刷新：下拉刷新或显式 `forceRefresh=true` 走远端并覆盖缓存
+
+## 16. 投资展示与在线签约（APP）
+
+本模块已接入 APP 端产品展示、产品详情、认购页与在线签约流程，并完成认购提交幂等改造。
+
+### 16.1 APP 页面与路由
+
+页面：
+
+- [invest_product_list_page.dart](../app/lib/pages/product/invest_product_list_page.dart)
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+
+路由：
+
+- [app_router.dart](../app/lib/routers/app_router.dart)
+
+能力：
+
+- 产品列表/详情展示（购买逻辑分步接入）
+- 普通认购与拼团认购页面
+- 购买前合同弹窗
+- 必须“勾选同意 + 手写签名”后才能继续支付提交
+
+### 16.2 APP 接口与后端入口
+
+APP 接口：
+
+```http
+GET  /app/invest/product/list
+GET  /app/invest/product/{productId}
+POST /app/invest/order/contract/preview
+POST /app/invest/order/submit
+```
+
+后端入口：
+
+- [AppInvestProductController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestProductController.java)
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+
+### 16.3 在线签约规则
+
+- 点击购买后先展示合同条款，不直接扣款
+- 用户必须勾选同意并手写签名
+- 合同页展示投资章图片（资源由 APP assets 管理）
+- 提交时后端校验：同意状态、签名数据、支付密码、金额与产品约束
+
+### 16.4 认购落库链路（当前实现）
+
+- 扣减用户钱包可用余额并记录钱包流水
+- 写入投资订单（`sys_invest_order`）
+- 写入合同签署记录（`sys_invest_contract_sign`）
+- 生成收益/返本计划（`sys_invest_order_plan`）
+- 更新产品已售份数
+
+核心 Mapper：
+
+- [SysAppInvestOrderMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysAppInvestOrderMapper.java)
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+
+### 16.5 认购提交幂等
+
+已实现“双层幂等”：
+
+- 接口层：`userId + clientReqNo` Redis 原子锁，提交处理中拒绝重复请求
+- 结果层：同请求号缓存成功结果，重复请求直接返回原结果
+- 数据库层：`sys_invest_order` 唯一键 `(user_id, client_req_no)` 兜底
+
+对应脚本：
+
+- [invest_order_online_sign_20260504.sql](../sql/invest_order_online_sign_20260504.sql)
+- [invest_order_idempotent_20260504.sql](../sql/invest_order_idempotent_20260504.sql)
+
+## 17. 余额宝幂等增强
+
+余额宝已补齐购买请求幂等与结算并发防重，降低重复扣款和重复结算风险。
+
+### 17.1 购买幂等
+
+入口：
+
+- [AppYebaoController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppYebaoController.java)
+- [SysYebaoOrderServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysYebaoOrderServiceImpl.java)
+
+规则：
+
+- 购买请求必须带 `clientReqNo`
+- 接口层按 `userId + clientReqNo` 加 Redis 锁防并发重复提交
+- 服务层按 `userId + clientReqNo` 查重，命中则不重复扣款不重复下单
+- 前端购买请求已自动携带 `clientReqNo`
+
+### 17.2 结算防重
+
+- 结算处理前对订单执行 `select ... for update`
+- 锁定后再次校验状态与 `next_settle_time`，避免并发重复结算
+- 建议配合 DB 唯一键进一步兜底
+
+### 17.3 数据库幂等键
+
+脚本：
+
+- [yebao_idempotent_20260504.sql](../sql/yebao_idempotent_20260504.sql)
+
+内容：
+
+- `sys_yebao_order` 增加 `client_req_no`
+- 唯一键：`uk_yebao_user_req (user_id, client_req_no)`
+- `sys_yebao_income_log` 唯一键：`uk_yebao_order_period (order_id, period_end_time)`
+
+## 18. 产品展示筛选与缓存
+
+APP 产品列表筛选已改为“动态标签组 + 全部”，并优先使用本地缓存。
+
+实现：
+
+- [invest_product_api.dart](../app/lib/request/invest_product_api.dart)
+- [invest_product_list_page.dart](../app/lib/pages/product/invest_product_list_page.dart)
+
+策略：
+
+- 标签组固定包含首项“全部”
+- 点击“全部”不做标签筛选
+- 标签组由产品数据动态生成并缓存（本地优先）
+- 缓存过期时先返回旧缓存并后台静默刷新
+
+## 19. 投资币种约束（后台）
+
+投资产品币种已统一为仅支持 `CNY` 与 `USD`。
+
+改动：
+
+- 后台产品页去掉 `USDT` 选项，仅保留“人民币(CNY)”与“USD”
+- 后端服务层增加强校验，拦截非 `CNY/USD` 提交
+
+文件：
+
+- [index.vue](../ruoyi-ui/src/views/operation/investProduct/index.vue)
+- [SysInvestProductServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestProductServiceImpl.java)
+
+## 20. 产品进度入库与排序
+
+产品进度改为落库字段 `progress_percent`，由 `sold_shares / total_shares * 100` 计算（保留 4 位小数，范围 0~100）。
+
+规则：
+
+- 进度用于判断产品是否仍可继续投资（100% 视为已满）
+- 列表排序改为“未满额优先 + 进度倒序”
+- 达到 `100%` 的产品默认排到列表最下面
+
+实现：
+
+- 产品插入、更新时自动重算 `progress_percent`
+- 已投资份数变更（`increaseSoldShares`）时同步刷新 `progress_percent`
+- 用户投资成功后按“投资金额/单份金额”折算写入 `sold_shares`，并校验剩余份额是否充足
+- APP 返回优先读取落库进度，空值时兼容走运行时计算
+
+脚本与文件：
+
+- [invest_product_progress_20260504.sql](../sql/invest_product_progress_20260504.sql)
+- [SysInvestProduct.java](../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysInvestProduct.java)
+- [SysInvestProductMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysInvestProductMapper.xml)
+- [AppInvestProductController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestProductController.java)
+
+## 21. 参数类型增强（后台与APP配置）
+
+参数管理与 APP 配置管理已支持参数类型驱动渲染：
+
+- `TEXT` 文本
+- `IMAGE` 图片（上传与预览）
+- `FILE` 文件（上传与下载）
+- `DATE` 日期时间
+- `SWITCH` 开关（true/false）
+- `SELECT` 下拉选择（选项来源于参数备注）
+
+实现：
+
+- `sys_config` 新增 `config_value_type` 字段，默认 `TEXT`
+- 后端 `SysConfig`/Mapper/Service 与 APP 配置保存链路支持该字段
+- 后台参数管理页新增“参数类型”查询与编辑，参数值输入控件按类型自动切换
+- `SELECT` 类型约定用 `remark` 存选项，支持逗号/分号/换行分隔，支持 `值:文案` 或 `值=文案`
+- APP 配置管理页同步复用参数类型渲染与保存，避免仅按值猜测类型
+- 参数值 `config_value` 容量扩展为 `varchar(2000)`，用于存储较长合同文本
+
+脚本与文件：
+
+- [config_value_type_20260504.sql](../sql/config_value_type_20260504.sql)
+- [config_value_len_2000_20260504.sql](../sql/config_value_len_2000_20260504.sql)
+- [SysConfig.java](../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysConfig.java)
+- [SysConfigMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysConfigMapper.xml)
+- [SysConfigServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysConfigServiceImpl.java)
+- [AppConfigController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/common/AppConfigController.java)
+- [index.vue](../ruoyi-ui/src/views/system/config/index.vue)
+- [index.vue](../ruoyi-ui/src/views/system/appConfig/index.vue)
+
+## 22. 投资合同公章改为后台图片参数
+
+新增 APP 配置参数用于合同公章：
+
+- `app.htimg1`
+- `app.htimg2`
+
+APP 端认购合同弹窗公章展示规则：
+
+- 优先读取 `app.htimg1/app.htimg2` 并渲染（支持相对路径自动补全）
+- 两张图都为空时，兜底使用本地默认公章图
+
+涉及文件：
+
+- [app_config_api.dart](../app/lib/request/app_config_api.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+
+## 23. 产品交易规则内容配置
+
+产品后台新增“交易规则内容”字段，支持在新增/编辑时按多行维护规则文案；APP 产品详情“交易规则”区按行渲染该内容到规则卡片中。
+
+- 后台未配置时，APP 继续使用原有收益公式文案作为兜底
+- 后台配置后，APP 优先显示配置内容（每行一条）
+
+涉及文件：
+
+- [SysInvestProduct.java](../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysInvestProduct.java)
+- [SysInvestProductMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysInvestProductMapper.xml)
+- [AppInvestProductController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestProductController.java)
+- [index.vue](../ruoyi-ui/src/views/operation/investProduct/index.vue)
+- [invest_product_api.dart](../app/lib/request/invest_product_api.dart)
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+- [invest_product_trade_rule_20260504.sql](../sql/invest_product_trade_rule_20260504.sql)
+
+## 24. 产品投资模式升级（按金额/按份额）
+
+产品新增双模式：
+
+- `SHARE`：按份额配置，后台维护总份数
+- `AMOUNT`：按金额配置，后台维护总金额
+
+数据模型补充：
+
+- `invest_mode`（投资模式）
+- `total_amount`（总金额）
+- `sold_amount`（已售金额）
+
+核心规则：
+
+- 进度统一按金额优先计算：`sold_amount / total_amount * 100`（金额为空时兼容份额）
+- 按份额模式下，后台校验“最高可投”必须是“起投金额”的整数倍
+- 按份额模式下，`total_amount/sold_amount` 按 `份数 * 起投金额` 自动换算
+- 认购成功后同时更新 `sold_shares` 与 `sold_amount`
+
+APP 联动：
+
+- 产品详情按模式展示：
+- 按金额：剩余金额=`总金额-已投金额`，详情不显示总份数，仅显示金额项
+- 按份额：保持原份额展示（总份数/已投份数/剩余份数）
+- 认购页按份额模式增加“购买份数 +/-”，金额自动计算并禁止手工输入
+
+涉及文件与脚本：
+
+- [SysInvestProduct.java](../ruoyi-system/src/main/java/com/ruoyi/system/domain/SysInvestProduct.java)
+- [SysInvestProductMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysInvestProductMapper.xml)
+- [SysInvestProductServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestProductServiceImpl.java)
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+- [AppInvestProductController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestProductController.java)
+- [index.vue](../ruoyi-ui/src/views/operation/investProduct/index.vue)
+- [invest_product_api.dart](../app/lib/request/invest_product_api.dart)
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+- [invest_order_api.dart](../app/lib/request/invest_order_api.dart)
+- [invest_product_mode_amount_20260504.sql](../sql/invest_product_mode_amount_20260504.sql)
+
+## 25. 后台产品复制功能
+
+后台产品管理新增“复制”操作：按当前产品复制一条新产品数据，同时重置销售进度相关字段。
+
+- 复制后 `sold_shares` 强制为 `0`
+- 复制后 `progress_percent` 强制为 `0`（入库按 `sold_shares/total_shares` 自动计算）
+- 复制保留原标签关系、产品介绍、交易规则内容等配置
+- 复制新产品自动生成新的 `product_code`，避免唯一键冲突
+
+涉及文件：
+
+- [ISysInvestProductService.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/ISysInvestProductService.java)
+- [SysInvestProductServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestProductServiceImpl.java)
+- [SysInvestProductController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/system/SysInvestProductController.java)
+- [investProduct.js](../ruoyi-ui/src/api/operation/investProduct.js)
+- [index.vue](../ruoyi-ui/src/views/operation/investProduct/index.vue)
+
+## 26. APP 签名组件工具化
+
+为避免签名逻辑在各页面重复实现，已将签名能力封装为统一工具组件。
+
+- 新增 `SignatureTool.show(context)`，统一打开签名页并返回 `base64` 签名图
+- 签名板支持鼠标/触摸/手写笔指针事件（按下、移动、抬起）
+- 投资认购合同页已改为调用工具类，不再内嵌签名画板代码
+
+涉及文件：
+
+- [signature_tool.dart](../app/lib/tools/signature_tool.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+
+## 27. 产品认购支付密码前置校验
+
+产品认购页在输入支付密码和提交前，新增“支付密码是否已设置”前置校验流程。
+
+- 点击支付密码输入框前先检查 `payPasswordSet`
+- 未设置时跳转支付密码设置页，设置完成后自动返回认购页继续流程
+- 提交前再次兜底校验，避免绕过输入步骤直接提交
+
+涉及文件：
+
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+- [auth_api.dart](../app/lib/request/auth_api.dart)
+- [app_router.dart](../app/lib/routers/app_router.dart)
+
+## 28. 余额宝购买支付密码验证闭环
+
+余额宝购买流程已升级为“确认购买 -> 支付密码输入 -> 后台校验通过后购买”。
+
+- 前端购买前弹确认框，随后检查是否已设置支付密码
+- 未设置时跳转支付密码设置页，设置成功后返回继续购买
+- 使用统一数字键盘输入支付密码，并随购买请求提交 `payPwd`
+- 后端 `/app/yebao/purchase` 增加支付密码校验：未设置或密码错误直接拦截
+
+涉及文件：
+
+- [yebao_page.dart](../app/lib/pages/mine/yebao_page.dart)
+- [yebao_api.dart](../app/lib/request/yebao_api.dart)
+- [AppYebaoController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppYebaoController.java)
+
+## 29. 产品积分/成长值计算口径预留（按金额模式）
+
+为兼容产品“按份额/按金额”双模式，预留如下统一计算口径（本节先做规则沉淀，后续再按此实现代码）：
+
+- 产品配置项保留“每份积分”“每份成长值”。
+- `SHARE` 模式：按用户认购份数直接计算积分和成长值。
+- `AMOUNT` 模式：
+  - 先用 `最高可投 / 最低起投` 计算倍数；
+  - 再用 `总金额 / 倍数` 计算单份投资金额；
+  - 再用 `用户投资金额 / 单份投资金额` 换算投资份数；
+  - 最后按换算份数 × 每份积分 / 每份成长值，得到本次应发积分和成长值。
+
+补充约束（实现时必须遵守）：
+
+- 计算过程需统一金额精度与舍入规则，避免前后端口径不一致。
+- 倍数、单份金额、换算份数在边界值（0、空值、除数为0）时必须有兜底保护。
+- 最终积分和成长值必须通过统一奖励/成长值服务入账，不允许在业务代码中分散直接写库。
+
+## 30. 后台 Google 二次验证（敏感操作）
+
+### 30.1 模块目标
+
+为后台敏感操作增加 Google Authenticator 动态码校验能力，避免仅依赖登录态导致高风险操作被误执行。
+
+### 30.2 绑定流程（个人中心）
+
+- 管理员在“个人中心 -> Google验证”发起绑定
+- 后端生成临时 `secret` 与 `otpauth`，并返回二维码 `qrImageBase64`
+- 管理员扫码后输入 6 位动态码确认绑定
+- 绑定信息写入 `sys_user_google_auth`
+
+接口：
+
+```http
+GET  /system/user/profile/google2fa/status
+POST /system/user/profile/google2fa/init
+POST /system/user/profile/google2fa/bind
+POST /system/user/profile/google2fa/unbind
+```
+
+### 30.3 敏感操作统一校验（注解+AOP）
+
+新增注解 `@GoogleVerifyRequired` 与切面 `GoogleVerifyAspect`，统一提取请求中的 `googleCode` 并执行校验。
+
+当前已接入：
+
+- 提现审核：`PUT /system/withdraw`
+- 实名审核：`PUT /system/realNameAuth`
+- 投资赎回：`POST /system/invest/order/redeem`
+
+前端在提交上述操作前必须弹窗输入 6 位 Google 动态码，并随请求体携带 `googleCode`。
+
+### 30.4 关键文件
+
+- [GoogleVerifyRequired.java](../ruoyi-common/src/main/java/com/ruoyi/common/annotation/GoogleVerifyRequired.java)
+- [GoogleVerifyAspect.java](../ruoyi-framework/src/main/java/com/ruoyi/framework/aspectj/GoogleVerifyAspect.java)
+- [GoogleTotpUtils.java](../ruoyi-common/src/main/java/com/ruoyi/common/utils/security/GoogleTotpUtils.java)
+- [SysGoogleAuthServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysGoogleAuthServiceImpl.java)
+- [SysProfileController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/system/SysProfileController.java)
+- [googleAuth.vue](../ruoyi-ui/src/views/system/user/profile/googleAuth.vue)
+- [upgrade_google_auth_202606.sql](../sql/upgrade_google_auth_202606.sql)
+
+## 31. APP 投资收益明细（仅利息口径）
+
+### 31.1 展示口径
+
+- 收益明细页仅展示 `INTEREST`（利息）计划，不展示 `PRINCIPAL`（本金）计划。
+- 顶部汇总改为“已收利息 / 待收利息”（按币种分开），不再展示“本息合计”。
+
+### 31.2 明细卡片字段
+
+- 每条记录显示：
+  - 产品名称
+  - 订单号
+  - 状态（已收取 / 未收取 / 待收取 / 已取消）
+  - 收取时间（已收取显示实际收取时间，未收取显示预计收取时间）
+  - 利息金额 + 币种
+
+### 31.3 状态判定
+
+- `status = 1`：已收取
+- `status = 0` 且 `plan_time > now`：未收取（未到期）
+- `status = 0` 且 `plan_time <= now`：待收取（已到期待结算）
+- `status = 2`：已取消（如赎回后取消计划）
+
+### 31.4 关键文件
+
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+- [invest_order_api.dart](../app/lib/request/invest_order_api.dart)
+- [my_invest_income_page.dart](../app/lib/pages/mine/my_invest_income_page.dart)
+
+## 32. APP 投资扣款与本金口径
+
+### 32.1 下单扣款规则
+
+- APP 投资下单前，前端需先按产品币种匹配用户钱包并做余额预校验，余额不足直接拦截。
+- 后端下单时再次按币种钱包加锁校验余额并扣减，防止绕过前端校验。
+- 钱包币种映射统一：`USDT -> USD`，其余按 `CNY/USD` 处理。
+
+### 32.2 订单本金口径
+
+- 投资订单中的 `invest_amount` 作为“实际扣款本金”口径。
+- 订单收益计划（利息与返本）、产品已售金额统计、钱包投资金额累计，统一使用该本金口径。
+- 用户累计投资字段写入同样按该实际扣款金额折算 CNY 后更新。
+
+### 32.3 赎回回退累计投资
+
+- 后台执行赎回时，除返还钱包本金外，必须同步回退用户累计投资字段（按币种折算 CNY）。
+- 赎回回退不影响已结算收益；仅对本金维度进行回退。
+
+### 32.4 关键文件
+
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+- [SysInvestOrderServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestOrderServiceImpl.java)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+
+## 33. APP 我的投资页面重构
+
+### 33.1 视觉风格统一
+
+- “我的投资”页按 APP 整体暗色科技风重构，背景采用深色渐变 + 光晕层，AppBar 透明沉浸。
+- 顶部新增订单概览面板（总订单/进行中/已结束），统一边框、圆角、阴影层级。
+- Tab 区域改为独立深色胶囊容器，激活态保留发光下划线。
+
+### 33.2 订单卡片重排
+
+- 卡片信息层级重排：标题 + 状态、核心指标（单购利率/预期收益/期限/利率）、底部订单号与时间。
+- 状态标签改为半透明底+描边，颜色跟随状态（进行中/已结束/已赎回）。
+- 保留币种品牌图并在底部补充币种文本，增强币种识别一致性。
+
+### 33.3 关键文件
+
+- [my_invest_orders_page.dart](../app/lib/pages/mine/my_invest_orders_page.dart)
+
+### 33.4 统一卡片主题补充
+
+- “我的投资”列表底部订单卡片已取消按币种分底色，统一为全局深色卡片主题（背景、边框、阴影一致）。
+- 币种差异仅通过币种图标与文本体现，避免卡片主视觉割裂。
+- “收益明细”列表卡片同样取消按币种分底色，统一为全局深色卡片主题，风格与“我的投资”保持一致。
+- “收益明细”页面新增全局背景层（深色渐变 + 光晕），并启用透明 AppBar，整体风格与“我的投资/我的页面”统一。
+
+## 34. APP 投资链路口径修正（资产与账变）
+
+### 34.1 资产页总资产口径
+
+- 资产页“总资产”改为钱包资产口径：`available + frozen + pending + profit`。
+- 不再把 `totalInvest` 直接累加到总资产，避免投资时“可用减少、在投增加”导致总资产看起来不变化。
+
+### 34.2 投资账变正负号
+
+- 投资记录页金额符号按业务类型判定，而非按 `amount >= 0` 判定。
+- `invest` 显示负号（扣款），`redeem/profit` 显示正号（入账）。
+
+### 34.3 关键文件
+
+- [assets_page.dart](../app/lib/pages/mine/assets_page.dart)
+- [account_invest_records_page.dart](../app/lib/pages/mine/account_invest_records_page.dart)
+
+## 35. 充值/提现人民币图标统一（银联）
+
+### 35.1 规则
+
+- APP 充值、提现页面中，人民币（CNY）相关入口与账户卡片统一使用 `unionpay.webp` 图标。
+- USD/USDT 保持原币种图标不变。
+
+### 35.2 实现方式
+
+- `CurrencyBrandBadge` 新增 `useUnionPayForCny` 开关；开启后，非 USD 币种图标强制使用银联图。
+- 在 `recharge_page.dart` 与 `withdraw_page.dart` 的人民币展示点统一开启该开关。
+
+### 35.3 关键文件
+
+- [currency_brand_badge.dart](../app/lib/widgets/currency_brand_badge.dart)
+- [recharge_page.dart](../app/lib/pages/mine/recharge_page.dart)
+- [withdraw_page.dart](../app/lib/pages/mine/withdraw_page.dart)
+
+## 36. 产品认购页去除汇率展示
+
+### 36.1 调整说明
+
+- 产品认购页提示文案已移除固定“汇率”显示，避免在认购流程中出现与实时配置不一致的静态汇率信息。
+- 保留“单笔最低 / 单笔最高 / 可投次数”等核心交易限制提示。
+
+### 36.2 关键文件
+
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+
+## 37. 收益明细卡片状态/币种图标布局优化
+
+### 37.1 调整说明
+
+- 收益明细卡片顶部状态保持与产品名同一行展示，并增加状态图标（已收取/已取消/待收取）提升识别度。
+- 订单号改为“标签一行 + 值一行”，减少被右侧金额区域挤压导致的截断。
+- 右侧金额区域固定显示币种图标与金额，保持币种识别一致。
+
+### 37.2 关键文件
+
+- [my_invest_income_page.dart](../app/lib/pages/mine/my_invest_income_page.dart)
+
+### 37.3 细节补充（卡片可读性）
+
+- 状态标签已调整为与产品名同一行显示，避免视觉跳跃。
+- “订单号”改为独立标题 + 下一行值，降低被右侧金额区域挤压导致的截断风险。
+- 订单号新增复制按钮，点击后写入剪贴板并提示“订单号已复制”。
+
+## 38. 资产详情文案调整（可投资金 -> 已投资金）
+
+### 38.1 调整说明
+
+- 资产中心“资产详情”中的字段文案 `assetsInvestable` 已统一改为“已投资金”，更贴合 `wallet.totalInvest` 的已投入语义。
+- 英文文案同步从 `Investable` 调整为 `Invested`，中英文口径一致。
+
+### 38.2 关键文件
+
+- [zh-CN.json](../app/assets/i18n/zh-CN.json)
+- [en-US.json](../app/assets/i18n/en-US.json)
+
+## 39. APP 提现提交金额解析兜底
+
+### 39.1 问题现象
+
+- APP 提现提交出现后端提示“提现金额必须大于0”，但客户端已进入提交流程。
+
+### 39.2 修复内容
+
+- 后端 `AppWithdrawController.submit` 改为与充值接口一致的兼容解析模式：
+- 支持 `data` 加密包解密后反序列化为 `SysUserWithdraw`。
+- 支持明文字段兼容解析（`amount/withdrawAmount/money`、`currencyType`、`withdrawMethod`、`bankCardId`、`requestNo` 等）。
+- 金额字符串解析时去除逗号，避免格式差异导致金额解析为 `null/0`。
+- 前端提现提交前增加金额标准化：输入先去逗号，再按两位小数提交，避免异常格式导致金额失真。
+
+### 39.3 关键文件
+
+- [AppWithdrawController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppWithdrawController.java)
+- [withdraw_page.dart](../app/lib/pages/mine/withdraw_page.dart)
+
+## 40. 后台提现审核通过不写系统通知
+
+### 40.1 调整说明
+
+- 后台提现审核流程中，`审核通过` 分支不再写入 `sys_notice`（业务通知）。
+- 资金处理逻辑保持不变：仍执行冻结金额扣除、钱包流水与状态更新。
+- `审核拒绝` 分支维持原逻辑，仍可写拒绝通知。
+
+### 40.2 关键文件
+
+- [SysUserWithdrawServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysUserWithdrawServiceImpl.java)
+
+## 41. 投资成功写入团队统计并纳入夜间升级口径
+
+### 41.1 调整目标
+
+- 用户投资产品认购成功后，立即写入团队统计事件，保证团队计算链路有实时事件来源。
+- 夜间团队重算与团队升级口径统一纳入 `sys_invest_order`，避免仅统计余额宝订单导致团队投资额偏小。
+
+### 41.2 后端逻辑完善
+
+- 在 `AppInvestOrderController.submit` 下单成功并拿到 `orderId` 后，调用 `teamStatService.recordInvestOrderEvent(...)` 写入团队投资事件。
+- 团队统计服务新增 `recordInvestOrderEvent`，按当前统计层级将成员投资事件展开写入上级链路，且按 `biz_key` 做幂等防重。
+- 夜间重算 `insertInvestEvents` 增加 `sys_invest_order` 来源（`event_type=INVEST`，`biz_key=IPO:{orderId}`）。
+- 团队日快照 `team_total_invest` 改为“余额宝订单 + 投资产品订单”合并口径。
+- 团队等级升级计算 `sumTeamInvestAmount` 同步改为“余额宝订单 + 投资产品订单”合并口径。
+
+### 41.3 关键文件
+
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+- [ISysTeamStatService.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/ISysTeamStatService.java)
+- [SysTeamStatServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysTeamStatServiceImpl.java)
+- [SysTeamStatMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysTeamStatMapper.java)
+- [SysTeamStatMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysTeamStatMapper.xml)
+- [SysTeamLevelMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysTeamLevelMapper.xml)
+
+### 41.4 赎回撤销补充
+
+- 后台执行投资订单赎回时，新增撤销团队统计事件逻辑：按 `biz_key=IPO:{orderId}` 删除该订单对应 `INVEST` 团队事件，避免赎回后仍参与团队投资统计。
+- 撤销动作与赎回资金处理处于同一事务链路，确保状态一致（订单改赎回、计划取消、团队事件撤销）。
+
+补充涉及文件：
+
+- [SysInvestOrderServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestOrderServiceImpl.java)
+- [ISysTeamStatService.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/ISysTeamStatService.java)
+- [SysTeamStatServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysTeamStatServiceImpl.java)
+- [SysTeamStatMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysTeamStatMapper.java)
+- [SysTeamStatMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysTeamStatMapper.xml)
+
+### 41.5 余额宝团队逻辑开关补充
+
+- 余额宝相关“团队升级/团队统计投资额”逻辑改为仅在 `app.yebao.levelBonusEnabled=true` 时生效。
+- 当开关为 `false`（或缺省）时：
+  - 夜间团队事件重算不写入余额宝投资事件；
+  - 团队日快照 `team_total_invest` 不计入余额宝投资；
+  - 团队升级判定投资额不计入余额宝投资。
+- 投资产品订单（`sys_invest_order`）统计不受该开关影响，继续参与团队口径。
+
+补充涉及文件：
+
+- [SysTeamStatServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysTeamStatServiceImpl.java)
+- [SysTeamStatMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysTeamStatMapper.java)
+- [SysTeamStatMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysTeamStatMapper.xml)
+- [SysTeamLevelServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysTeamLevelServiceImpl.java)
+- [SysTeamLevelMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysTeamLevelMapper.java)
+- [SysTeamLevelMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysTeamLevelMapper.xml)
+
+## 47. 钱包地址长度限制（前后端双重校验）
+
+### 47.1 调整说明
+
+- 添加 USD 钱包地址时，输入长度统一限制为最多 34 个字符，超过即拦截。
+- 前端在输入框层面增加长度限制，并在提交时做二次校验提示。
+- 后端服务层增加强校验，防止绕过前端直接提交超长钱包地址。
+- 银行卡新增流程改为“弹窗只收集表单并返回结果，页面层再发起网络请求”，避免在弹窗销毁动画阶段仍引用输入控制器，修复 `TextEditingController was used after being disposed` 与相关 `_dependents.isEmpty` 崩溃链路。
+
+### 47.2 关键文件
+
+- [bank_card_page.dart](../app/lib/pages/mine/bank_card_page.dart)
+- [SysUserBankCardServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysUserBankCardServiceImpl.java)
+- [zh-CN.json](../app/assets/i18n/zh-CN.json)
+- [en-US.json](../app/assets/i18n/en-US.json)
+
+## 48. 真实姓名字段打通（实名审核/个人信息/银行卡/投资合同）
+
+### 48.1 调整说明
+
+- 用户表新增 `real_name` 字段，作为实名认证通过后的权威姓名来源。
+- 后台审核实名认证通过时，自动将实名记录中的 `real_name` 回写到 `sys_user.real_name`，并同步实名状态。
+- `getInfo` / APP 登录返回的用户对象补充 `realName`，前端用户模型同步接收并缓存。
+- 个人信息页“基本信息”新增“真实姓名”只读展示。
+- 添加人民币银行卡时，持卡人姓名改为自动使用 `realName` 且前端只读不可改；后端也强制覆盖为 `sys_user.real_name` 防篡改。
+- 投资产品合同预览与签约文本中的投资方姓名统一优先使用 `realName`（为空时才回退旧值）。
+
+### 48.2 关键文件
+
+- [user_real_name_20260504.sql](../sql/user_real_name_20260504.sql)
+- [SysUser.java](../ruoyi-common/src/main/java/com/ruoyi/common/core/domain/entity/SysUser.java)
+- [SysUserMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysUserMapper.java)
+- [SysUserMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysUserMapper.xml)
+- [ISysUserService.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/ISysUserService.java)
+- [SysUserServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysUserServiceImpl.java)
+- [SysAppRealNameAuthServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysAppRealNameAuthServiceImpl.java)
+- [SysLoginService.java](../ruoyi-framework/src/main/java/com/ruoyi/framework/web/service/SysLoginService.java)
+- [auth_api.dart](../app/lib/request/auth_api.dart)
+- [profile_page.dart](../app/lib/pages/mine/profile_page.dart)
+- [bank_card_page.dart](../app/lib/pages/mine/bank_card_page.dart)
+- [SysUserBankCardServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysUserBankCardServiceImpl.java)
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+- [invest_order_api.dart](../app/lib/request/invest_order_api.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+
+## 49. 实名重审入口与审核通过通知收口
+
+### 49.1 调整说明
+
+- 后台实名认证页面 `system/realNameAuth/index` 新增“重新审核”按钮（仅对非待审核状态显示）。
+- 点击“重新审核”后，要求输入 Google 验证码，并将当前记录状态重置为 `待审核(status=0)`，用于历史已实名用户的重新审核流程。
+- 保持提现审核通过不写 `sys_notice`（此前已处理）。
+- 进一步收口“审核通过”通知：充值审核通过不再写入 `sys_notice`，仅保留审核拒绝提醒。
+
+### 49.2 关键文件
+
+- [index.vue](../ruoyi-ui/src/views/system/realNameAuth/index.vue)
+- [SysUserRechargeServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysUserRechargeServiceImpl.java)
+
+## 50. 实名审核 Google 验证范围调整
+
+### 50.1 调整说明
+
+- 实名认证“通过/拒绝”审核流程不再要求 Google 验证码。
+- 仅“重新审核（重置为待审核，status=0）”时要求 Google 验证码。
+- 后端接口按状态做强校验：`status=0` 且 `googleCode` 为空时直接返回错误，避免前端绕过。
+- 后台页面同步交互：通过/拒绝操作去掉 Google 验证弹窗；重新审核保留验证码弹窗。
+
+### 50.2 关键文件
+
+- [SysAppRealNameAuthController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/system/SysAppRealNameAuthController.java)
+- [index.vue](../ruoyi-ui/src/views/system/realNameAuth/index.vue)

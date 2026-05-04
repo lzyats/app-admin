@@ -179,14 +179,6 @@ public class SysUserWithdrawServiceImpl implements ISysUserWithdrawService
         if (STATUS_APPROVED == target.getStatus())
         {
             approveWithdrawAmount(target);
-            businessNoticeService.insertBusinessNotice(
-                "提现审核通过",
-                String.format("用户 %s 的提现订单 %s 已审核通过，金额 %s %s 已完成处理。",
-                    target.getUserName(),
-                    target.getOrderNo(),
-                    formatAmount(target.getAmount()),
-                    getCurrencyLabelCn(target.getCurrencyType()))
-            );
         }
         else
         {

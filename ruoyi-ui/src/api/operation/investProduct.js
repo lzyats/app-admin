@@ -38,6 +38,13 @@ export function delInvestProduct(productId) {
   })
 }
 
+export function copyInvestProduct(productId) {
+  return request({
+    url: '/system/invest/product/copy/' + productId,
+    method: 'post'
+  })
+}
+
 export function listInvestTag(query) {
   return request({
     url: '/system/invest/tag/list',

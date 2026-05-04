@@ -23,4 +23,8 @@ public interface SysInvestProductMapper
     int insertProductTagRel(@Param("productId") Long productId, @Param("tagId") Long tagId);
 
     Long[] selectTagIdsByProductId(Long productId);
+
+    SysInvestProduct selectInvestProductByIdForUpdate(Long productId);
+
+    int increaseSoldShares(@Param("productId") Long productId, @Param("delta") Long delta, @Param("amountDelta") java.math.BigDecimal amountDelta);
 }

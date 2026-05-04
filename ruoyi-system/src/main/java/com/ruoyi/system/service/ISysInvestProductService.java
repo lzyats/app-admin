@@ -14,4 +14,6 @@ public interface ISysInvestProductService
     int updateInvestProduct(SysInvestProduct product);
 
     int deleteInvestProductByIds(Long[] productIds);
+
+    int copyInvestProduct(Long productId, String operator);
 }

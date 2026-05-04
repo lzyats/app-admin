@@ -134,6 +134,18 @@ public interface SysUserMapper
     public int updateUserRealNameStatus(@Param("userId") Long userId, @Param("realNameStatus") Integer realNameStatus);
 
     /**
+     * 审核通过后更新用户真实姓名与实名状态
+     *
+     * @param userId 用户ID
+     * @param realName 真实姓名
+     * @param realNameStatus 实名状态
+     * @return 结果
+     */
+    public int updateUserVerifiedRealName(@Param("userId") Long userId,
+                                          @Param("realName") String realName,
+                                          @Param("realNameStatus") Integer realNameStatus);
+
+    /**
      * 修改用户头像
      * 
      * @param userId 用户ID

@@ -110,6 +110,40 @@ export function uploadAvatar(data) {
   })
 }
 
+// Google 2FA 状态
+export function getGoogle2faStatus() {
+  return request({
+    url: '/system/user/profile/google2fa/status',
+    method: 'get'
+  })
+}
+
+// 初始化 Google 2FA 绑定
+export function initGoogle2fa() {
+  return request({
+    url: '/system/user/profile/google2fa/init',
+    method: 'post'
+  })
+}
+
+// 绑定 Google 2FA
+export function bindGoogle2fa(code) {
+  return request({
+    url: '/system/user/profile/google2fa/bind',
+    method: 'post',
+    data: { code }
+  })
+}
+
+// 解绑 Google 2FA
+export function unbindGoogle2fa(code) {
+  return request({
+    url: '/system/user/profile/google2fa/unbind',
+    method: 'post',
+    data: { code }
+  })
+}
+
 // 查询授权角色
 export function getAuthRole(userId) {
   return request({

@@ -131,6 +131,7 @@ public class AppConfigController
                 config.setConfigKey(configKey);
                 config.setConfigName(StringUtils.trim((String) option.get("configName")));
                 config.setConfigValue(normalizeConfigValue(StringUtils.trim((String) option.get("configValue"))));
+                config.setConfigValueType(normalizeConfigValueType(option.get("configValueType")));
                 config.setConfigType("N");
                 config.setIsAppConfig(normalizeAppFlag(option.get("isAppConfig")));
                 config.setRemark(StringUtils.trim((String) option.get("remark")));
@@ -218,6 +219,7 @@ public class AppConfigController
         option.put("currentValue", value);
         option.put("remark", config.getRemark());
         option.put("isAppConfig", config.getIsAppConfig());
+        option.put("configValueType", normalizeConfigValueType(config.getConfigValueType()));
         option.put("valueType", inferValueType(config));
         return option;
     }
@@ -227,6 +229,27 @@ public class AppConfigController
         if (config == null)
         {
             return "text";
+        }
+        String configValueType = normalizeConfigValueType(config.getConfigValueType());
+        if ("IMAGE".equals(configValueType))
+        {
+            return "image";
+        }
+        if ("FILE".equals(configValueType))
+        {
+            return "file";
+        }
+        if ("DATE".equals(configValueType))
+        {
+            return "date";
+        }
+        if ("SWITCH".equals(configValueType))
+        {
+            return "bool";
+        }
+        if ("SELECT".equals(configValueType))
+        {
+            return "select";
         }
         String item = StringUtils.trim(config.getConfigKey());
         String value = StringUtils.trim(config.getConfigValue());
@@ -298,6 +321,16 @@ public class AppConfigController
             return "1";
         }
         return "0".equals(raw) ? "0" : "1";
+    }
+
+    private String normalizeConfigValueType(Object value)
+    {
+        String type = StringUtils.upperCase(StringUtils.trim(Convert.toStr(value)));
+        if ("IMAGE".equals(type) || "FILE".equals(type) || "DATE".equals(type) || "SWITCH".equals(type) || "SELECT".equals(type))
+        {
+            return type;
+        }
+        return "TEXT";
     }
 
     private void normalizeConfigList(List<SysConfig> configs)

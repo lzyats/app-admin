@@ -1,4 +1,4 @@
-{
+﻿{
   "appName": "GVA App",
   "homeTitle": "Control Center",
   "upgradeTitle": "Upgrade",
@@ -9,7 +9,7 @@
   "scanAdd": "Scan to add",
   "followSystem": "Follow System",
   "language": "Language",
-  "zhCN": "中文",
+  "zhCN": "涓枃",
   "enUS": "English",
   "selectPlaceholder": "Please select",
   "loginTitle": "Login",
@@ -139,7 +139,7 @@
   "assetsSummaryTitle": "Asset Overview",
   "assetsDetail": "Asset Details",
   "assetsTotalAssets": "Total Assets",
-  "assetsInvestable": "Investable",
+  "assetsInvestable": "Invested",
   "assetsAvailable": "Available Balance",
   "assetsFrozen": "Frozen Amount",
   "assetsPending": "Pending Amount",
@@ -354,6 +354,7 @@
   "bankCardNeedRealName": "Please complete real-name verification before binding an RMB bank card",
   "bankCardMaxReached": "Each currency can bind up to 2 cards",
   "bankCardFillRequired": "Please fill in all required fields",
+  "bankCardWalletAddressTooLong": "Wallet address cannot exceed 34 characters",
   "bankCardSubmit": "Submit",
   "bankCardSubmitSuccess": "Bank card bound successfully",
   "bankCardSubmitFailed": "Failed to bind bank card, please try again later",
@@ -431,4 +432,5 @@
   "uploadFailed": "Upload failed",
   "avatarCropTitle": "Crop Avatar"
   ,"assetsSignIn":"Sign In","commonConfirm":"OK","currencyYuan":"CNY","currencyPoints":"Points","signTitle":"Daily Sign-In","signTodaySigned":"Signed Today","signTodayReward":"Today's Reward","signButton":"Check In","signInviteTitle":"Invite Friends","signInviteSubtitle":"You may get generous rewards","signInviteButton":"Invite Now","signRewardRules":"Continuous Rewards","signHistoryTitle":"Sign-in History","signCurrentStreak":"Current streak","signDayUnit":"days","signNoHistory":"No sign-in records yet. Complete your first check-in.","signLoadFailed":"Failed to load sign-in data","signLoadFailedHint":"We could not load the sign-in information right now. Tap the button below to try again.","signRetry":"Retry","signSuccessTitle":"Check-in Successful","signSuccessHint":"Congratulations on earning your reward!","signSubmitFailed":"Failed to submit sign-in, please try again later.","signRecordSuccess":"Check-in successful","signMaxReward":"Max reward","newsTitle":"News","newsInfo":"News","newsAboutUs":"About Us","newsEmptyTitle":"No news available","newsDetailTitle":"Details"}
+
 

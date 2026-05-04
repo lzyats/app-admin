@@ -147,15 +147,6 @@ public class SysUserRechargeServiceImpl implements ISysUserRechargeService
             target.setUpdateTime(new Date());
             rechargeMapper.updateRecharge(target);
             syncUserTotalsAndLevel(target);
-            businessNoticeService.insertBusinessNotice(
-                "充值审核通过",
-                String.format(
-                    "用户 %s 的充值订单 %s 已通过审核。金额 %s %s 已到账。",
-                    target.getUserName(),
-                    target.getOrderNo(),
-                    formatAmount(target.getAmount()),
-                    getCurrencyLabel(target.getCurrencyType()))
-            );
         }
         else if (STATUS_REJECTED == target.getStatus())
         {

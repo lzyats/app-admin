@@ -1,9 +1,9 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/api_exception.dart';
 import 'package:myapp/request/auth_api.dart';
+import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/tools/auth_tool.dart';
 
 class PayPasswordSetPage extends StatefulWidget {
@@ -19,60 +19,55 @@ class PayPasswordSetPage extends StatefulWidget {
 }
 
 class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
-  final TextEditingController emailController = TextEditingController();
   final TextEditingController payPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
-  final TextEditingController codeController = TextEditingController();
-
-  bool loading = false;
+  final Map<int, TextEditingController> _answerControllers = {};
+  List<SecurityQuestion> _securityQuestions = <SecurityQuestion>[];
+  bool _loadingQuestions = false;
   bool submitting = false;
-  bool captchaEnabled = false;
-  String captchaUuid = '';
-  String captchaImageBase64 = '';
-  String initialEmail = '';
 
   @override
   void initState() {
     super.initState();
-    _loadUserInfo();
+    _loadSecurityQuestions();
   }
 
-  Future<void> _loadUserInfo() async {
-    try {
-      final userInfo = await AuthApi.getInfo();
-      if (userInfo.email != null && userInfo.email!.isNotEmpty) {
-        initialEmail = userInfo.email!;
-        emailController.text = userInfo.email!;
-      }
-    } catch (_) {
-      // 忽略错误，使用空邮箱
-    }
-  }
-
-  Future<void> _refreshCaptcha() async {
-    if (loading) {
+  Future<void> _loadSecurityQuestions() async {
+    if (!mounted) {
       return;
     }
-    setState(() {
-      loading = true;
-    });
     try {
-      final payload = await AuthApi.captcha();
       setState(() {
-        captchaEnabled = payload.captchaEnabled;
-        captchaUuid = payload.uuid;
-        captchaImageBase64 = payload.imageBase64;
+        _loadingQuestions = true;
+      });
+      final myAnswers = await AuthApi.getMySecurityAnswers();
+      if (myAnswers.isEmpty) {
+        setState(() {
+          _securityQuestions = <SecurityQuestion>[];
+        });
+        return;
+      }
+      final i18n = AppLocalizations.of(context);
+      final allQuestions = await AuthApi.getSecurityQuestions(lang: i18n.locale.toString());
+      final userQuestionIds = myAnswers.map((e) => e.questionId).toSet();
+      final userQuestions = allQuestions.where((q) => userQuestionIds.contains(q.questionId)).toList();
+      setState(() {
+        _securityQuestions = userQuestions;
+        for (final controller in _answerControllers.values) {
+          controller.dispose();
+        }
+        _answerControllers.clear();
+        for (final q in userQuestions) {
+          _answerControllers[q.questionId] = TextEditingController();
+        }
       });
     } catch (_) {
-      setState(() {
-        captchaEnabled = false;
-        captchaUuid = '';
-        captchaImageBase64 = '';
-      });
     } finally {
-      setState(() {
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loadingQuestions = false;
+        });
+      }
     }
   }
 
@@ -83,17 +78,10 @@ class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
 
   Future<void> _submit() async {
     final i18n = AppLocalizations.of(context);
-    final email = emailController.text.trim();
     final payPassword = payPasswordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
-    final code = codeController.text.trim();
-
-    if (email.isEmpty) {
-      _showError(i18n.t('payPasswordEmailRequired'));
-      return;
-    }
-    if (!email.contains('@')) {
-      _showError(i18n.t('payPasswordEmailInvalid'));
+    if (_securityQuestions.isEmpty) {
+      _showError(i18n.t('securityQuestionNoQuestions'));
       return;
     }
     if (payPassword.isEmpty) {
@@ -112,9 +100,14 @@ class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
       _showError(i18n.t('payPasswordConfirmError'));
       return;
     }
-    if (captchaEnabled && code.isEmpty) {
-      _showError(i18n.t('authCaptchaRequired'));
-      return;
+    final answers = <SecurityAnswerBody>[];
+    for (final question in _securityQuestions) {
+      final value = _answerControllers[question.questionId]?.text.trim() ?? '';
+      if (value.isEmpty) {
+        _showError(i18n.t('securityQuestionAnswerRequired'));
+        return;
+      }
+      answers.add(SecurityAnswerBody(questionId: question.questionId, answer: value));
     }
 
     setState(() {
@@ -122,12 +115,10 @@ class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
     });
 
     try {
-      // 如果邮箱与初始值不同，先更新邮箱信息
-      if (email != initialEmail) {
-        await AuthApi.updateProfile(email: email);
-      }
-      // 设置支付密码
-      await AuthApi.setPayPwd(widget.userId, payPassword);
+      await AuthApi.setPayPasswordWithSecurityQuestions(
+        newPassword: payPassword,
+        answers: answers,
+      );
       // 更新本地缓存
       await AuthTool.setPayPasswordSet();
       if (mounted) {
@@ -215,26 +206,67 @@ class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
                   ),
                   child: Column(
                     children: <Widget>[
-                      TextField(
-                        controller: emailController,
-                        decoration: InputDecoration(
-                          labelText: i18n.t('payPasswordEmail'),
-                          labelStyle: const TextStyle(color: Color(0xFF9DB1C9)),
-                          hintText: i18n.t('payPasswordEmailHint'),
-                          hintStyle: const TextStyle(color: Color(0xFF6B7A8A)),
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Color(0x334CE3FF)),
-                            borderRadius: BorderRadius.circular(12),
+                      if (_loadingQuestions)
+                        const Padding(
+                          padding: EdgeInsets.only(bottom: 16),
+                          child: CircularProgressIndicator(color: Color(0xFF39E6FF)),
+                        ),
+                      if (!_loadingQuestions && _securityQuestions.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0x334CE3FF)),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: const BorderSide(color: Color(0xFF39E6FF)),
-                            borderRadius: BorderRadius.circular(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                i18n.t('securityQuestionNoQuestions'),
+                                style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 13),
+                              ),
+                              const SizedBox(height: 8),
+                              TextButton(
+                                onPressed: () async {
+                                  await Navigator.pushNamed(context, AppRouter.securityQuestionSet);
+                                  if (mounted) {
+                                    _loadSecurityQuestions();
+                                  }
+                                },
+                                child: Text(i18n.t('mineSecurityQuestion')),
+                              ),
+                            ],
                           ),
                         ),
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(color: Color(0xFFE9F3FF)),
-                      ),
-                      const SizedBox(height: 16),
+                      if (_securityQuestions.isNotEmpty)
+                        Column(
+                          children: _securityQuestions.map((question) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: TextField(
+                                controller: _answerControllers[question.questionId],
+                                decoration: InputDecoration(
+                                  labelText: question.questionText,
+                                  labelStyle: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
+                                  hintText: i18n.t('securityQuestionAnswerHint'),
+                                  hintStyle: const TextStyle(color: Color(0xFF6B7A8A)),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Color(0x334CE3FF)),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: const BorderSide(color: Color(0xFF39E6FF)),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                style: const TextStyle(color: Color(0xFFE9F3FF)),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       TextField(
                         controller: payPasswordController,
                         decoration: InputDecoration(
@@ -278,73 +310,6 @@ class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
                         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                         style: const TextStyle(color: Color(0xFFE9F3FF)),
                       ),
-                      if (captchaEnabled)
-                        Column(
-                          children: <Widget>[
-                            const SizedBox(height: 16),
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: TextField(
-                                    controller: codeController,
-                                    decoration: InputDecoration(
-                                      labelText: i18n.t('authCaptcha'),
-                                      labelStyle: const TextStyle(color: Color(0xFF9DB1C9)),
-                                      hintText: i18n.t('authCaptchaHint'),
-                                      hintStyle: const TextStyle(color: Color(0xFF6B7A8A)),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Color(0x334CE3FF)),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderSide: const BorderSide(color: Color(0xFF39E6FF)),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    style: const TextStyle(color: Color(0xFFE9F3FF)),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: _refreshCaptcha,
-                                  child: Container(
-                                    width: 100,
-                                    height: 48,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(color: const Color(0x334CE3FF)),
-                                    ),
-                                    child: loading
-                                        ? const Center(
-                                            child: SizedBox(
-                                              width: 20,
-                                              height: 20,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF39E6FF)),
-                                              ),
-                                            ),
-                                          )
-                                        : captchaImageBase64.isNotEmpty
-                                            ? Image.memory(
-                                                base64Decode(captchaImageBase64),
-                                                fit: BoxFit.cover,
-                                                width: 100,
-                                                height: 48,
-                                              )
-                                            : Center(
-                                                child: Text(
-                                                  i18n.t('authRefreshCaptcha'),
-                                                  style: const TextStyle(color: Color(0xFF39E6FF)),
-                                                ),
-                                              ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
                       const SizedBox(height: 32),
                       SizedBox(
                         width: double.infinity,
@@ -389,10 +354,11 @@ class _PayPasswordSetPageState extends State<PayPasswordSetPage> {
 
   @override
   void dispose() {
-    emailController.dispose();
     payPasswordController.dispose();
     confirmPasswordController.dispose();
-    codeController.dispose();
+    for (final controller in _answerControllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 }

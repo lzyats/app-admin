@@ -9,6 +9,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <result property="configName"    column="config_name"    />
         <result property="configKey"     column="config_key"     />
         <result property="configValue"   column="config_value"   />
+        <result property="configValueType" column="config_value_type" />
         <result property="configType"    column="config_type"    />
         <result property="isAppConfig"   column="is_app_config"  />
         <result property="createBy"      column="create_by"      />
@@ -19,7 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectConfigVo">
-        select config_id, config_name, config_key, config_value, config_type, is_app_config,
+        select config_id, config_name, config_key, config_value, config_value_type, config_type, is_app_config,
                create_by, create_time, update_by, update_time, remark
         from sys_config
     </sql>
@@ -55,6 +56,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="configKey != null and configKey != ''">
                 and config_key like concat('%', #{configKey}, '%')
             </if>
+            <if test="configValueType != null and configValueType != ''">
+                and config_value_type = #{configValueType}
+            </if>
             <if test="isAppConfig != null and isAppConfig != ''">
                 and is_app_config = #{isAppConfig}
             </if>
@@ -82,6 +86,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="configName != null and configName != '' ">config_name,</if>
             <if test="configKey != null and configKey != '' ">config_key,</if>
             <if test="configValue != null and configValue != '' ">config_value,</if>
+            <if test="configValueType != null and configValueType != '' ">config_value_type,</if>
             <if test="configType != null and configType != '' ">config_type,</if>
             <if test="isAppConfig != null and isAppConfig != '' ">is_app_config,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
@@ -91,6 +96,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="configName != null and configName != ''">#{configName},</if>
             <if test="configKey != null and configKey != ''">#{configKey},</if>
             <if test="configValue != null and configValue != ''">#{configValue},</if>
+            <if test="configValueType != null and configValueType != ''">#{configValueType},</if>
             <if test="configType != null and configType != ''">#{configType},</if>
             <if test="isAppConfig != null and isAppConfig != ''">#{isAppConfig},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
@@ -105,6 +111,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="configName != null and configName != ''">config_name = #{configName},</if>
             <if test="configKey != null and configKey != ''">config_key = #{configKey},</if>
             <if test="configValue != null and configValue != ''">config_value = #{configValue},</if>
+            <if test="configValueType != null and configValueType != ''">config_value_type = #{configValueType},</if>
             <if test="configType != null and configType != ''">config_type = #{configType},</if>
             <if test="isAppConfig != null and isAppConfig != ''">is_app_config = #{isAppConfig},</if>
             <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>

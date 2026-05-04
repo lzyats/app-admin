@@ -346,6 +346,7 @@ class _RechargePageState extends State<RechargePage> {
                                 CurrencyBrandBadge(
                                   currencyType: option.currencyType,
                                   size: 54,
+                                  useUnionPayForCny: true,
                                 ),
                                 const SizedBox(width: 14),
                                 Expanded(

@@ -7,6 +7,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <resultMap type="SysYebaoOrder" id="SysYebaoOrderResult">
         <id property="orderId" column="order_id" />
         <result property="orderNo" column="order_no" />
+        <result property="clientReqNo" column="client_req_no" />
         <result property="userId" column="user_id" />
         <result property="userName" column="user_name" />
         <result property="shares" column="shares" />
@@ -26,7 +27,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectYebaoOrderVo">
-        select o.order_id, o.order_no, o.user_id, u.user_name, o.shares, o.unit_amount, o.principal_amount,
+        select o.order_id, o.order_no, o.client_req_no, o.user_id, u.user_name, o.shares, o.unit_amount, o.principal_amount,
                o.annual_rate, o.settled_income, o.invest_time, o.last_settle_time, o.next_settle_time,
                o.status, o.create_by, o.create_time, o.update_by, o.update_time, o.remark
         from sys_yebao_order o
@@ -80,6 +81,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         for update
     </select>
 
+    <select id="selectYebaoOrderByUserAndClientReqNo" resultMap="SysYebaoOrderResult">
+        <include refid="selectYebaoOrderVo" />
+        where o.user_id = #{userId}
+          and o.client_req_no = #{clientReqNo}
+        limit 1
+    </select>
+
     <select id="selectUserPrincipalTotal" parameterType="Long" resultType="java.lang.Double">
         select ifnull(sum(principal_amount), 0)
         from sys_yebao_order
@@ -113,6 +121,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         insert into sys_yebao_order
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="orderNo != null and orderNo != ''">order_no,</if>
+            <if test="clientReqNo != null and clientReqNo != ''">client_req_no,</if>
             <if test="userId != null">user_id,</if>
             <if test="userName != null and userName != ''">user_name,</if>
             <if test="shares != null">shares,</if>
@@ -130,6 +139,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="orderNo != null and orderNo != ''">#{orderNo},</if>
+            <if test="clientReqNo != null and clientReqNo != ''">#{clientReqNo},</if>
             <if test="userId != null">#{userId},</if>
             <if test="userName != null and userName != ''">#{userName},</if>
             <if test="shares != null">#{shares},</if>

@@ -82,6 +82,14 @@ class RuoYiEndpoints {
   static const String appUserLevelOptions = '/app/userLevel/options';
   static const String appTeamRewardInfo = '/app/team/reward/info';
   static const String appTeamStatsMe = '/app/team/stats/me';
+  static const String appInvestProductList = '/app/invest/product/list';
+  static const String appInvestProductDetail = '/app/invest/product';
+  static const String appInvestOrderContractPreview = '/app/invest/order/contract/preview';
+  static const String appInvestOrderSubmit = '/app/invest/order/submit';
+  static const String appInvestOrderList = '/app/invest/order/list';
+  static const String appInvestOrderIncomes = '/app/invest/order/incomes';
+  static const String appUserWalletInvestLogs = '/app/user/wallet/log/investList';
+  static const String appUserWalletLogList = '/app/user/wallet/log/list';
 
   static String newsDetail(int articleId) => '/app/news/$articleId';
 }

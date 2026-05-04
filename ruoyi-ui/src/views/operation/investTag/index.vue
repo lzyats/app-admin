@@ -7,6 +7,11 @@
       <el-form-item label="标签编码" prop="tagCode">
         <el-input v-model="queryParams.tagCode" placeholder="请输入标签编码" clearable @keyup.enter.native="handleQuery" />
       </el-form-item>
+      <el-form-item label="标签类型" prop="tagType">
+        <el-select v-model="queryParams.tagType" placeholder="全部类型" clearable style="width: 140px">
+          <el-option v-for="item in tagTypeOptions" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="状态" clearable style="width: 130px">
           <el-option v-for="dict in dict.type.sys_normal_disable" :key="dict.value" :label="dict.label" :value="dict.value" />
@@ -30,6 +35,12 @@
       <el-table-column label="标签ID" prop="tagId" width="90" />
       <el-table-column label="标签名称" prop="tagName" min-width="120" />
       <el-table-column label="标签编码" prop="tagCode" min-width="120" />
+      <el-table-column label="标签类型" prop="tagType" width="120">
+        <template slot-scope="scope">
+          <el-tag v-if="scope.row.tagType === 'RISK'" type="danger" size="mini">风险标签</el-tag>
+          <el-tag v-else type="success" size="mini">产品标签</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="颜色值" prop="tagColor" width="160">
         <template slot-scope="scope">
           <span class="color-dot" :style="{ backgroundColor: scope.row.tagColor || '#409EFF' }"></span>
@@ -60,6 +71,12 @@
         </el-form-item>
         <el-form-item label="标签颜色" prop="tagColor">
           <el-input v-model="form.tagColor" placeholder="例如 #67C23A" />
+        </el-form-item>
+        <el-form-item label="标签类型" prop="tagType">
+          <el-radio-group v-model="form.tagType">
+            <el-radio label="PRODUCT">产品标签</el-radio>
+            <el-radio label="RISK">风险标签</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="排序值" prop="sortOrder">
           <el-input-number v-model="form.sortOrder" :min="0" />
@@ -97,6 +114,10 @@ export default {
       showSearch: true,
       total: 0,
       tagList: [],
+      tagTypeOptions: [
+        { label: '产品标签', value: 'PRODUCT' },
+        { label: '风险标签', value: 'RISK' }
+      ],
       open: false,
       title: '',
       queryParams: {
@@ -104,12 +125,14 @@ export default {
         pageSize: 10,
         tagName: undefined,
         tagCode: undefined,
+        tagType: undefined,
         status: undefined
       },
       form: {},
       rules: {
         tagName: [{ required: true, message: '请输入标签名称', trigger: 'blur' }],
-        tagCode: [{ required: true, message: '请输入标签编码', trigger: 'blur' }]
+        tagCode: [{ required: true, message: '请输入标签编码', trigger: 'blur' }],
+        tagType: [{ required: true, message: '请选择标签类型', trigger: 'change' }]
       }
     }
   },
@@ -131,6 +154,7 @@ export default {
         tagCode: undefined,
         tagName: undefined,
         tagColor: '#409EFF',
+        tagType: 'PRODUCT',
         sortOrder: 0,
         status: '0',
         remark: undefined

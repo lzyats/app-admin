@@ -20,6 +20,8 @@ public interface ISysYebaoOrderService
 
     int purchase(Long userId, Integer shares, String remark);
 
+    int purchase(Long userId, Integer shares, String remark, String clientReqNo);
+
     int redeem(Long userId, Long orderId);
 
     int settleDueIncome();

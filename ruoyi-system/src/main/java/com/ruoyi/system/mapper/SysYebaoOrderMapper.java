@@ -17,6 +17,8 @@ public interface SysYebaoOrderMapper
 
     SysYebaoOrder selectYebaoOrderByIdForUpdate(@Param("orderId") Long orderId);
 
+    SysYebaoOrder selectYebaoOrderByUserAndClientReqNo(@Param("userId") Long userId, @Param("clientReqNo") String clientReqNo);
+
     int insertYebaoOrder(SysYebaoOrder order);
 
     int updateYebaoOrder(SysYebaoOrder order);

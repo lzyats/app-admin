@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysTeamLevel;
 import com.ruoyi.system.mapper.SysTeamLevelMapper;
 import com.ruoyi.system.mapper.SysUserMapper;
+import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysTeamLevelService;
 
 @Service
@@ -18,6 +20,7 @@ public class SysTeamLevelServiceImpl implements ISysTeamLevelService
 {
     private static final String CACHE_KEY_OPTIONS = "team:level:options";
     private static final Integer CACHE_EXPIRE_MINUTES = 30;
+    private static final String CONFIG_YEBAO_LEVEL_BONUS_ENABLED = "app.yebao.levelBonusEnabled";
 
     @Autowired
     private SysTeamLevelMapper teamLevelMapper;
@@ -27,6 +30,9 @@ public class SysTeamLevelServiceImpl implements ISysTeamLevelService
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private ISysConfigService configService;
 
     @Override
     public SysTeamLevel selectTeamLevelById(Long teamLevelId)
@@ -106,7 +112,7 @@ public class SysTeamLevelServiceImpl implements ISysTeamLevelService
         Integer userLevel = user.getLevel() == null ? 0 : user.getLevel();
         int directValidUsers = teamLevelMapper.countDirectValidUsers(userId);
         int teamValidUsers = teamLevelMapper.countTeamValidUsers(userId);
-        BigDecimal teamInvest = teamLevelMapper.sumTeamInvestAmount(userId);
+        BigDecimal teamInvest = teamLevelMapper.sumTeamInvestAmount(userId, isYebaoLevelBonusEnabled());
         if (teamInvest == null)
         {
             teamInvest = BigDecimal.ZERO;
@@ -145,5 +151,18 @@ public class SysTeamLevelServiceImpl implements ISysTeamLevelService
     public void clearCache()
     {
         redisCache.deleteObject(CACHE_KEY_OPTIONS);
+    }
+
+    private boolean isYebaoLevelBonusEnabled()
+    {
+        try
+        {
+            String raw = configService.selectConfigByKey(CONFIG_YEBAO_LEVEL_BONUS_ENABLED);
+            return "true".equalsIgnoreCase(StringUtils.trim(raw)) || "1".equals(StringUtils.trim(raw));
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
     }
 }

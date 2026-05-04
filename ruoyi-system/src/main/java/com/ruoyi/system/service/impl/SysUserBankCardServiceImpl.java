@@ -28,6 +28,7 @@ public class SysUserBankCardServiceImpl implements ISysUserBankCardService
 {
     private static final int REAL_NAME_APPROVED = 3;
     private static final int MAX_CARD_PER_CURRENCY = 2;
+    private static final int MAX_WALLET_ADDRESS_LENGTH = 34;
 
     @Autowired
     private SysUserBankCardMapper bankCardMapper;
@@ -218,12 +219,17 @@ public class SysUserBankCardServiceImpl implements ISysUserBankCardService
             {
                 throw new ServiceException("Real-name approval is required before binding an RMB card.");
             }
+            String verifiedRealName = StringUtils.trim(user.getRealName());
+            if (StringUtils.isBlank(verifiedRealName))
+            {
+                throw new ServiceException("Verified real name is required before binding an RMB card.");
+            }
             bankCard.setBankName(StringUtils.trim(bankCard.getBankName()));
             bankCard.setAccountNo(StringUtils.trim(bankCard.getAccountNo()));
-            bankCard.setAccountName(StringUtils.trim(bankCard.getAccountName()));
-            if (StringUtils.isBlank(bankCard.getBankName()) || StringUtils.isBlank(bankCard.getAccountNo()) || StringUtils.isBlank(bankCard.getAccountName()))
+            bankCard.setAccountName(verifiedRealName);
+            if (StringUtils.isBlank(bankCard.getBankName()) || StringUtils.isBlank(bankCard.getAccountNo()))
             {
-                throw new ServiceException("Bank name, account number and account name are required for RMB cards.");
+                throw new ServiceException("Bank name and account number are required for RMB cards.");
             }
             bankCard.setWalletAddress(null);
         }
@@ -233,6 +239,10 @@ public class SysUserBankCardServiceImpl implements ISysUserBankCardService
             if (StringUtils.isBlank(bankCard.getWalletAddress()))
             {
                 throw new ServiceException("Wallet address is required for USD cards.");
+            }
+            if (bankCard.getWalletAddress().length() > MAX_WALLET_ADDRESS_LENGTH)
+            {
+                throw new ServiceException("Wallet address cannot exceed 34 characters.");
             }
             bankCard.setBankName(null);
             bankCard.setAccountNo(null);

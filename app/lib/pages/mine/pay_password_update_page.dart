@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/api_exception.dart';
 import 'package:myapp/request/auth_api.dart';
+import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/tools/auth_tool.dart';
 
 class PayPasswordUpdatePage extends StatefulWidget {
@@ -19,40 +20,30 @@ class PayPasswordUpdatePage extends StatefulWidget {
 }
 
 class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
-  final TextEditingController oldPasswordController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
   final TextEditingController confirmPasswordController = TextEditingController();
 
   bool submitting = false;
-  bool _useSecurityQuestions = false;
-  
-  // 安全问题相关
   List<SecurityQuestion> _securityQuestions = [];
   final Map<int, TextEditingController> _answerControllers = {};
   bool _isLoadingQuestions = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _loadSecurityQuestions();
+  }
+
   Future<void> _submit() async {
     final i18n = AppLocalizations.of(context);
-    final oldPassword = oldPasswordController.text.trim();
     final newPassword = newPasswordController.text.trim();
     final confirmPassword = confirmPasswordController.text.trim();
 
-    if (!_useSecurityQuestions) {
-      if (oldPassword.isEmpty) {
-        _showError(i18n.t('payPasswordOldRequired'));
-        return;
-      }
-      if (!_isNumeric(oldPassword)) {
-        _showError(i18n.t('payPasswordMustBeNumber'));
-        return;
-      }
-    } else {
-      if (!_validateSecurityAnswers()) {
-        _showError(i18n.t('securityQuestionAnswerRequired'));
-        return;
-      }
+    if (!_validateSecurityAnswers()) {
+      _showError(i18n.t('securityQuestionAnswerRequired'));
+      return;
     }
-    
+
     if (newPassword.length < 6) {
       _showError(i18n.t('payPasswordLengthError'));
       return;
@@ -71,23 +62,17 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
     });
 
     try {
-      if (_useSecurityQuestions) {
-        // 通过安全问题验证修改支付密码
-        final answers = _answerControllers.entries.map((entry) {
-          return SecurityAnswerBody(
-            questionId: entry.key,
-            answer: entry.value.text.trim(),
-          );
-        }).toList();
-
-        await AuthApi.updatePayPasswordWithSecurityQuestions(
-          newPassword: newPassword,
-          answers: answers,
+      final answers = _answerControllers.entries.map((entry) {
+        return SecurityAnswerBody(
+          questionId: entry.key,
+          answer: entry.value.text.trim(),
         );
-      } else {
-        // 通过旧支付密码验证修改支付密码
-        await AuthApi.updatePayPwd(widget.userId, oldPassword, newPassword);
-      }
+      }).toList();
+
+      await AuthApi.updatePayPasswordWithSecurityQuestions(
+        newPassword: newPassword,
+        answers: answers,
+      );
       // 更新本地缓存
       await AuthTool.setPayPasswordSet();
       if (mounted) {
@@ -118,7 +103,6 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
       }
       _answerControllers.clear();
       
-      // 获取用户已设置的安全问题答案
       final myAnswers = await AuthApi.getMySecurityAnswers();
       
       if (myAnswers.isEmpty) {
@@ -128,15 +112,12 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
         return;
       }
       
-      // 提取用户已设置的安全问题ID
       final userQuestionIds = myAnswers.map((answer) => answer.questionId).toList();
-      
-      // 获取所有安全问题
+
       final i18n = AppLocalizations.of(context);
       final langCode = i18n.locale.toString();
       final allQuestions = await AuthApi.getSecurityQuestions(lang: langCode);
-      
-      // 过滤出用户已设置的安全问题
+
       final userQuestions = allQuestions.where((question) => userQuestionIds.contains(question.questionId)).toList();
       
       setState(() {
@@ -158,16 +139,10 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
     }
   }
 
-  void _toggleVerificationMethod() {
-    setState(() {
-      _useSecurityQuestions = !_useSecurityQuestions;
-      if (_useSecurityQuestions) {
-        _loadSecurityQuestions();
-      }
-    });
-  }
-
   bool _validateSecurityAnswers() {
+    if (_securityQuestions.isEmpty) {
+      return false;
+    }
     for (var controller in _answerControllers.values) {
       if (controller.text.trim().isEmpty) {
         return false;
@@ -177,7 +152,9 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
   }
 
   bool _isNumeric(String str) {
-    if (str.isEmpty) return false;
+    if (str.isEmpty) {
+      return false;
+    }
     return RegExp(r'^\d+$').hasMatch(str);
   }
 
@@ -250,120 +227,88 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
                   ),
                   child: Column(
                     children: <Widget>[
-                      // 验证方式切换
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                        children: <Widget>[
                           Text(
-                            _useSecurityQuestions
-                                ? i18n.t('loginPasswordVerifyWithSecurityQuestions')
-                                : i18n.t('loginPasswordVerifyWithOldPassword'),
+                            i18n.t('loginPasswordVerifyWithSecurityQuestions'),
                             style: const TextStyle(
                               color: Color(0xFFE9F3FF),
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                          TextButton(
-                            onPressed: _toggleVerificationMethod,
-                            child: Text(
-                              _useSecurityQuestions
-                                  ? i18n.t('loginPasswordUseOldPassword')
-                                  : i18n.t('loginPasswordUseSecurityQuestions'),
-                              style: const TextStyle(
-                                color: Color(0xFF39E6FF),
-                                fontSize: 14,
-                              ),
-                            ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 24),
-
-                      // 旧支付密码验证方式
-                      if (!_useSecurityQuestions)
-                        Column(
-                          children: [
-                            TextField(
-                              controller: oldPasswordController,
-                              decoration: InputDecoration(
-                                labelText: i18n.t('payPasswordOld'),
-                                labelStyle: const TextStyle(color: Color(0xFF9DB1C9)),
-                                hintText: i18n.t('payPasswordOldHint'),
-                                hintStyle: const TextStyle(color: Color(0xFF6B7A8A)),
-                                enabledBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(color: Color(0x334CE3FF)),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                focusedBorder: OutlineInputBorder(
-                                  borderSide: const BorderSide(color: Color(0xFF39E6FF)),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                      if (_isLoadingQuestions)
+                        const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFF39E6FF),
+                          ),
+                        )
+                      else if (_securityQuestions.isEmpty)
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          margin: const EdgeInsets.only(bottom: 16),
+                          decoration: BoxDecoration(
+                            color: const Color(0x1AFFFFFF),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: const Color(0x334CE3FF)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: <Widget>[
+                              Text(
+                                i18n.t('securityQuestionNoQuestions'),
+                                style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 13),
                               ),
-                              obscureText: true,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                              style: const TextStyle(color: Color(0xFFE9F3FF)),
-                            ),
-                            const SizedBox(height: 16),
-                          ],
-                        ),
-
-                      // 安全问题验证方式
-                      if (_useSecurityQuestions)
+                              const SizedBox(height: 8),
+                              TextButton(
+                                onPressed: () async {
+                                  await Navigator.pushNamed(context, AppRouter.securityQuestionSet);
+                                  if (mounted) {
+                                    _loadSecurityQuestions();
+                                  }
+                                },
+                                child: Text(i18n.t('mineSecurityQuestion')),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
                         Column(
-                          children: [
-                            if (_isLoadingQuestions)
-                              const Center(
-                                child: CircularProgressIndicator(
-                                  color: Color(0xFF39E6FF),
-                                ),
-                              )
-                            else if (_securityQuestions.isEmpty)
-                              Center(
-                                child: Text(
-                                  i18n.t('securityQuestionNoQuestions'),
+                          children: _securityQuestions.map((question) {
+                            return Column(
+                              children: [
+                                Text(
+                                  question.questionText,
                                   style: const TextStyle(
-                                    color: Color(0xFF9DB1C9),
+                                    color: Color(0xFFE9F3FF),
                                     fontSize: 14,
                                   ),
                                 ),
-                              )
-                            else
-                              Column(
-                                children: _securityQuestions.map((question) {
-                                  return Column(
-                                    children: [
-                                      Text(
-                                        question.questionText,
-                                        style: const TextStyle(
-                                          color: Color(0xFFE9F3FF),
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      TextField(
-                                        controller: _answerControllers[question.questionId],
-                                        decoration: InputDecoration(
-                                          hintText: i18n.t('securityQuestionAnswerHint'),
-                                          hintStyle: const TextStyle(color: Color(0xFF6B7A8A)),
-                                          enabledBorder: OutlineInputBorder(
-                                            borderSide: const BorderSide(color: Color(0x334CE3FF)),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          focusedBorder: OutlineInputBorder(
-                                            borderSide: const BorderSide(color: Color(0xFF39E6FF)),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                        ),
-                                        style: const TextStyle(color: Color(0xFFE9F3FF)),
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
-                          ],
+                                const SizedBox(height: 8),
+                                TextField(
+                                  controller: _answerControllers[question.questionId],
+                                  decoration: InputDecoration(
+                                    hintText: i18n.t('securityQuestionAnswerHint'),
+                                    hintStyle: const TextStyle(color: Color(0xFF6B7A8A)),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderSide: const BorderSide(color: Color(0x334CE3FF)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: const BorderSide(color: Color(0xFF39E6FF)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                  ),
+                                  style: const TextStyle(color: Color(0xFFE9F3FF)),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            );
+                          }).toList(),
                         ),
 
                       // 新支付密码输入
@@ -454,7 +399,6 @@ class _PayPasswordUpdatePageState extends State<PayPasswordUpdatePage> {
 
   @override
   void dispose() {
-    oldPasswordController.dispose();
     newPasswordController.dispose();
     confirmPasswordController.dispose();
     for (var controller in _answerControllers.values) {

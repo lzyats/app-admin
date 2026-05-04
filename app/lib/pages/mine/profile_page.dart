@@ -384,19 +384,28 @@ class _ProfilePageState extends State<ProfilePage> {
     required String title,
     required String currentValue,
     required Function(String) onSave,
-  }) {
-    TextEditingController controller = TextEditingController(text: currentValue);
-
-    showDialog(
+  }) async {
+    String draftValue = currentValue;
+    final String? result = await showDialog<String>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text(title),
           content: TextField(
-            controller: controller,
+            autofocus: true,
+            controller: null,
+            onChanged: (String value) {
+              draftValue = value;
+            },
+            onSubmitted: (String value) {
+              Navigator.pop(context, value);
+            },
             decoration: InputDecoration(
               hintText: i18n.t('pleaseInput') + title,
             ),
+            // 避免控制器生命周期问题，使用 initialValue + onChanged 记录输入。
+            // ignore: deprecated_member_use
+            toolbarOptions: const ToolbarOptions(copy: true, cut: true, paste: true, selectAll: true),
           ),
           actions: [
             TextButton(
@@ -405,8 +414,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             TextButton(
               onPressed: () {
-                Navigator.pop(context);
-                onSave(controller.text);
+                Navigator.pop(context, draftValue);
               },
               child: Text(i18n.t('submit')),
             ),
@@ -414,6 +422,10 @@ class _ProfilePageState extends State<ProfilePage> {
         );
       },
     );
+    if (result == null) {
+      return;
+    }
+    onSave(result);
   }
 
   String _getGenderText(int? sex) {
@@ -431,24 +443,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _copyInviteCode(String code) {
     Clipboard.setData(ClipboardData(text: code));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('邀请码已复制'),
-        backgroundColor: Color(0xFF38FFB3),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    _showSnackMessage('邀请码已复制', success: true);
   }
 
   void _copyUserId(int userId) {
     Clipboard.setData(ClipboardData(text: userId.toString()));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('用户ID已复制'),
-        backgroundColor: Color(0xFF38FFB3),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    _showSnackMessage('用户ID已复制', success: true);
   }
 
   @override
@@ -566,6 +566,10 @@ class _ProfilePageState extends State<ProfilePage> {
             label: i18n.t('mineNickname'),
             value: _displayNickName(),
             onTap: _showEditNickName,
+          ),
+          _buildReadOnlyItem(
+            label: i18n.t('realNameName'),
+            value: (_userInfo?.realName ?? '').trim(),
           ),
           _buildReadOnlyItem(
             label: '用户名',

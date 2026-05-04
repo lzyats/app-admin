@@ -422,6 +422,17 @@ public class SysUserServiceImpl implements ISysUserService
         return rows;
     }
 
+    @Override
+    public int updateUserVerifiedRealName(Long userId, String realName, Integer realNameStatus)
+    {
+        int rows = userMapper.updateUserVerifiedRealName(userId, realName, realNameStatus);
+        if (rows > 0)
+        {
+            userApiService.evictUserCache(userId);
+        }
+        return rows;
+    }
+
     /**
      * 修改用户头像
      * 

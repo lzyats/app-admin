@@ -23,7 +23,7 @@ public interface SysTeamLevelMapper
 
     int countTeamValidUsers(Long userId);
 
-    BigDecimal sumTeamInvestAmount(Long userId);
+    BigDecimal sumTeamInvestAmount(@Param("userId") Long userId, @Param("yebaoLevelBonusEnabled") Boolean yebaoLevelBonusEnabled);
 
     int updateUserTeamLeaderLevel(@Param("userId") Long userId, @Param("teamLeaderLevel") Integer teamLeaderLevel);
 }

@@ -3,8 +3,10 @@ import 'package:flutter/services.dart';
 
 import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/config/app_localizations.dart';
+import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/request/yebao_api.dart';
 import 'package:myapp/tools/app_bootstrap_tool.dart';
+import 'package:myapp/tools/number_keyboard_tool.dart';
 
 class YebaoPage extends StatefulWidget {
   const YebaoPage({super.key});
@@ -88,10 +90,49 @@ class _YebaoPageState extends State<YebaoPage> {
       );
       return;
     }
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(_text(i18n, 'commonConfirm')),
+          content: Text('确认购买 $shares ${_text(i18n, 'yebaoShareUnit')} 吗？'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text(_text(i18n, 'cancel')),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text(_text(i18n, 'commonConfirm')),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) {
+      return;
+    }
+    final bool payReady = await _ensurePayPasswordSet();
+    if (!payReady) {
+      return;
+    }
+    final String? payPwd = await NumberKeyboardTool.show(
+      context,
+      title: '请输入支付密码',
+      initialValue: '',
+      maxLength: 12,
+    );
+    if (!mounted || payPwd == null || payPwd.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请输入支付密码')),
+      );
+      return;
+    }
 
     try {
       await YebaoApi.purchase(
         shares: shares,
+        payPwd: payPwd.trim(),
       );
       if (!mounted) {
         return;
@@ -114,6 +155,40 @@ class _YebaoPageState extends State<YebaoPage> {
           backgroundColor: const Color(0xFFFF6B6B),
         ),
       );
+    }
+  }
+
+  Future<bool> _ensurePayPasswordSet() async {
+    try {
+      AuthUserProfile profile = await AuthApi.getInfo();
+      if (profile.payPasswordSet == 1) {
+        return true;
+      }
+      profile = await AuthApi.getInfo(forceRefresh: true);
+      if (profile.payPasswordSet == 1) {
+        return true;
+      }
+      if (!mounted) {
+        return false;
+      }
+      final Object? result = await Navigator.pushNamed(
+        context,
+        AppRouter.payPasswordSet,
+        arguments: <String, dynamic>{'userId': profile.userId},
+      );
+      if (result == true) {
+        final AuthUserProfile latest = await AuthApi.getInfo(forceRefresh: true);
+        return latest.payPasswordSet == 1;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('请先设置支付密码')),
+      );
+      return false;
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('暂时无法校验支付密码状态，请稍后重试')),
+      );
+      return false;
     }
   }
 

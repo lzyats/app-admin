@@ -212,11 +212,10 @@ class _AssetsPageState extends State<AssetsPage> {
   }
 
   double _totalAssets(WithdrawWalletItem wallet) {
-    return wallet.totalInvest +
-        wallet.availableBalance +
+    // 收益金额已在钱包余额链路体现，此处总资产不再重复叠加 profitAmount。
+    return wallet.availableBalance +
         wallet.frozenAmount +
-        wallet.pendingAmount +
-        wallet.profitAmount;
+        wallet.pendingAmount;
   }
 
   String _formatAmount(double value) {

@@ -23,9 +23,11 @@ import 'package:myapp/pages/mine/miner_reward_logs_page.dart';
 import 'package:myapp/pages/mine/miner_exchange_logs_page.dart';
 import 'package:myapp/pages/mine/recharge_page.dart';
 import 'package:myapp/pages/mine/account_change_records_page.dart';
+import 'package:myapp/pages/mine/account_all_records_page.dart';
 import 'package:myapp/pages/mine/account_recharge_records_page.dart';
 import 'package:myapp/pages/mine/account_withdraw_records_page.dart';
 import 'package:myapp/pages/mine/account_point_records_page.dart';
+import 'package:myapp/pages/mine/account_invest_records_page.dart';
 import 'package:myapp/pages/mine/member_center_page.dart';
 import 'package:myapp/pages/mine/my_team_page.dart';
 import 'package:myapp/pages/mine/team_reward_page.dart';
@@ -34,8 +36,12 @@ import 'package:myapp/pages/mine/sign_page.dart';
 import 'package:myapp/pages/mine/yebao_income_page.dart';
 import 'package:myapp/pages/mine/yebao_orders_page.dart';
 import 'package:myapp/pages/mine/yebao_page.dart';
+import 'package:myapp/pages/mine/my_invest_orders_page.dart';
+import 'package:myapp/pages/mine/my_invest_income_page.dart';
 import 'package:myapp/pages/mine/withdraw_page.dart';
 import 'package:myapp/pages/mine/currency_exchange_page.dart';
+import 'package:myapp/pages/product/invest_product_detail_page.dart';
+import 'package:myapp/pages/product/invest_purchase_page.dart';
 import 'package:myapp/pages/upgrade/upgrade_page.dart';
 import 'package:myapp/request/news_api.dart';
 
@@ -73,13 +79,20 @@ class AppRouter {
   static const String balanceTreasureOrders = '/mine/balanceTreasure/orders';
   static const String balanceTreasureIncomes = '/mine/balanceTreasure/incomes';
   static const String accountChangeRecords = '/mine/account/records';
+  static const String accountAllRecords = '/mine/account/records/all';
   static const String accountRechargeRecords = '/mine/account/records/recharge';
   static const String accountWithdrawRecords = '/mine/account/records/withdraw';
   static const String accountPointRecords = '/mine/account/records/points';
+  static const String accountInvestRecords = '/mine/account/records/invest';
   static const String memberCenter = '/mine/memberCenter';
   static const String myTeam = '/mine/memberCenter/myTeam';
   static const String vipGuide = '/mine/memberCenter/vipGuide';
   static const String teamReward = '/mine/memberCenter/teamReward';
+  static const String investProductDetail = '/product/detail';
+  static const String investPurchase = '/product/purchase';
+  static const String investGroupPurchase = '/product/purchase/group';
+  static const String myInvestOrders = '/mine/myInvest/orders';
+  static const String myInvestIncomes = '/mine/myInvest/incomes';
 
   /// 鏍规嵁璺敱鍚嶇О鏋勫缓瀵瑰簲椤甸潰銆?
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -168,12 +181,16 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const YebaoIncomePage());
       case accountChangeRecords:
         return MaterialPageRoute(builder: (_) => const AccountChangeRecordsPage());
+      case accountAllRecords:
+        return MaterialPageRoute(builder: (_) => const AccountAllRecordsPage());
       case accountRechargeRecords:
         return MaterialPageRoute(builder: (_) => const AccountRechargeRecordsPage());
       case accountWithdrawRecords:
         return MaterialPageRoute(builder: (_) => const AccountWithdrawRecordsPage());
       case accountPointRecords:
         return MaterialPageRoute(builder: (_) => const AccountPointRecordsPage());
+      case accountInvestRecords:
+        return MaterialPageRoute(builder: (_) => const AccountInvestRecordsPage());
       case memberCenter:
         return MaterialPageRoute(builder: (_) => const MemberCenterPage());
       case myTeam:
@@ -182,6 +199,33 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const VipGuidePage());
       case teamReward:
         return MaterialPageRoute(builder: (_) => const TeamRewardPage());
+      case investProductDetail:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => InvestProductDetailPage(
+            productId: (args?['productId'] as int?) ?? 0,
+          ),
+        );
+      case investPurchase:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => InvestPurchasePage(
+            productId: (args?['productId'] as int?) ?? 0,
+            groupMode: false,
+          ),
+        );
+      case investGroupPurchase:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => InvestPurchasePage(
+            productId: (args?['productId'] as int?) ?? 0,
+            groupMode: true,
+          ),
+        );
+      case myInvestOrders:
+        return MaterialPageRoute(builder: (_) => const MyInvestOrdersPage());
+      case myInvestIncomes:
+        return MaterialPageRoute(builder: (_) => const MyInvestIncomePage());
       default:
         return null;
     }

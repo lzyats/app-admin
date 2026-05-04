@@ -2,6 +2,7 @@ package com.ruoyi.system.service;
 
 import java.util.Date;
 import java.util.List;
+import java.math.BigDecimal;
 import com.ruoyi.system.domain.SysTeamStatEvent;
 import com.ruoyi.system.domain.SysTeamStatUser;
 
@@ -29,6 +30,23 @@ public interface ISysTeamStatService
      * @return 事件列表
      */
     List<SysTeamStatEvent> selectTeamStatEventList(SysTeamStatEvent query);
+
+    /**
+     * 投资订单成功后写入团队统计事件（用于当日增量与夜间重算口径对齐）
+     *
+     * @param memberUserId 投资用户ID
+     * @param orderId 投资订单ID
+     * @param investAmount 投资本金
+     * @param eventTime 事件时间
+     */
+    void recordInvestOrderEvent(Long memberUserId, Long orderId, BigDecimal investAmount, Date eventTime);
+
+    /**
+     * 后台赎回后撤销投资订单团队事件
+     *
+     * @param orderId 投资订单ID
+     */
+    void revokeInvestOrderEvent(Long orderId);
 
     /**
      * 获取统计层级配置

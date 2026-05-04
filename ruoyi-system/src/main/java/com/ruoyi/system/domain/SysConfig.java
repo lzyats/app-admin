@@ -33,6 +33,10 @@ public class SysConfig extends BaseEntity
     @Excel(name = "参数键值")
     private String configValue;
 
+    /** 参数值类型（TEXT/IMAGE/FILE/DATE/SWITCH） */
+    @Excel(name = "参数类型")
+    private String configValueType;
+
     /** 系统内置（Y是 N否） */
     @Excel(name = "系统内置", readConverterExp = "Y=是,N=否")
     private String configType;
@@ -76,7 +80,7 @@ public class SysConfig extends BaseEntity
     }
 
     @NotBlank(message = "参数键值不能为空")
-    @Size(min = 0, max = 500, message = "参数键值长度不能超过500个字符")
+    @Size(min = 0, max = 2000, message = "参数键值长度不能超过2000个字符")
     public String getConfigValue()
     {
         return configValue;
@@ -85,6 +89,16 @@ public class SysConfig extends BaseEntity
     public void setConfigValue(String configValue)
     {
         this.configValue = configValue;
+    }
+
+    public String getConfigValueType()
+    {
+        return configValueType;
+    }
+
+    public void setConfigValueType(String configValueType)
+    {
+        this.configValueType = configValueType;
     }
 
     public String getConfigType()
@@ -115,6 +129,7 @@ public class SysConfig extends BaseEntity
             .append("configName", getConfigName())
             .append("configKey", getConfigKey())
             .append("configValue", getConfigValue())
+            .append("configValueType", getConfigValueType())
             .append("configType", getConfigType())
             .append("isAppConfig", getIsAppConfig())
             .append("createBy", getCreateBy())

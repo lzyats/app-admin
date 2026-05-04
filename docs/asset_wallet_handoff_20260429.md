@@ -5,7 +5,7 @@ This note captures the current state so the next chat/window can continue withou
 ## Current rules
 - `app.currency.investMode = 1`: single-currency mode, only RMB is shown/used in frontend flows.
 - `app.currency.investMode = 2`: dual-currency mode, RMB + USDT wallets are both shown/used.
-- `assetsRmb` is `???` in zh-CN and `RMB` in en-US.
+- `assetsRmb` uses Chinese localized text in `zh-CN.json` and `RMB` in `en-US.json`.
 
 ## Assets page status
 - Displays per-wallet values split by currency, not mixed.
