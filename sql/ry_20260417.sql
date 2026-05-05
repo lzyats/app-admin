@@ -11,7 +11,7 @@
  Target Server Version : 80012 (8.0.12)
  File Encoding         : 65001
 
- Date: 05/05/2026 18:00:10
+ Date: 05/05/2026 21:12:42
 */
 
 SET NAMES utf8mb4;
@@ -235,11 +235,12 @@ CREATE TABLE `sys_coupon_template`  (
   `remark` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`coupon_id`) USING BTREE,
   INDEX `idx_sys_coupon_template_type`(`coupon_type` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '优惠券模板' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '优惠券模板' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_coupon_template
 -- ----------------------------
+INSERT INTO `sys_coupon_template` VALUES (1, '减满体验券', 'FULL_REDUCTION', 'GLOBAL', NULL, 1000.00, 50.00, 0.00, 0.0000, 0.00, 0, 0, 1, 0, 0, '0', 'admin', '2026-05-05 20:05:21', 'admin', '2026-05-05 20:07:06', NULL);
 
 -- ----------------------------
 -- Table structure for sys_coupon_user
@@ -637,7 +638,7 @@ CREATE TABLE `sys_invest_product`  (
   UNIQUE INDEX `uk_sys_invest_product_code`(`product_code` ASC) USING BTREE,
   INDEX `idx_sys_invest_product_currency`(`currency` ASC) USING BTREE,
   INDEX `idx_sys_invest_product_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '投资产品' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '投资产品' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_invest_product
@@ -645,6 +646,7 @@ CREATE TABLE `sys_invest_product`  (
 INSERT INTO `sys_invest_product` VALUES (1, 'CN0504A', '人民币日息体验', 'CNY', 'blue', '中低风险', NULL, NULL, '新手高回报体验产品，每人限购一单。', '本产品为到期返息产品\n产品到期后会将产生的收益和本金全部返回至用户账号\n如需提现可自行提交，系统客服会在24小时内处理提现事宜', 1.0000, 1.2000, 1, 'MATURITY', 'MATURITY', 0, 0, NULL, 'SHARE', 1000.00, 1000.00, 20000, 2008, 20000000.00, 4000.00, 10.0450, 2000.0000, 500.0000, 0.0000, '1', '0', 2, '0', 0, 1, '0', NULL, NULL, 'admin', '2026-05-04 12:58:22', 'admin', '2026-05-04 19:57:47', NULL);
 INSERT INTO `sys_invest_product` VALUES (2, 'CN0504A_C80609', 'USD日息体验', 'USD', 'purple', '中低风险', NULL, NULL, '新手高回报体验产品，每人限购一单。', '本产品为到期返息产品\n产品到期后会将产生的收益和本金全部返回至用户账号\n如需提现可自行提交，系统客服会在24小时内处理提现事宜', 1.0000, 1.2000, 1, 'MATURITY', 'MATURITY', 0, 0, NULL, 'SHARE', 200.00, 1000.00, 20000, 4207, 4000000.00, 501200.00, 21.0600, 1000.0000, 500.0000, 10.0000, '1', '0', 2, '0', 0, 1, '0', NULL, NULL, 'admin', '2026-05-04 14:44:40', 'admin', '2026-05-04 22:04:25', NULL);
 INSERT INTO `sys_invest_product` VALUES (3, 'CN0504A_C907436', '人民币定时测试', 'CNY', 'blue', '中低风险', NULL, NULL, '新手高回报体验产品，每人限购一单，必须拼团成团。', '本产品为到期返息产品\n产品到期后会将产生的收益和本金全部返回至用户账号\n如需提现可自行提交，系统客服会在24小时内处理提现事宜', 1.2000, 1.5000, 5, 'DAILY', 'MATURITY', 0, 0, NULL, 'AMOUNT', 1000.00, 1000.00, 0, 3, 20000000.00, 503000.00, 2.5200, 2000.0000, 500.0000, 0.0000, '1', '1', 3, '1', 0, 2, '0', '2026-05-05 11:00:00', '2028-05-05 11:05:00', 'admin', '2026-05-05 10:58:27', 'admin', '2026-05-05 13:27:02', NULL);
+INSERT INTO `sys_invest_product` VALUES (4, 'CN0504A_C576251', '人民币等级优惠测试', 'CNY', 'blue', '中低风险', NULL, NULL, '新手高回报体验产品，每人限购一单。', '本产品为到期返息产品\n产品到期后会将产生的收益和本金全部返回至用户账号\n如需提现可自行提交，系统客服会在24小时内处理提现事宜', 1.0000, 1.2000, 1, 'MATURITY', 'MATURITY', 0, 0, NULL, 'SHARE', 1000.00, 1000.00, 20000, 0, 20000000.00, 0.00, 0.0000, 2000.0000, 500.0000, 0.0000, '1', '0', 2, '0', 5, 1, '0', NULL, NULL, 'admin', '2026-05-05 18:06:16', 'admin', '2026-05-05 18:06:49', NULL);
 
 -- ----------------------------
 -- Table structure for sys_invest_product_tag_rel
@@ -656,7 +658,7 @@ CREATE TABLE `sys_invest_product_tag_rel`  (
   `tag_id` bigint(20) NOT NULL COMMENT '标签ID',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_sys_invest_product_tag`(`product_id` ASC, `tag_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 39 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '投资产品标签关联' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 43 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '投资产品标签关联' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of sys_invest_product_tag_rel
@@ -667,6 +669,8 @@ INSERT INTO `sys_invest_product_tag_rel` VALUES (19, 2, 1);
 INSERT INTO `sys_invest_product_tag_rel` VALUES (20, 2, 2);
 INSERT INTO `sys_invest_product_tag_rel` VALUES (37, 3, 2);
 INSERT INTO `sys_invest_product_tag_rel` VALUES (38, 3, 3);
+INSERT INTO `sys_invest_product_tag_rel` VALUES (41, 4, 1);
+INSERT INTO `sys_invest_product_tag_rel` VALUES (42, 4, 2);
 
 -- ----------------------------
 -- Table structure for sys_invest_tag
@@ -769,7 +773,7 @@ CREATE TABLE `sys_logininfor`  (
   PRIMARY KEY (`info_id`) USING BTREE,
   INDEX `idx_sys_logininfor_s`(`status` ASC) USING BTREE,
   INDEX `idx_sys_logininfor_lt`(`login_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 275 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '系统访问记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 277 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '系统访问记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_logininfor
@@ -949,6 +953,8 @@ INSERT INTO `sys_logininfor` VALUES (271, 'admin', '127.0.0.1', '内网IP', 'Chr
 INSERT INTO `sys_logininfor` VALUES (272, 'nnd1', '192.168.140.1', '内网IP', 'Dart 3.4', '', '0', '登录成功', '2026-05-05 14:57:18');
 INSERT INTO `sys_logininfor` VALUES (273, 'nnd1', '192.168.140.1', '内网IP', 'Dart 3.4', '', '0', '登录成功', '2026-05-05 16:14:20');
 INSERT INTO `sys_logininfor` VALUES (274, 'admin', '127.0.0.1', '内网IP', 'Chrome 147', 'Windows10', '0', '登录成功', '2026-05-05 17:53:38');
+INSERT INTO `sys_logininfor` VALUES (275, 'admin', '127.0.0.1', '内网IP', 'Chrome 147', 'Windows10', '0', '登录成功', '2026-05-05 21:03:28');
+INSERT INTO `sys_logininfor` VALUES (276, 'nnd1', '192.168.140.1', '内网IP', 'Dart 3.4', '', '0', '登录成功', '2026-05-05 21:09:14');
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -1201,13 +1207,14 @@ CREATE TABLE `sys_miner_reward_log`  (
   PRIMARY KEY (`log_id`) USING BTREE,
   INDEX `idx_miner_reward_user_time`(`user_id` ASC, `create_time` ASC) USING BTREE,
   INDEX `idx_miner_reward_run`(`run_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '矿机收益日志' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '矿机收益日志' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_miner_reward_log
 -- ----------------------------
 INSERT INTO `sys_miner_reward_log` VALUES (1, 1000107, 3, 1, 1, 'A', 'START', 0.00000000, '2026-05-01 20:35:31', '2026-05-03 20:35:31', '2026-05-03 20:35:31', NULL);
 INSERT INTO `sys_miner_reward_log` VALUES (2, 1000107, 3, 1, 1, 'A', 'AUTO_CREDIT', 500.00000000, '2026-05-03 20:35:31', '2026-05-04 20:35:31', '2026-05-04 20:40:00', NULL);
+INSERT INTO `sys_miner_reward_log` VALUES (3, 1000107, 3, 1, 1, 'A', 'AUTO_CREDIT', 500.00000000, '2026-05-04 20:35:31', '2026-05-05 20:35:31', '2026-05-05 20:40:00', NULL);
 
 -- ----------------------------
 -- Table structure for sys_news_article
@@ -1386,7 +1393,7 @@ CREATE TABLE `sys_oper_log`  (
   INDEX `idx_sys_oper_log_bt`(`business_type` ASC) USING BTREE,
   INDEX `idx_sys_oper_log_s`(`status` ASC) USING BTREE,
   INDEX `idx_sys_oper_log_ot`(`oper_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 524 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '操作日志记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 528 CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '操作日志记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_oper_log
@@ -1815,6 +1822,10 @@ INSERT INTO `sys_oper_log` VALUES (520, '新闻文章', 1, 'com.ruoyi.web.contro
 INSERT INTO `sys_oper_log` VALUES (521, '新闻文章', 2, 'com.ruoyi.web.controller.system.SysNewsArticleController.edit()', 'PUT', 1, 'admin', NULL, '/system/news/article', '127.0.0.1', '内网IP', '{\"articleContent\":\"\",\"articleId\":6,\"articleTitle\":\"首页广告1\",\"categoryCode\":\"APP_HOME_AD\",\"categoryId\":4,\"coverImage\":\"https://img.1trx.in/avatar/432003d40b294519a357d171f33c0aa8.webp\",\"params\":{},\"remark\":\"\",\"sortOrder\":0,\"status\":\"0\",\"summary\":\"\",\"topFlag\":\"0\",\"updateBy\":\"admin\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 15:40:56', 1614);
 INSERT INTO `sys_oper_log` VALUES (522, '新闻文章', 1, 'com.ruoyi.web.controller.system.SysNewsArticleController.add()', 'POST', 1, 'admin', NULL, '/system/news/article', '127.0.0.1', '内网IP', '{\"articleContent\":\"\",\"articleId\":8,\"articleTitle\":\"首页广告3\",\"categoryCode\":\"APP_HOME_AD\",\"categoryId\":4,\"coverImage\":\"https://img.1trx.in/avatar/f1c4ff1a6bfe40a1b786cc65a1fcfaf4.webp\",\"createBy\":\"admin\",\"params\":{},\"remark\":\"\",\"sortOrder\":0,\"status\":\"0\",\"summary\":\"\",\"topFlag\":\"0\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 15:58:50', 1670);
 INSERT INTO `sys_oper_log` VALUES (523, '新闻文章', 2, 'com.ruoyi.web.controller.system.SysNewsArticleController.edit()', 'PUT', 1, 'admin', NULL, '/system/news/article', '127.0.0.1', '内网IP', '{\"articleContent\":\"\",\"articleId\":6,\"articleTitle\":\"首页广告1\",\"categoryCode\":\"APP_HOME_AD\",\"categoryId\":4,\"coverImage\":\"https://img.1trx.in/avatar/432003d40b294519a357d171f33c0aa8.webp\",\"params\":{},\"remark\":\"\",\"sortOrder\":0,\"status\":\"0\",\"summary\":\"app://product/group\",\"topFlag\":\"0\",\"updateBy\":\"admin\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 15:59:04', 708);
+INSERT INTO `sys_oper_log` VALUES (524, '投资产品', 1, 'com.ruoyi.web.controller.system.SysInvestProductController.copy()', 'POST', 1, 'admin', NULL, '/system/invest/product/copy/1', '127.0.0.1', '内网IP', '1 ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 18:06:16', 409);
+INSERT INTO `sys_oper_log` VALUES (525, '投资产品', 2, 'com.ruoyi.web.controller.system.SysInvestProductController.edit()', 'PUT', 1, 'admin', NULL, '/system/invest/product', '127.0.0.1', '内网IP', '{\"autoGroup\":\"0\",\"cardTheme\":\"blue\",\"couponEnabled\":\"1\",\"createBy\":\"admin\",\"createTime\":\"2026-05-05 18:06:16\",\"currency\":\"CNY\",\"cycleDays\":1,\"groupEnabled\":\"0\",\"groupRate\":1.2,\"groupSize\":2,\"growthPerUnit\":500,\"interestMode\":\"MATURITY\",\"interestStageCount\":0,\"investMode\":\"SHARE\",\"limitLevel\":5,\"limitTimes\":1,\"maxInvestAmount\":1000,\"minInvestAmount\":1000,\"params\":{},\"pointPerUnit\":2000,\"principalMode\":\"MATURITY\",\"principalStageCount\":0,\"productCode\":\"CN0504A_C576251\",\"productContent\":\"新手高回报体验产品，每人限购一单。\",\"productId\":4,\"productName\":\"人民币等级优惠测试\",\"progressPercent\":0.0000,\"redPacketPerUnit\":0,\"riskTag\":\"中低风险\",\"singleRate\":1,\"soldAmount\":0.00,\"soldShares\":0,\"status\":\"0\",\"tagIds\":[1,2],\"totalAmount\":20000000.00,\"totalShares\":20000,\"tradeRuleContent\":\"本产品为到期返息产品\\n产品到期后会将产生的收益和本金全部返回至用户账号\\n如需提现可自行提交，系统客服会在24小时内处理提现事宜\",\"updateBy\":\"admin\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 18:06:49', 430);
+INSERT INTO `sys_oper_log` VALUES (526, '优惠券模板', 1, 'com.ruoyi.web.controller.system.SysCouponTemplateController.add()', 'POST', 1, 'admin', NULL, '/system/invest/coupon', '127.0.0.1', '内网IP', '{\"bonusPrincipal\":0,\"bonusRate\":0,\"couponId\":1,\"couponName\":\"减满体验券\",\"couponType\":\"FULL_REDUCTION\",\"createBy\":\"admin\",\"discountAmount\":50,\"experiencePrincipal\":0,\"maxExperienceUnits\":0,\"minAmount\":1000,\"minExperienceUnits\":0,\"params\":{},\"receivedCount\":0,\"scopeType\":\"GLOBAL\",\"status\":\"0\",\"totalCount\":0,\"validDays\":7} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 20:05:21', 29);
+INSERT INTO `sys_oper_log` VALUES (527, '优惠券模板', 2, 'com.ruoyi.web.controller.system.SysCouponTemplateController.edit()', 'PUT', 1, 'admin', NULL, '/system/invest/coupon', '127.0.0.1', '内网IP', '{\"bonusPrincipal\":0,\"bonusRate\":0,\"couponId\":1,\"couponName\":\"减满体验券\",\"couponType\":\"FULL_REDUCTION\",\"createBy\":\"admin\",\"createTime\":\"2026-05-05 20:05:21\",\"discountAmount\":50,\"experiencePrincipal\":0,\"maxExperienceUnits\":0,\"minAmount\":1000,\"minExperienceUnits\":0,\"params\":{},\"receivedCount\":0,\"scopeType\":\"GLOBAL\",\"status\":\"0\",\"totalCount\":0,\"updateBy\":\"admin\",\"validDays\":1} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 20:07:06', 15);
 
 -- ----------------------------
 -- Table structure for sys_post
@@ -2274,7 +2285,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 103, 'admin', '若依', NULL, '00', 'ry@163.com', '15888888888', '1', NULL, '', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', '2026-05-05 17:53:37', '2026-04-24 11:27:59', 'admin', '2026-04-24 11:27:59', '', '2026-05-05 17:53:36', '管理员', 'ABCDEF', '0', 0, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
+INSERT INTO `sys_user` VALUES (1, 103, 'admin', '若依', NULL, '00', 'ry@163.com', '15888888888', '1', NULL, '', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', '2026-05-05 21:03:25', '2026-04-24 11:27:59', 'admin', '2026-04-24 11:27:59', '', '2026-05-05 21:03:25', '管理员', 'ABCDEF', '0', 0, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000002, 105, 'ry', '若依', NULL, '00', 'ry@qq.com', '15666666666', '1', NULL, '', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', '2026-04-24 11:27:59', '2026-04-24 11:27:59', 'admin', '2026-04-24 11:27:59', '', NULL, '测试员', 'ABCDEG', '0', 0, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000100, NULL, 'lanz', '小兰男', NULL, '00', 'aa@abc.com', '13988888888', '0', '2026-04-25', 'https://img.1trx.in/avatar/6261112486f440e0bbb1ad0c8dbde87c.png', '$2a$10$JBPe895RePwgGN5hniLBguPWASmTXgvCtAu5ilkzlY35tNWGt7FOm', '0', '0', '192.168.140.1', '2026-05-05 13:26:19', '2026-04-30 20:54:01', '', '2026-04-24 20:30:27', 'admin', '2026-05-05 13:27:13', '万事开头男', 'ABCDEA', '0', 0, 1, '$2a$10$bLhiSDpHkYR7wLQBUAaKRuf.zrHU4s/NqOGLhI9iL7Gupz7hlb8z2', 3, 'CNY', 1, 1000.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000102, NULL, 'test1', '小王', NULL, '00', '', '13977777777', '0', '2013-05-01', 'https://img.1trx.in/avatar/74eb662070884ad8bf2872e7c53ec9d0.png', '$2a$10$RhuENwv4Kr91c6QhcrY9DO0SSLJVworA2beGoIibf4PcXiO.Q5RVm', '0', '0', '192.168.0.2', '2026-05-01 16:17:13', '2026-04-25 14:39:57', '', '2026-04-25 14:39:57', 'admin', '2026-05-01 23:05:28', NULL, 'LNWR6M', '0,1', 1, 0, '$2a$10$VYHgMfZU9cEP5jWNN29K9ucmeS/mh76K622B52T8uUKVqhv3WD28S', 3, 'CNY', 0, 0.00, 0.00, 0, 0);
@@ -2282,7 +2293,7 @@ INSERT INTO `sys_user` VALUES (1000103, NULL, 'liyats', 'liyats', NULL, '00', ''
 INSERT INTO `sys_user` VALUES (1000104, NULL, 'suyat', 'suyat', NULL, '00', '', '', '0', NULL, '', '$2a$10$vAn3CcctPLeHdmmf6qR9OOyVqjsn4qik2tf3bdqtl0nmHh720uNBW', '0', '0', '', NULL, '2026-05-02 12:39:40', '', '2026-05-02 12:39:39', '', NULL, NULL, 'AW5A8K', '0,1000100', 1, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000105, NULL, 'lian', 'lian', NULL, '00', '', '', '0', NULL, '', '$2a$10$h9GWo3g.qhsb.AtVAI9TAuwhuDi6ngQbLoMfNR7c7y0ieUb.6cyEi', '0', '0', '192.168.140.1', '2026-05-02 12:47:57', '2026-05-02 12:47:52', '', '2026-05-02 12:47:52', '', NULL, NULL, '8HPBM2', '0,1000100', 1, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000106, NULL, 'nnd', 'nnd', NULL, '00', '', '', '0', NULL, '', '$2a$10$X/ErL7disJDeJhAVL/LxIezsA2kTy6y07Ifn/ozean3H72KGGRht.', '0', '0', '192.168.140.1', '2026-05-02 13:08:43', '2026-05-02 13:08:39', '', '2026-05-02 13:08:38', '', NULL, NULL, 'ERQJWA', '0,1000100', 1, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
-INSERT INTO `sys_user` VALUES (1000107, NULL, 'nnd1', '小天', 'xtsd', '00', 'c@qq.com', '13988888887', '0', '1995-05-01', 'https://img.1trx.in/avatar/b06c80c1b0f349d1a94fc617bdd630e8.png', '$2a$10$/CCCtZY0SFw.qCK5aKGrf.GtezC94R565l9f/MzxR1TiwSA7v.iPC', '0', '0', '192.168.140.1', '2026-05-05 16:14:18', '2026-05-02 13:12:15', '', '2026-05-02 13:12:15', 'admin', '2026-05-05 16:14:17', NULL, 'YKZQ4N', '0,1000100', 1, 2, '$2a$10$JtWd0k6ITDSxXa3reolJiuKt1f.vi2NbKDOtgf4XNFf56zk5opU4.', 3, 'CNY', 1, 10800.00, 18000.00, 8500, 0);
+INSERT INTO `sys_user` VALUES (1000107, NULL, 'nnd1', '小天', 'xtsd', '00', 'c@qq.com', '13988888887', '0', '1995-05-01', 'https://img.1trx.in/avatar/b06c80c1b0f349d1a94fc617bdd630e8.png', '$2a$10$/CCCtZY0SFw.qCK5aKGrf.GtezC94R565l9f/MzxR1TiwSA7v.iPC', '0', '0', '192.168.140.1', '2026-05-05 21:09:12', '2026-05-02 13:12:15', '', '2026-05-02 13:12:15', 'admin', '2026-05-05 21:09:11', NULL, 'YKZQ4N', '0,1000100', 1, 2, '$2a$10$JtWd0k6ITDSxXa3reolJiuKt1f.vi2NbKDOtgf4XNFf56zk5opU4.', 3, 'CNY', 1, 10800.00, 18000.00, 8500, 0);
 
 -- ----------------------------
 -- Table structure for sys_user_bank_card
@@ -2431,7 +2442,7 @@ CREATE TABLE `sys_user_miner`  (
 -- ----------------------------
 -- Records of sys_user_miner
 -- ----------------------------
-INSERT INTO `sys_user_miner` VALUES (1, 1000107, 3, '1', '2026-05-03 20:35:31', '2026-05-03 20:35:31', NULL, 500.00000000, '0', '2026-05-03 20:35:31', '2026-05-04 20:40:00');
+INSERT INTO `sys_user_miner` VALUES (1, 1000107, 3, '1', '2026-05-03 20:35:31', '2026-05-03 20:35:31', NULL, 1000.00000000, '0', '2026-05-03 20:35:31', '2026-05-05 20:40:00');
 
 -- ----------------------------
 -- Table structure for sys_user_miner_run
@@ -2462,7 +2473,7 @@ CREATE TABLE `sys_user_miner_run`  (
 -- ----------------------------
 -- Records of sys_user_miner_run
 -- ----------------------------
-INSERT INTO `sys_user_miner_run` VALUES (1, 1000107, 1, 3, 'A', '0', '2026-05-04 20:35:31', '2026-05-05 20:35:31', '2026-05-04 20:35:31', 500.00000000, 0.00000000, '0', NULL, 1, '2026-05-03 20:35:31', '2026-05-04 20:40:00');
+INSERT INTO `sys_user_miner_run` VALUES (1, 1000107, 1, 3, 'A', '0', '2026-05-05 20:35:31', '2026-05-06 20:35:31', '2026-05-05 20:35:31', 500.00000000, 0.00000000, '0', NULL, 2, '2026-05-03 20:35:31', '2026-05-05 20:40:00');
 
 -- ----------------------------
 -- Table structure for sys_user_point_account
@@ -2491,7 +2502,7 @@ INSERT INTO `sys_user_point_account` VALUES (1, 1, 'admin', 0, 0, 0, 0, 0, '2026
 INSERT INTO `sys_user_point_account` VALUES (2, 1000002, 'ry', 0, 0, 0, 0, 0, '2026-04-30 12:58:22', '2026-04-30 12:58:22');
 INSERT INTO `sys_user_point_account` VALUES (3, 1000100, 'lanz', 910, 0, 910, 0, 0, '2026-04-30 12:58:22', '2026-05-05 13:28:13');
 INSERT INTO `sys_user_point_account` VALUES (4, 1000102, 'test1', 300, 0, 300, 0, 0, '2026-04-30 12:58:22', '2026-05-01 16:22:21');
-INSERT INTO `sys_user_point_account` VALUES (5, 1000107, 'nnd1', 2300, 0, 2300, 0, 0, '2026-05-02 13:55:12', '2026-05-04 21:31:11');
+INSERT INTO `sys_user_point_account` VALUES (5, 1000107, 'nnd1', 2600, 0, 2600, 0, 0, '2026-05-02 13:55:12', '2026-05-05 18:10:03');
 
 -- ----------------------------
 -- Table structure for sys_user_point_log
@@ -2520,7 +2531,7 @@ CREATE TABLE `sys_user_point_log`  (
   INDEX `idx_change_type`(`change_type` ASC) USING BTREE,
   INDEX `idx_source_type`(`source_type` ASC) USING BTREE,
   INDEX `idx_create_time`(`create_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户积分账变表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 8 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '用户积分账变表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user_point_log
@@ -2531,6 +2542,7 @@ INSERT INTO `sys_user_point_log` VALUES (3, 4, 1000102, 'test1', 300, 0, 300, 'e
 INSERT INTO `sys_user_point_log` VALUES (4, 5, 1000107, 'nnd1', 300, 0, 300, 'earn', 'sign', NULL, 'SG20260502135512E0056358', 'success', 'nnd1', 'Daily sign-in reward', '2026-05-02 13:55:12', '2026-05-02 13:55:12');
 INSERT INTO `sys_user_point_log` VALUES (5, 5, 1000107, 'nnd1', 2000, 300, 2300, 'earn', 'invest', 5, 'IO202605041957471000107', 'success', 'admin', '投资订单到期结算发放积分', '2026-05-04 21:31:11', '2026-05-04 21:31:11');
 INSERT INTO `sys_user_point_log` VALUES (6, 3, 1000100, 'lanz', 300, 610, 910, 'earn', 'sign', NULL, 'SG20260505132812FAD6B112', 'success', 'lanz', 'Daily sign-in reward', '2026-05-05 13:28:13', '2026-05-05 13:28:13');
+INSERT INTO `sys_user_point_log` VALUES (7, 5, 1000107, 'nnd1', 300, 2300, 2600, 'earn', 'sign', NULL, 'SG202605051810029AEDA243', 'success', 'nnd1', 'Daily sign-in reward', '2026-05-05 18:10:03', '2026-05-05 18:10:03');
 
 -- ----------------------------
 -- Table structure for sys_user_post
@@ -2655,7 +2667,7 @@ CREATE TABLE `sys_user_sign_log`  (
   UNIQUE INDEX `uk_user_sign_date`(`user_id` ASC, `sign_date` ASC) USING BTREE,
   INDEX `idx_user_sign_date`(`user_id` ASC, `sign_date` ASC) USING BTREE,
   INDEX `idx_source_no`(`source_no` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户签到记录表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 7 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户签到记录表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user_sign_log
@@ -2665,6 +2677,7 @@ INSERT INTO `sys_user_sign_log` VALUES (2, 1000100, 'lanz', '2026-05-01', 2, 'PO
 INSERT INTO `sys_user_sign_log` VALUES (3, 1000102, 'test1', '2026-05-01', 1, 'POINT', 300.00, 'sign', 'SG2026050116222004EE57A1', 'success', 'Daily sign-in reward', '2026-05-01 16:22:21', '2026-05-01 16:22:21');
 INSERT INTO `sys_user_sign_log` VALUES (4, 1000107, 'nnd1', '2026-05-02', 1, 'POINT', 300.00, 'sign', 'SG20260502135512E0056358', 'success', 'Daily sign-in reward', '2026-05-02 13:55:12', '2026-05-02 13:55:12');
 INSERT INTO `sys_user_sign_log` VALUES (5, 1000100, 'lanz', '2026-05-05', 1, 'POINT', 300.00, 'sign', 'SG20260505132812FAD6B112', 'success', 'Daily sign-in reward', '2026-05-05 13:28:13', '2026-05-05 13:28:13');
+INSERT INTO `sys_user_sign_log` VALUES (6, 1000107, 'nnd1', '2026-05-05', 1, 'POINT', 300.00, 'sign', 'SG202605051810029AEDA243', 'success', 'Daily sign-in reward', '2026-05-05 18:10:03', '2026-05-05 18:10:03');
 
 -- ----------------------------
 -- Table structure for sys_user_wag_wallet
@@ -2683,7 +2696,7 @@ CREATE TABLE `sys_user_wag_wallet`  (
 -- ----------------------------
 -- Records of sys_user_wag_wallet
 -- ----------------------------
-INSERT INTO `sys_user_wag_wallet` VALUES (1000107, 300.00000000, 500.00000000, 200.00000000, '2026-05-03 18:48:14', '2026-05-05 11:03:25');
+INSERT INTO `sys_user_wag_wallet` VALUES (1000107, 800.00000000, 1000.00000000, 200.00000000, '2026-05-03 18:48:14', '2026-05-05 20:40:00');
 
 -- ----------------------------
 -- Table structure for sys_user_wallet
