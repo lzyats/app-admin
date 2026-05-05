@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/invest_order_api.dart';
 import 'package:myapp/widgets/countdown_text.dart';
 
@@ -14,6 +15,7 @@ class _MyGroupPageState extends State<MyGroupPage> {
   bool _loading = true;
   String _error = '';
   List<InvestOrderListItem> _groups = const <InvestOrderListItem>[];
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -57,7 +59,7 @@ class _MyGroupPageState extends State<MyGroupPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A1220),
       appBar: AppBar(
-        title: const Text('我的拼团'),
+        title: Text(i18n.t('myGroupTitle')),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -85,7 +87,7 @@ class _MyGroupPageState extends State<MyGroupPage> {
           ),
           const SizedBox(height: 14),
           Center(
-            child: FilledButton(onPressed: _load, child: const Text('重试')),
+            child: FilledButton(onPressed: _load, child: Text(i18n.t('signRetry'))),
           ),
         ],
       );
@@ -93,10 +95,10 @@ class _MyGroupPageState extends State<MyGroupPage> {
     if (_groups.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const <Widget>[
+        children: <Widget>[
           SizedBox(height: 120),
           Center(
-            child: Text('暂无拼团记录', style: TextStyle(color: Color(0xFF9DB1C9), fontSize: 16)),
+            child: Text(i18n.t('myGroupEmpty'), style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 16)),
           ),
         ],
       );
@@ -125,10 +127,10 @@ class _MyGroupPageState extends State<MyGroupPage> {
       ),
       child: Row(
         children: <Widget>[
-          _summaryCell('总拼团', _groups.length.toString()),
-          _summaryCell('拼团中', running.toString()),
-          _summaryCell('已成团', success.toString()),
-          _summaryCell('已失败', failed.toString()),
+          _summaryCell(i18n.t('myGroupTotal'), _groups.length.toString()),
+          _summaryCell(i18n.t('grouping'), running.toString()),
+          _summaryCell(i18n.t('groupSuccess'), success.toString()),
+          _summaryCell(i18n.t('failed'), failed.toString()),
         ],
       ),
     );
@@ -194,26 +196,26 @@ class _MyGroupPageState extends State<MyGroupPage> {
             ],
           ),
           const SizedBox(height: 8),
-          Text('团号：${groupNo.isEmpty ? '--' : groupNo}',
+          Text('${i18n.t('groupNo')}：${groupNo.isEmpty ? '--' : groupNo}',
               style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 13)),
           const SizedBox(height: 4),
-          Text('认购金额：${item.investAmount.toStringAsFixed(2)} ${item.currency}',
+          Text('${i18n.t('purchaseAmount')}：${item.investAmount.toStringAsFixed(2)} ${item.currency}',
               style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 13)),
           const SizedBox(height: 4),
-          Text('下单时间：$createTime', style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 13)),
+          Text('${i18n.t('orderTime')}：$createTime', style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 13)),
           if (item.groupStatus == '0') ...<Widget>[
             const SizedBox(height: 4),
             if (item.groupCountdownSeconds > 0)
               CountdownText(
                 key: ValueKey<String>('${item.orderNo}_${item.groupNo}'),
                 initialSeconds: item.groupCountdownSeconds,
-                prefix: '剩余成团时间：',
-                finishedText: '状态更新中，请下拉刷新',
+                prefix: '${i18n.t('groupRemainingTime')}：',
+                finishedText: i18n.t('groupStatusUpdating'),
                 textStyle: const TextStyle(color: Color(0xFFFFA500), fontSize: 13),
               )
             else
-              const Text(
-                '状态更新中，请下拉刷新',
+              Text(
+                i18n.t('groupStatusUpdating'),
                 style: TextStyle(color: Color(0xFFFFA500), fontSize: 13),
               ),
           ],
@@ -227,7 +229,7 @@ class _MyGroupPageState extends State<MyGroupPage> {
                     side: const BorderSide(color: Color(0xFF2E8FFF)),
                     foregroundColor: const Color(0xFF39E6FF),
                   ),
-                  child: const Text('复制团号'),
+                  child: Text(i18n.t('copyGroupNo')),
                 ),
               ),
               const SizedBox(width: 8),
@@ -238,7 +240,7 @@ class _MyGroupPageState extends State<MyGroupPage> {
                     backgroundColor: const Color(0xFF1F3CF5),
                     foregroundColor: const Color(0xFF39E6FF),
                   ),
-                  child: const Text('复制分享文案'),
+                  child: Text(i18n.t('copyShareCopy')),
                 ),
               ),
             ],
@@ -250,14 +252,17 @@ class _MyGroupPageState extends State<MyGroupPage> {
 
   Future<void> _copyGroupNo(String groupNo) async {
     await Clipboard.setData(ClipboardData(text: groupNo));
-    _toast('团号已复制：$groupNo', success: true);
+    _toast('${i18n.t('groupNoCopied')}：$groupNo', success: true);
   }
 
   Future<void> _copyShareText(InvestOrderListItem item) async {
     final String groupNo = item.groupNo.trim();
-    final String text = '我正在参与【${item.productName}】拼团，团号：$groupNo，快来一起参团吧。';
+    final String text = i18n
+        .t('groupShareTemplate')
+        .replaceAll('{productName}', item.productName)
+        .replaceAll('{groupNo}', groupNo);
     await Clipboard.setData(ClipboardData(text: text));
-    _toast('分享文案已复制', success: true);
+    _toast(i18n.t('groupShareCopied'), success: true);
   }
 
   void _toast(String text, {bool success = false}) {
@@ -275,13 +280,13 @@ class _MyGroupPageState extends State<MyGroupPage> {
   String _groupStatusLabel(String status) {
     switch (status) {
       case '0':
-        return '拼团中';
+        return i18n.t('grouping');
       case '1':
-        return '已成团';
+        return i18n.t('groupSuccess');
       case '2':
-        return '已失败';
+        return i18n.t('failed');
       default:
-        return '未知';
+        return i18n.t('unknown');
     }
   }
 

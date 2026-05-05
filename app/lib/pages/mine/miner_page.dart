@@ -445,15 +445,15 @@ class _MinerPageState extends State<MinerPage> {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  '${isZh ? '日产出' : 'Daily'}: ${wagPerDay.toStringAsFixed(2)}WAG',
-                  style: const TextStyle(color: Color(0xFF9DB1C9)),
+                  '${isZh ? '日产出:' : 'Daily:'} ${wagPerDay.toStringAsFixed(2)}WAG',
+                  style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
                 ),
               ),
               Expanded(
                 child: Text(
-                  '${isZh ? '累计产出' : 'Total'}: ${totalOutput.toStringAsFixed(2)}WAG',
+                  '${isZh ? '累计产出:' : 'Total:'} ${totalOutput.toStringAsFixed(2)}WAG',
                   textAlign: TextAlign.end,
-                  style: const TextStyle(color: Color(0xFF9DB1C9)),
+                  style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
                 ),
               ),
             ],

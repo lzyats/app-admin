@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/invest_order_api.dart';
 
 class MyInvestIncomePage extends StatefulWidget {
@@ -12,6 +13,7 @@ class MyInvestIncomePage extends StatefulWidget {
 
 class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
   late Future<InvestIncomeData> _future;
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -41,8 +43,8 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
       backgroundColor: const Color(0xFF0B0E2A),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          '收益明细',
+        title: Text(
+          i18n.t('myIncomeDetailTitle'),
           style: TextStyle(color: Color(0xFFEAF4FF), fontWeight: FontWeight.w700, fontSize: 20),
         ),
         backgroundColor: Colors.transparent,
@@ -61,7 +63,7 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                 }
                 if (snapshot.hasError || !snapshot.hasData) {
                   return Center(
-                    child: TextButton(onPressed: _refresh, child: const Text('加载失败，点击重试')),
+                    child: TextButton(onPressed: _refresh, child: Text(i18n.t('loadFailedRetryTap'))),
                   );
                 }
                 final InvestIncomeData data = snapshot.data!;
@@ -74,22 +76,22 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                     children: <Widget>[
                       _buildSummary(data),
                       const SizedBox(height: 18),
-                      const Row(
+                      Row(
                         children: <Widget>[
-                          Icon(Icons.account_balance_wallet_outlined, color: Color(0xFFA7A5C4), size: 16),
-                          SizedBox(width: 8),
+                          const Icon(Icons.account_balance_wallet_outlined, color: Color(0xFFA7A5C4), size: 16),
+                          const SizedBox(width: 8),
                           Text(
-                            '财务列表',
-                            style: TextStyle(color: Color(0xFFA7A5C4), fontSize: 15, fontWeight: FontWeight.w600),
+                            i18n.t('financeList'),
+                            style: const TextStyle(color: Color(0xFFA7A5C4), fontSize: 15, fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       if (data.logs.isEmpty)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.symmetric(vertical: 48),
                           child: Center(
-                            child: Text('暂无收益明细', style: TextStyle(color: Color(0xFF9DB1C9))),
+                            child: Text(i18n.t('myIncomeEmpty'), style: const TextStyle(color: Color(0xFF9DB1C9))),
                           ),
                         )
                       else
@@ -189,13 +191,13 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
             children: <Widget>[
               Expanded(
                 child: _statCell(
-                  label: '已收利息(CNY)',
+                  label: i18n.t('receivedInterestCny'),
                   value: _money(cnyReceived),
                 ),
               ),
               Expanded(
                 child: _statCell(
-                  label: '待收利息(CNY)',
+                  label: i18n.t('pendingInterestCny'),
                   value: _money(cnyPending),
                   alignEnd: true,
                 ),
@@ -207,13 +209,13 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
             children: <Widget>[
               Expanded(
                 child: _statCell(
-                  label: '已收利息(USDT)',
+                  label: i18n.t('receivedInterestUsdt'),
                   value: _money(usdReceived),
                 ),
               ),
               Expanded(
                 child: _statCell(
-                  label: '待收利息(USDT)',
+                  label: i18n.t('pendingInterestUsdt'),
                   value: _money(usdPending),
                   alignEnd: true,
                 ),
@@ -275,15 +277,15 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
     final _IncomeLogTheme theme = _logTheme(item.currency);
     final Color amountColor = isSettled ? const Color(0xFFFF6A4A) : const Color(0xFF9DB1C9);
     final String statusText = isSettled
-        ? '已收取'
-        : (isCancelled ? '已取消' : (notDueYet ? '未收取' : '待收取'));
+        ? i18n.t('incomeReceived')
+        : (isCancelled ? i18n.t('incomeCancelled') : (notDueYet ? i18n.t('incomeNotReceived') : i18n.t('incomePending')));
     final Color statusColor = isSettled
         ? const Color(0xFF36D399)
         : (isCancelled ? const Color(0xFF8892B5) : const Color(0xFFFFD166));
     final IconData statusIcon = isSettled
         ? Icons.check_circle_outline
         : (isCancelled ? Icons.cancel_outlined : Icons.schedule_outlined);
-    final String timeLabel = isSettled ? '收取时间' : '预计收取';
+    final String timeLabel = isSettled ? i18n.t('incomeReceivedTime') : i18n.t('incomeExpectedTime');
     final DateTime? showTime = isSettled ? (item.execTime ?? item.planTime) : item.planTime;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -313,7 +315,7 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      item.productName.isEmpty ? '收益记录' : item.productName,
+                      item.productName.isEmpty ? i18n.t('incomeRecord') : item.productName,
                       style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -353,8 +355,8 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                 ),
               ),
               const SizedBox(height: 10),
-              const Text(
-                '订单号',
+              Text(
+                i18n.t('orderNo'),
                 style: TextStyle(color: Color(0xFF95A0C0), fontSize: 12, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 4),
@@ -379,8 +381,8 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                               return;
                             }
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('订单号已复制'),
+                              SnackBar(
+                                content: Text(i18n.t('orderNoCopied')),
                                 duration: Duration(milliseconds: 1200),
                                 backgroundColor: Color(0xFF38FFB3),
                               ),

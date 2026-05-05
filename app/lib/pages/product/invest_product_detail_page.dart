@@ -45,7 +45,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A1220),
       appBar: AppBar(
-        title: const Text('产品详情'),
+        title: Text(i18n.t('productDetailTitle')),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -85,7 +85,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             return Center(
               child: FilledButton(
                 onPressed: _refresh,
-                child: const Text('重试'),
+                child: Text(i18n.t('signRetry')),
               ),
             );
           }
@@ -225,9 +225,9 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-                    _buildInlineMetric('投资周期', '${item.cycleDays}天'),
+                    _buildInlineMetric(i18n.t('productPeriod'), '${item.cycleDays}${i18n.t('signDayUnit')}'),
                     const SizedBox(height: 8),
-                    _buildInlineMetric('剩余金额', _fmt(remainingAmount)),
+                    _buildInlineMetric(i18n.t('productRemainingAmount'), _fmt(remainingAmount)),
                   ],
                 ),
               ),
@@ -239,13 +239,13 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             runSpacing: 8,
             children: <Widget>[
               if (item.riskTag.isNotEmpty) _chip(item.riskTag),
-              _chip('${_fmt(item.minInvestAmount)}元起投'),
+              _chip(i18n.t('homeMinInvestLabel').replaceAll('{amount}', _fmt(item.minInvestAmount))),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: <Widget>[
-              const Text('进度:', style: TextStyle(color: Color(0xFF8C94BC), fontSize: 16)),
+              Text('${i18n.t('productProgress')}:', style: const TextStyle(color: Color(0xFF8C94BC), fontSize: 16)),
               const SizedBox(width: 8),
               Expanded(
                 child: ClipRRect(
@@ -320,9 +320,9 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
         const SizedBox(height: 6),
         Row(
           children: <Widget>[
-            const Text(
-              '单购利率',
-              style: TextStyle(color: Color(0xFF7E89B5), fontSize: 13),
+            Text(
+              i18n.t('productSingleRate'),
+              style: const TextStyle(color: Color(0xFF7E89B5), fontSize: 13),
             ),
             const SizedBox(width: 6),
             Text(
@@ -340,7 +340,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   }
 
   Widget _chip(String text) {
-    final bool isRisk = text.contains('风险');
+    final bool isRisk = text.contains('风险') || text.toLowerCase().contains('risk');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
@@ -358,9 +358,9 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   Widget _buildTabs() {
     return Row(
       children: <Widget>[
-        Expanded(child: _tabButton('产品详情', 0)),
+        Expanded(child: _tabButton(i18n.t('productDetailTab'), 0)),
         const SizedBox(width: 2),
-        Expanded(child: _tabButton('收益计算', 1)),
+        Expanded(child: _tabButton(i18n.t('productIncomeCalcTab'), 1)),
       ],
     );
   }
@@ -396,29 +396,29 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       decoration: _panelDecoration(),
       child: Column(
         children: <Widget>[
-          _kv('项目名', item.productName),
-          _kv('项目进度', '${item.progressPercent.toStringAsFixed(4)}%'),
+          _kv(i18n.t('productProjectName'), item.productName),
+          _kv(i18n.t('productProjectProgress'), '${item.progressPercent.toStringAsFixed(4)}%'),
           if (shareMode) ...<Widget>[
-            _kv('总份数', '${item.totalShares}'),
-            _kv('已投份数', '${item.soldShares}'),
-            _kv('剩余份数', '${item.remainingShares}'),
-            _kv('单份金额', _fmt(item.minInvestAmount)),
+            _kv(i18n.t('productTotalShares'), '${item.totalShares}'),
+            _kv(i18n.t('productSoldShares'), '${item.soldShares}'),
+            _kv(i18n.t('productRemainingShares'), '${item.remainingShares}'),
+            _kv(i18n.t('productUnitAmount'), _fmt(item.minInvestAmount)),
           ] else ...<Widget>[
-            _kv('总金额', _fmt(item.totalAmount)),
-            _kv('已投金额', _fmt(item.soldAmount)),
+            _kv(i18n.t('productTotalAmount'), _fmt(item.totalAmount)),
+            _kv(i18n.t('productSoldAmount'), _fmt(item.soldAmount)),
           ],
-          _kv('剩余金额', _fmt(_calcRemainingAmount(item))),
-          _kv('成长值', '${item.growthPerUnit.toStringAsFixed(0)}'),
-          _kv('限购等级', item.limitLevel <= 0 ? '无' : 'VIP.${item.limitLevel}'),
+          _kv(i18n.t('productRemainingAmount'), _fmt(_calcRemainingAmount(item))),
+          _kv(i18n.t('productGrowthValue'), '${item.growthPerUnit.toStringAsFixed(0)}'),
+          _kv(i18n.t('productLimitLevel'), item.limitLevel <= 0 ? i18n.t('notSet') : 'VIP.${item.limitLevel}'),
           _kv(_displayRateLabel(item), _displayRateText(item)),
-          if (item.groupEnabled) _kv('单购利率', '${item.singleRate.toStringAsFixed(2)}%'),
-          _kv('限投次数', item.limitTimes <= 0 ? '不限' : '限投${item.limitTimes}次'),
+          if (item.groupEnabled) _kv(i18n.t('productSingleRate'), '${item.singleRate.toStringAsFixed(2)}%'),
+          _kv(i18n.t('productLimitTimes'), item.limitTimes <= 0 ? i18n.t('productUnlimited') : i18n.t('productLimitTimesValue').replaceAll('{times}', '${item.limitTimes}')),
           if (_hasValidPeriod(item)) _buildValidPeriodBlock(item),
           if (item.galleryImages.isNotEmpty) ...<Widget>[
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text('产品组图', style: _labelStyle),
+              child: Text(i18n.t('productGallery'), style: _labelStyle),
             ),
             const SizedBox(height: 8),
             SizedBox(
@@ -440,7 +440,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerLeft,
-            child: Text('产品介绍', style: _labelStyle),
+            child: Text(i18n.t('productIntro'), style: _labelStyle),
           ),
           const SizedBox(height: 8),
           Container(
@@ -471,8 +471,8 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Text(
-            '交易规则',
+          Text(
+            i18n.t('productTradeRulesTitle'),
             style: TextStyle(color: Colors.white, fontSize: 38 / 2, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
@@ -519,10 +519,10 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
         ),
         const SizedBox(height: 8),
         Row(
-          children: const <Widget>[
-            Expanded(child: Column(children: <Widget>[Text('申购提交', style: captionStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis), Text('今日', style: valueStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)])),
-            Expanded(child: Column(children: <Widget>[Text('每日返利', style: captionStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis), Text('24小时后', style: valueStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)])),
-            Expanded(child: Column(children: <Widget>[Text('申请提现', style: captionStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis), Text('24小时内到账', style: valueStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)])),
+          children: <Widget>[
+            Expanded(child: Column(children: <Widget>[Text(i18n.t('productTimelineSubmit'), style: captionStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis), Text(i18n.t('productTimelineToday'), style: valueStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)])),
+            Expanded(child: Column(children: <Widget>[Text(i18n.t('productTimelineDailyRebate'), style: captionStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis), Text(i18n.t('productTimelineAfter24h'), style: valueStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)])),
+            Expanded(child: Column(children: <Widget>[Text(i18n.t('productTimelineWithdraw'), style: captionStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis), Text(i18n.t('productTimelineArrive24h'), style: valueStyle, maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis)])),
           ],
         ),
       ],
@@ -621,7 +621,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
 
   String _stripHtml(String raw) {
     if (raw.trim().isEmpty) {
-      return '暂无介绍';
+      return i18n.t('productNoIntro');
     }
     return raw
         .replaceAll(RegExp(r'<[^>]*>'), ' ')
@@ -639,7 +639,13 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     if (configured.isNotEmpty) {
       return configured.take(8).toList();
     }
-    final String fallback = '1. ${item.currency}收益：${_fmt(principal)}*${_displayRateText(item)}*${item.cycleDays}=${_fmt(income)} ${item.currency}';
+    final String fallback = i18n
+        .t('productTradeRuleFormula')
+        .replaceAll('{currency}', item.currency)
+        .replaceAll('{principal}', _fmt(principal))
+        .replaceAll('{rate}', _displayRateText(item))
+        .replaceAll('{days}', '${item.cycleDays}')
+        .replaceAll('{income}', _fmt(income));
     return List<String>.filled(4, fallback);
   }
 
@@ -652,7 +658,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   }
 
   String _displayRateLabel(InvestProductItem item) {
-    return item.groupEnabled ? '拼团利率' : '单购利率';
+    return item.groupEnabled ? i18n.t('productGroupRate') : i18n.t('productSingleRate');
   }
 
   String _normalizeDateText(String raw) {
@@ -676,21 +682,21 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Expanded(child: Text('产品有效期', style: _labelStyle)),
+          Expanded(child: Text(i18n.t('productValidPeriod'), style: _labelStyle)),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: <Widget>[
                 if (start.isNotEmpty)
                   Text(
-                    '产品开放时间  $start',
+                    '${i18n.t('productOpenTime')}  $start',
                     textAlign: TextAlign.right,
                     style: const TextStyle(color: Color(0xFF8E9AC6), fontSize: 16),
                   ),
                 if (start.isNotEmpty && end.isNotEmpty) const SizedBox(height: 6),
                 if (end.isNotEmpty)
                   Text(
-                    '产品结束时间  $end',
+                    '${i18n.t('productEndTime')}  $end',
                     textAlign: TextAlign.right,
                     style: const TextStyle(color: Color(0xFF8E9AC6), fontSize: 16),
                   ),
@@ -704,26 +710,28 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
 
   String? _resolveOrderBlockedReason(InvestProductItem item) {
     if (!item.canOrder) {
-      return item.orderDisabledReason.isEmpty ? '当前产品暂不可下单' : item.orderDisabledReason;
+      return item.orderDisabledReason.isEmpty ? i18n.t('productOrderDisabled') : item.orderDisabledReason;
     }
     final DateTime now = DateTime.now();
     final DateTime? startTime = _parseDateTime(item.startTime);
     if (startTime != null && now.isBefore(startTime)) {
-      return '产品未开始';
+      return i18n.t('productNotStarted');
     }
     final DateTime? endTime = _parseDateTime(item.endTime);
     if (endTime != null && now.isAfter(endTime)) {
-      return '产品已过有效期';
+      return i18n.t('productExpired');
     }
     if (item.progressPercent >= 100) {
-      return '产品进度已100%，暂不可下单';
+      return i18n.t('productProgressFull');
     }
     final double remainAmount = _calcRemainingAmount(item);
     if (remainAmount <= 0) {
-      return '该产品已满额，暂不可下单';
+      return i18n.t('productSoldOut');
     }
     if (item.limitTimes > 0 && item.userInvestCount >= item.limitTimes) {
-      return item.limitTimes == 1 ? '该产品不可复购，您已订购过' : '该产品最多可认购${item.limitTimes}次，已达上限';
+      return item.limitTimes == 1
+          ? i18n.t('productNoRepurchase')
+          : i18n.t('productLimitReached').replaceAll('{times}', '${item.limitTimes}');
     }
     return null;
   }

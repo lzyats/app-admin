@@ -20,10 +20,11 @@ class InvestProductListPage extends StatefulWidget {
 }
 
 class _InvestProductListPageState extends State<InvestProductListPage> {
+  static const String _allTagToken = '__ALL__';
   late Future<InvestProductCatalog> _future;
   final TextEditingController _searchController = TextEditingController();
-  List<String> _tagGroups = const <String>['全部'];
-  String _selectedTag = '全部';
+  List<String> _tagGroups = const <String>[_allTagToken];
+  String _selectedTag = _allTagToken;
   String _initialTagKeyword = '';
 
   AppLocalizations get i18n => AppLocalizations.of(context)!;
@@ -70,7 +71,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
       _tagGroups = _normalizeTagGroups(cached);
       _applyInitialTagSelection();
       if (!_tagGroups.contains(_selectedTag)) {
-        _selectedTag = '全部';
+        _selectedTag = _allTagToken;
       }
     });
   }
@@ -115,7 +116,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
               return _buildErrorState();
             }
             final InvestProductCatalog catalog =
-                snapshot.data ?? const InvestProductCatalog(products: <InvestProductItem>[], tagGroups: <String>['全部']);
+                snapshot.data ?? const InvestProductCatalog(products: <InvestProductItem>[], tagGroups: <String>[_allTagToken]);
             final List<String> currentTags = _normalizeTagGroups(
               <String>[
                 ...catalog.tagGroups,
@@ -131,7 +132,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                   _tagGroups = currentTags;
                   _applyInitialTagSelection();
                   if (!_tagGroups.contains(_selectedTag)) {
-                    _selectedTag = '全部';
+                    _selectedTag = _allTagToken;
                   }
                 });
               });
@@ -243,7 +244,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
         Center(
           child: FilledButton(
             onPressed: _refresh,
-            child: const Text('重试'),
+            child: Text(i18n.t('signRetry')),
           ),
         ),
       ],
@@ -263,8 +264,8 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
             child: TextField(
               controller: _searchController,
               style: const TextStyle(color: Colors.white, fontSize: 15),
-              decoration: const InputDecoration(
-                hintText: '搜索',
+              decoration: InputDecoration(
+                hintText: i18n.t('productSearchPlaceholder'),
                 hintStyle: TextStyle(color: Color(0xFF9DB1C9)),
                 border: InputBorder.none,
               ),
@@ -301,7 +302,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                     : null,
               ),
               child: Text(
-                tag,
+                _displayTag(tag),
                 style: TextStyle(
                   color: selected ? const Color(0xFF39E6FF) : const Color(0xFFEAF4FF),
                   fontSize: 15,
@@ -340,7 +341,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
-                        item.productName.isEmpty ? '未命名产品' : item.productName,
+                        item.productName.isEmpty ? i18n.t('productUnnamed') : item.productName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -375,7 +376,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                 Expanded(
                   child: _buildRateBlock(
                     '${item.singleRate.toStringAsFixed(3)}%',
-                    '单购利率',
+                    i18n.t('productSingleRate'),
                     singleRateColor,
                   ),
                 ),
@@ -383,7 +384,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                   Expanded(
                     child: _buildRateBlock(
                       '${item.groupRate.toStringAsFixed(3)}%',
-                      '拼团利率',
+                      i18n.t('productGroupRate'),
                       groupRateColor,
                     ),
                   ),
@@ -392,16 +393,16 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
             const SizedBox(height: 8),
             Row(
               children: <Widget>[
-                Expanded(child: _buildMiniStat('起投投资', item.currency, _fmt(item.minInvestAmount))),
-                Expanded(child: _buildMiniStat('最高投资', item.currency, _fmt(item.maxInvestAmount))),
+                Expanded(child: _buildMiniStat(i18n.t('productMinInvest'), item.currency, _fmt(item.minInvestAmount))),
+                Expanded(child: _buildMiniStat(i18n.t('productMaxInvest'), item.currency, _fmt(item.maxInvestAmount))),
                 if (item.redPacketPerUnit > 0)
-                  Expanded(child: _buildMiniStat('红包金额', item.currency, _fmt(item.redPacketPerUnit))),
+                  Expanded(child: _buildMiniStat(i18n.t('productRedPacket'), item.currency, _fmt(item.redPacketPerUnit))),
               ],
             ),
             const SizedBox(height: 9),
             Row(
               children: <Widget>[
-                const Text('进度:', style: TextStyle(color: Color(0xFF8D95BB), fontSize: 33 / 2)),
+                Text('${i18n.t('productProgress')}:', style: const TextStyle(color: Color(0xFF8D95BB), fontSize: 33 / 2)),
                 const SizedBox(width: 8),
                 Expanded(
                   child: ClipRRect(
@@ -429,15 +430,16 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
 
   List<Widget> _buildTagBadges(InvestProductItem item) {
     final List<String> badges = <String>[];
-    badges.add(item.interestModeLabel);
+    badges.add(i18n.t('productInterestDaily'));
     if (item.riskTag.isNotEmpty) {
       badges.add(item.riskTag);
     }
-    badges.add('${item.cycleDays}天');
+    badges.add('${item.cycleDays}${i18n.t('signDayUnit')}');
     return badges.take(3).map((String text) {
-      final Color bg = text.contains('风险')
+      final String lower = text.toLowerCase();
+      final Color bg = (text.contains('风险') || lower.contains('risk'))
           ? const Color(0xFFFF3B30)
-          : text.endsWith('天')
+          : (text.endsWith('天') || lower.endsWith('days'))
               ? const Color(0xFF1F7A66)
               : const Color(0xFF1B4C7A);
       return Container(
@@ -544,7 +546,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
           border: Border.all(color: borderColor),
         ),
         child: Text(
-          '投资',
+          i18n.t('productInvestAction'),
           style: TextStyle(
             color: Colors.white,
             fontSize: compact ? 16 : 18,
@@ -559,9 +561,9 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
     return Container(
       margin: const EdgeInsets.only(top: 80),
       alignment: Alignment.center,
-      child: const Text(
-        '暂无产品',
-        style: TextStyle(color: Color(0xFF8D98C7), fontSize: 16),
+      child: Text(
+        i18n.t('productEmpty'),
+        style: const TextStyle(color: Color(0xFF8D98C7), fontSize: 16),
       ),
     );
   }
@@ -588,10 +590,14 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
   }
 
   bool _matchTagGroup(InvestProductItem item) {
-    if (_selectedTag == '全部') {
+    if (_selectedTag == _allTagToken) {
       return true;
     }
     return item.tagNames.any((String e) => e.trim() == _selectedTag);
+  }
+
+  String _displayTag(String tag) {
+    return tag == _allTagToken ? i18n.t('commonAll') : tag;
   }
 
   String _fmt(double value) {
@@ -614,10 +620,11 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
   }
 
   List<String> _normalizeTagGroups(List<String> raw) {
-    final List<String> tags = <String>['全部'];
+    final List<String> tags = <String>[_allTagToken];
     for (final String e in raw) {
       final String text = e.trim();
-      if (text.isNotEmpty && text != '全部' && !tags.contains(text)) {
+      final bool isAllTag = text == '全部' || text.toLowerCase() == 'all' || text == _allTagToken;
+      if (text.isNotEmpty && !isAllTag && !tags.contains(text)) {
         tags.add(text);
       }
     }
@@ -742,12 +749,6 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
         ],
       ),
     );
-  }
-}
-
-extension on InvestProductItem {
-  String get interestModeLabel {
-    return '每日返息';
   }
 }
 

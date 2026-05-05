@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/invest_order_api.dart';
 import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/widgets/countdown_text.dart';
@@ -15,6 +16,7 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
   static const List<String> _tabs = <String>['total', 'running', 'ended'];
   int _tabIndex = 0;
   late Future<InvestOrderListData> _future;
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -32,11 +34,11 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
   String _tabText(int index, InvestOrderListData data) {
     switch (index) {
       case 1:
-        return '进行中(${data.runningCount})';
+        return '${i18n.t('running')}(${data.runningCount})';
       case 2:
-        return '已结束(${data.endedCount})';
+        return '${i18n.t('ended')}(${data.endedCount})';
       default:
-        return '总订单(${data.totalCount})';
+        return '${i18n.t('myInvestTotalOrders')}(${data.totalCount})';
     }
   }
 
@@ -78,8 +80,8 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
       backgroundColor: const Color(0xFF0B0E2A),
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text(
-          '我的投资',
+        title: Text(
+          i18n.t('myInvestTitle'),
           style: TextStyle(color: Color(0xFFEAF4FF), fontWeight: FontWeight.w700, fontSize: 20),
         ),
         backgroundColor: Colors.transparent,
@@ -94,8 +96,8 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
                 foregroundColor: const Color(0xFFEAF4FF),
                 padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
-              child: const Text(
-                '收益明细',
+              child: Text(
+                i18n.t('myIncomeDetailTitle'),
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
               ),
             ),
@@ -116,7 +118,7 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
                   return Center(
                     child: TextButton(
                       onPressed: _refresh,
-                      child: const Text('加载失败，点击重试', style: TextStyle(color: Colors.white)),
+                      child: Text(i18n.t('loadFailedRetryTap'), style: const TextStyle(color: Colors.white)),
                     ),
                   );
                 }
@@ -143,10 +145,10 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
                             ? ListView(
                                 physics: const AlwaysScrollableScrollPhysics(),
                                 padding: const EdgeInsets.fromLTRB(14, 10, 14, 18),
-                                children: const <Widget>[
+                                children: <Widget>[
                                   SizedBox(height: 160),
                                   Center(
-                                    child: Text('暂无投资订单', style: TextStyle(color: Color(0xFF9DB1C9))),
+                                    child: Text(i18n.t('myInvestEmptyOrders'), style: const TextStyle(color: Color(0xFF9DB1C9))),
                                   ),
                                 ],
                               )
@@ -236,11 +238,11 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
       ),
       child: Row(
         children: <Widget>[
-          Expanded(child: _overviewCell('总订单', '$total')),
+          Expanded(child: _overviewCell(i18n.t('myInvestTotalOrders'), '$total')),
           _divider(),
-          Expanded(child: _overviewCell('进行中', '$running')),
+          Expanded(child: _overviewCell(i18n.t('running'), '$running')),
           _divider(),
-          Expanded(child: _overviewCell('已结束', '$ended')),
+          Expanded(child: _overviewCell(i18n.t('ended'), '$ended')),
         ],
       ),
     );
@@ -387,30 +389,30 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
             ],
           ),
           const SizedBox(height: 8),
-          _kv('单购利率', '${_fmtMoney(item.investAmount)} $unit'),
-          _kv('预期收益', '${_fmtMoney(item.expectedIncome)} $unit'),
-          _kv('投资期限', '${item.cycleDays}天'),
-          _kv('投资利率', '${item.effectiveRate.toStringAsFixed(3)}%', valueColor: theme.valueColor),
+          _kv(i18n.t('productSingleRate'), '${_fmtMoney(item.investAmount)} $unit'),
+          _kv(i18n.t('expectedIncome'), '${_fmtMoney(item.expectedIncome)} $unit'),
+          _kv(i18n.t('productPeriod'), '${item.cycleDays}${i18n.t('signDayUnit')}'),
+          _kv(i18n.t('investRate'), '${item.effectiveRate.toStringAsFixed(3)}%', valueColor: theme.valueColor),
           if (item.groupMode)
-            _kv('拼团状态', _groupStatusText(item), valueFontSize: 16),
+            _kv(i18n.t('groupStatus'), _groupStatusText(item), valueFontSize: 16),
           if (item.groupMode && item.groupNo.isNotEmpty)
-            _kv('拼团团号', item.groupNo, valueColor: const Color(0xFF9DB1C9), valueFontSize: 14),
+            _kv(i18n.t('groupNo'), item.groupNo, valueColor: const Color(0xFF9DB1C9), valueFontSize: 14),
           if (item.groupMode && item.groupStatus == '0')
             _kvWidget(
-              '待成团时间',
+              i18n.t('pendingGroupTime'),
               item.groupCountdownSeconds > 0
                   ? CountdownText(
                       key: ValueKey<String>('order_${item.orderNo}_${item.groupNo}'),
                       initialSeconds: item.groupCountdownSeconds,
-                      finishedText: '状态更新中，请下拉刷新',
+                      finishedText: i18n.t('groupStatusUpdating'),
                       textStyle: const TextStyle(
                         color: Color(0xFFFFA500),
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
                     )
-                  : const Text(
-                      '状态更新中，请下拉刷新',
+                  : Text(
+                      i18n.t('groupStatusUpdating'),
                       textAlign: TextAlign.right,
                       style: TextStyle(
                         color: Color(0xFFFFA500),
@@ -424,7 +426,7 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
             children: <Widget>[
               Expanded(
                 child: Text(
-                  '订单号 ${item.orderNo.isEmpty ? '--' : item.orderNo}',
+                  '${i18n.t('orderNo')} ${item.orderNo.isEmpty ? '--' : item.orderNo}',
                   style: const TextStyle(color: Color(0xFF7482AD), fontSize: 12, fontWeight: FontWeight.w500),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -461,31 +463,31 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
   _OrderStatusView _statusView(InvestOrderListItem item) {
     final String status = item.status.trim();
     if (status == '2') {
-      return const _OrderStatusView(
-        text: '已赎回',
+      return _OrderStatusView(
+        text: i18n.t('redeemed'),
         bgColor: Color(0x668A7DFF),
       );
     }
     if (status == '1') {
-      return const _OrderStatusView(
-        text: '已结束',
+      return _OrderStatusView(
+        text: i18n.t('ended'),
         bgColor: Color(0x66FF6B6B),
       );
     }
     if (_isEnded(item)) {
-      return const _OrderStatusView(
-        text: '已结束',
+      return _OrderStatusView(
+        text: i18n.t('ended'),
         bgColor: Color(0x66FF6B6B),
       );
     }
     if (item.groupMode && item.groupStatus == '0') {
       return _OrderStatusView(
-        text: '拼团中',
+        text: i18n.t('grouping'),
         bgColor: themeForStatus(item),
       );
     }
     return _OrderStatusView(
-      text: '进行中',
+      text: i18n.t('running'),
       bgColor: themeForStatus(item),
     );
   }
@@ -544,13 +546,13 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
   String _groupStatusText(InvestOrderListItem item) {
     switch (item.groupStatus) {
       case '0':
-        return '拼团中';
+        return i18n.t('grouping');
       case '1':
-        return '已成团';
+        return i18n.t('groupSuccess');
       case '2':
-        return '拼团失败已退款';
+        return i18n.t('groupFailedRefunded');
       default:
-        return '普通订单';
+        return i18n.t('normalOrder');
     }
   }
 }

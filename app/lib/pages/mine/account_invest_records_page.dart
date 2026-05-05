@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/invest_order_api.dart';
 
 class AccountInvestRecordsPage extends StatefulWidget {
@@ -11,6 +12,7 @@ class AccountInvestRecordsPage extends StatefulWidget {
 
 class _AccountInvestRecordsPageState extends State<AccountInvestRecordsPage> {
   late Future<List<InvestWalletLogItem>> _future;
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -35,11 +37,11 @@ class _AccountInvestRecordsPageState extends State<AccountInvestRecordsPage> {
   String _typeText(String type) {
     switch (type.toLowerCase()) {
       case 'redeem':
-        return '赎回';
+        return i18n.t('walletTypeRedeem');
       case 'profit':
-        return '收益';
+        return i18n.t('walletTypeProfit');
       default:
-        return '投资';
+        return i18n.t('walletTypeInvest');
     }
   }
 
@@ -53,7 +55,7 @@ class _AccountInvestRecordsPageState extends State<AccountInvestRecordsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A1220),
       appBar: AppBar(
-        title: const Text('投资记录'),
+        title: Text(i18n.t('investRecordTitle')),
         backgroundColor: const Color(0xFF0A1220),
         elevation: 0,
       ),
@@ -65,7 +67,7 @@ class _AccountInvestRecordsPageState extends State<AccountInvestRecordsPage> {
           }
           if (snapshot.hasError) {
             return Center(
-              child: TextButton(onPressed: _refresh, child: const Text('加载失败，点击重试')),
+              child: TextButton(onPressed: _refresh, child: Text(i18n.t('loadFailedRetryTap'))),
             );
           }
           final List<InvestWalletLogItem> rows = snapshot.data ?? <InvestWalletLogItem>[];
@@ -74,9 +76,9 @@ class _AccountInvestRecordsPageState extends State<AccountInvestRecordsPage> {
             child: rows.isEmpty
                 ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    children: const <Widget>[
+                    children: <Widget>[
                       SizedBox(height: 120),
-                      Center(child: Text('暂无记录', style: TextStyle(color: Color(0xFF9DB1C9)))),
+                      Center(child: Text(i18n.t('recordEmpty'), style: const TextStyle(color: Color(0xFF9DB1C9)))),
                     ],
                   )
                 : ListView.builder(
@@ -134,14 +136,14 @@ class _AccountInvestRecordsPageState extends State<AccountInvestRecordsPage> {
                               ],
                             ),
                             const SizedBox(height: 8),
-                            Text('订单号: ${item.orderNo.isEmpty ? '--' : item.orderNo}',
+                            Text('${i18n.t('orderNo')}: ${item.orderNo.isEmpty ? '--' : item.orderNo}',
                                 style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12)),
                             const SizedBox(height: 4),
-                            Text('时间: ${_time(item.createTime)}',
+                            Text('${i18n.t('time')}: ${_time(item.createTime)}',
                                 style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12)),
                             if (item.remark.trim().isNotEmpty) ...<Widget>[
                               const SizedBox(height: 4),
-                              Text('备注: ${item.remark.trim()}',
+                              Text('${i18n.t('remark')}: ${item.remark.trim()}',
                                   style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12)),
                             ],
                           ],

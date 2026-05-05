@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/request/my_team_api.dart';
 import 'package:myapp/routers/app_router.dart';
@@ -29,6 +30,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
     teamValidCount: 0,
     teamValidRate: 0,
   );
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -53,7 +55,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = '加载失败';
+        _error = i18n.t('loadFailed');
         _loading = false;
       });
     }
@@ -64,7 +66,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF050A2C),
       appBar: AppBar(
-        title: const Text('我的团队'),
+        title: Text(i18n.t('myTeamTitle')),
         centerTitle: true,
         backgroundColor: const Color(0xFF050A2C),
         elevation: 0,
@@ -84,7 +86,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
                   ? Center(
                       child: TextButton(
                         onPressed: () => _load(forceRefresh: true),
-                        child: const Text('加载失败，点击重试', style: TextStyle(color: Colors.white70)),
+                        child: Text(i18n.t('loadFailedRetryTap'), style: const TextStyle(color: Colors.white70)),
                       ),
                     )
                   : RefreshIndicator(
@@ -97,17 +99,17 @@ class _MyTeamPageState extends State<MyTeamPage> {
                           _buildTitle(),
                           const SizedBox(height: 10),
                           _buildStatCard(
-                            totalLabel: '直推总人数',
+                            totalLabel: i18n.t('myTeamDirectTotal'),
                             totalValue: _stats.directTotalCount.toString(),
-                            validLabel: '直推有效人数',
+                            validLabel: i18n.t('myTeamDirectValid'),
                             validValue: _stats.directValidCount.toString(),
                             rate: _stats.directValidRate,
                           ),
                           const SizedBox(height: 12),
                           _buildStatCard(
-                            totalLabel: '团队总人数',
+                            totalLabel: i18n.t('myTeamAllTotal'),
                             totalValue: _stats.teamTotalCount.toString(),
-                            validLabel: '团队有效人数',
+                            validLabel: i18n.t('myTeamAllValid'),
                             validValue: _stats.teamValidCount.toString(),
                             rate: _stats.teamValidRate,
                           ),
@@ -165,7 +167,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Text(
-                      '邀请码:  ${_stats.inviteCode.isEmpty ? "--" : _stats.inviteCode}',
+                      '${i18n.t('inviteCode')}:  ${_stats.inviteCode.isEmpty ? "--" : _stats.inviteCode}',
                       style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 8),
@@ -198,7 +200,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
                     borderRadius: BorderRadius.circular(22),
                     gradient: const LinearGradient(colors: <Color>[Color(0xFF8B4BFF), Color(0xFF2FB7FF)]),
                   ),
-                  child: const Text('立即推荐', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  child: Text(i18n.t('myTeamInviteNow'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 ),
               ),
             ],
@@ -209,11 +211,11 @@ class _MyTeamPageState extends State<MyTeamPage> {
           Row(
             children: <Widget>[
               Expanded(
-                child: _amountItem('总资产（元）', _stats.totalAsset),
+                child: _amountItem(i18n.t('myTeamTotalAssetYuan'), _stats.totalAsset),
               ),
               const SizedBox(width: 20),
               Expanded(
-                child: _amountItem('总收益', _stats.totalIncome),
+                child: _amountItem(i18n.t('myTeamTotalIncome'), _stats.totalIncome),
               ),
             ],
           ),
@@ -229,7 +231,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               ),
-              child: const Text('团队奖励'),
+              child: Text(i18n.t('teamReward')),
             ),
           ),
         ],
@@ -263,7 +265,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
           ),
         ),
         const SizedBox(width: 10),
-        const Text('团队统计', style: TextStyle(color: Colors.white, fontSize: 34 / 2, fontWeight: FontWeight.w700)),
+        Text(i18n.t('myTeamStatsTitle'), style: const TextStyle(color: Colors.white, fontSize: 34 / 2, fontWeight: FontWeight.w700)),
         const SizedBox(width: 10),
         Expanded(
           child: Container(

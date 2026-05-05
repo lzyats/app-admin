@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/request/api_client.dart';
 import 'package:myapp/request/app_config_api.dart';
@@ -36,6 +37,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
   final TextEditingController _joinGroupNoController = TextEditingController();
   int _purchaseShares = 1;
   bool _submitting = false;
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -63,7 +65,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     return Scaffold(
       backgroundColor: const Color(0xFF070A2D),
       appBar: AppBar(
-        title: Text(widget.groupMode ? '拼团认购' : '产品认购'),
+        title: Text(widget.groupMode ? i18n.t('purchaseGroupTitle') : i18n.t('purchaseTitle')),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -78,7 +80,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
             return Center(
               child: FilledButton(
                 onPressed: _refresh,
-                child: const Text('重试'),
+                child: Text(i18n.t('signRetry')),
               ),
             );
           }
@@ -93,16 +95,16 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
                 _buildGroupCard(),
                 const SizedBox(height: 10),
                 _buildInputCard(
-                  '参团团号',
-                  '留空默认发起新团，输入团号则参团',
+                  i18n.t('purchaseJoinGroupNo'),
+                  i18n.t('purchaseJoinGroupHint'),
                   _joinGroupNoController,
                   false,
                 ),
               ],
               const SizedBox(height: 10),
               _buildInputCard(
-                '金额',
-                item.investMode == 'AMOUNT' ? '请输入购买金额' : '自动按份数计算',
+                i18n.t('purchaseAmount'),
+                item.investMode == 'AMOUNT' ? i18n.t('purchaseAmountHint') : i18n.t('purchaseAmountAutoHint'),
                 _amountController,
                 false,
                 readOnly: item.investMode != 'AMOUNT',
@@ -112,7 +114,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
                 _buildSharesCard(item),
               ],
               const SizedBox(height: 10),
-              _buildInputCard('支付密码', '请输入支付密码', _payPwdController, true),
+              _buildInputCard(i18n.t('payPassword'), i18n.t('payPasswordRequired'), _payPwdController, true),
               const SizedBox(height: 10),
               _buildCurrencyLine(item),
               const SizedBox(height: 8),
@@ -181,16 +183,16 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
       child: Column(
         children: <Widget>[
           RichText(
-            text: const TextSpan(
+            text: TextSpan(
               children: <InlineSpan>[
-                TextSpan(text: '只需 ', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w700)),
-                TextSpan(text: '2', style: TextStyle(color: Color(0xFFFF5B4A), fontSize: 21, fontWeight: FontWeight.w700)),
-                TextSpan(text: ' 人即可成团', style: TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w700)),
+                TextSpan(text: i18n.t('purchaseNeedMembersPrefix'), style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w700)),
+                const TextSpan(text: '2', style: TextStyle(color: Color(0xFFFF5B4A), fontSize: 21, fontWeight: FontWeight.w700)),
+                TextSpan(text: i18n.t('purchaseNeedMembersSuffix'), style: const TextStyle(color: Colors.white, fontSize: 21, fontWeight: FontWeight.w700)),
               ],
             ),
           ),
           const SizedBox(height: 12),
-          const Text('剩余 24 : 00 : 00 结束', style: TextStyle(color: Color(0xFF8592BF), fontSize: 20 / 1.2)),
+          Text(i18n.t('purchaseGroupCountdownHint'), style: const TextStyle(color: Color(0xFF8592BF), fontSize: 20 / 1.2)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -209,9 +211,9 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
             ],
           ),
           const SizedBox(height: 10),
-          const Text('✓ 享受拼团优惠价格', style: TextStyle(color: Color(0xFF7E8DBB), fontSize: 15)),
+          Text('✓ ${i18n.t('purchaseGroupBenefit1')}', style: const TextStyle(color: Color(0xFF7E8DBB), fontSize: 15)),
           const SizedBox(height: 4),
-          const Text('✓ 成团后立即开始投资', style: TextStyle(color: Color(0xFF7E8DBB), fontSize: 15)),
+          Text('✓ ${i18n.t('purchaseGroupBenefit2')}', style: const TextStyle(color: Color(0xFF7E8DBB), fontSize: 15)),
         ],
       ),
     );
@@ -270,9 +272,9 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
       ),
       child: Row(
         children: <Widget>[
-          const SizedBox(
+          SizedBox(
             width: 110,
-            child: Text('购买份数', style: TextStyle(color: Colors.white, fontSize: 35 / 2, fontWeight: FontWeight.w600)),
+            child: Text(i18n.t('purchaseShares'), style: const TextStyle(color: Colors.white, fontSize: 35 / 2, fontWeight: FontWeight.w600)),
           ),
           const Spacer(),
           _stepBtn('-', () => _changeShares(item, -1)),
@@ -339,7 +341,11 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
 
   Widget _buildTips(InvestProductItem item) {
     return Text(
-      '单笔最低${_fmt(item.minInvestAmount)}，最高${_fmt(item.maxInvestAmount)}，可投次数${item.limitTimes <= 0 ? 1 : item.limitTimes}',
+      i18n
+          .t('purchaseTipRange')
+          .replaceAll('{min}', _fmt(item.minInvestAmount))
+          .replaceAll('{max}', _fmt(item.maxInvestAmount))
+          .replaceAll('{times}', '${item.limitTimes <= 0 ? 1 : item.limitTimes}'),
       textAlign: TextAlign.center,
       style: const TextStyle(color: Color(0xFF7B88B6), fontSize: 32 / 2),
     );
@@ -357,7 +363,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         ),
         child: _submitting
             ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : const Text('提交', style: TextStyle(color: Color(0xFF35DAFF), fontSize: 20, fontWeight: FontWeight.w700)),
+            : Text(i18n.t('submit'), style: const TextStyle(color: Color(0xFF35DAFF), fontSize: 20, fontWeight: FontWeight.w700)),
       ),
     );
   }
@@ -377,11 +383,11 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         ? _calcShareModeAmount(item, _purchaseShares)
         : (double.tryParse(_amountController.text.trim()) ?? 0);
     if (shareMode && _purchaseShares <= 0) {
-      _toast('请选择购买份数');
+      _toast(i18n.t('purchaseSelectShares'));
       return;
     }
     if (amount <= 0) {
-      _toast(shareMode ? '请先配置单份金额' : '请输入正确金额');
+      _toast(shareMode ? i18n.t('purchaseConfigUnitAmount') : i18n.t('purchaseInputValidAmount'));
       return;
     }
     final String? walletError = await _validateWalletBalance(item.currency, amount);
@@ -402,7 +408,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         agreed: true,
         signatureBase64: '',
       );
-      _toast('该产品已签约，本次无需重复签约');
+      _toast(i18n.t('purchaseSignedSkip'));
     } else {
       final String contractStamp1 = AppBootstrapTool.config
           .getByItemString(AppConfigOptionItem.htimg1)
@@ -426,7 +432,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     }
     final String payPwd = _payPwdController.text.trim();
     if (payPwd.isEmpty) {
-      _toast('请输入支付密码');
+      _toast(i18n.t('payPasswordRequired'));
       return;
     }
 
@@ -448,7 +454,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         joinGroupNo: joinGroupNo,
       );
       if (!mounted) return;
-      _toast('签约并提交成功', success: true);
+      _toast(i18n.t('purchaseSubmitSuccess'), success: true);
       Navigator.pop(context);
     } catch (e) {
       _toast(e.toString().replaceFirst('Exception: ', ''));
@@ -497,7 +503,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     }
     final String? value = await NumberKeyboardTool.show(
       context,
-      title: '请输入支付密码',
+      title: i18n.t('payPasswordRequired'),
       initialValue: controller.text.trim(),
       maxLength: 12,
     );
@@ -531,10 +537,10 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         final AuthUserProfile latest = await AuthApi.getInfo(forceRefresh: true);
         return latest.payPasswordSet == 1;
       }
-      _toast('请先设置支付密码');
+      _toast(i18n.t('purchaseNeedSetPayPassword'));
       return false;
     } catch (_) {
-      _toast('暂时无法校验支付密码状态，请稍后重试');
+      _toast(i18n.t('purchasePayPasswordCheckFailed'));
       return false;
     }
   }
@@ -546,7 +552,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     }
     final int maxByProduct = _resolveShareMax(item);
     if (maxByProduct > 0 && next > maxByProduct) {
-      _toast('购买份数超出限制');
+      _toast(i18n.t('purchaseSharesExceeded'));
       return;
     }
     setState(() {
@@ -609,25 +615,27 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
 
   String? _resolveOrderBlockedReason(InvestProductItem item) {
     if (!item.canOrder) {
-      return item.orderDisabledReason.isEmpty ? '当前产品暂不可下单' : item.orderDisabledReason;
+      return item.orderDisabledReason.isEmpty ? i18n.t('productOrderDisabled') : item.orderDisabledReason;
     }
     final DateTime now = DateTime.now();
     final DateTime? startTime = _parseDateTime(item.startTime);
     if (startTime != null && now.isBefore(startTime)) {
-      return '产品未开始';
+      return i18n.t('productNotStarted');
     }
     final DateTime? endTime = _parseDateTime(item.endTime);
     if (endTime != null && now.isAfter(endTime)) {
-      return '产品已过有效期';
+      return i18n.t('productExpired');
     }
     if (item.progressPercent >= 100) {
-      return '产品进度已100%，暂不可下单';
+      return i18n.t('productProgressFull');
     }
     if (item.remainingAmount <= 0 && item.remainingShares <= 0) {
-      return '该产品已满额，暂不可下单';
+      return i18n.t('productSoldOut');
     }
     if (item.limitTimes > 0 && item.userInvestCount >= item.limitTimes) {
-      return item.limitTimes == 1 ? '该产品不可复购，您已订购过' : '该产品最多可认购${item.limitTimes}次，已达上限';
+      return item.limitTimes == 1
+          ? i18n.t('productNoRepurchase')
+          : i18n.t('productLimitReached').replaceAll('{times}', '${item.limitTimes}');
     }
     return null;
   }
@@ -653,14 +661,14 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         }
       }
       if (wallet == null) {
-        return '${target}钱包不存在';
+        return i18n.t('purchaseWalletMissing').replaceAll('{currency}', target);
       }
       if (wallet.availableBalance < amount) {
-        return '余额不足，无法成交';
+        return i18n.t('purchaseBalanceNotEnough');
       }
       return null;
     } catch (_) {
-      return '暂时无法校验钱包余额，请稍后重试';
+      return i18n.t('purchaseBalanceCheckFailed');
     }
   }
 
@@ -691,6 +699,7 @@ class _ContractSignDialog extends StatefulWidget {
 class _ContractSignDialogState extends State<_ContractSignDialog> {
   bool _agreed = false;
   String _signatureBase64 = '';
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   bool get _signed => _signatureBase64.trim().isNotEmpty;
 
@@ -712,7 +721,7 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: <Widget>[
-                    const Text('投资合同条款', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                    Text(i18n.t('purchaseContractTitle'), style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
                     Positioned(
                       right: 0,
                       child: IconButton(
@@ -729,18 +738,18 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      _line('甲方（平台方）', widget.preview.platformName),
+                      _line(i18n.t('purchasePartyA'), widget.preview.platformName),
                       _line(
-                        '乙方（投资方）',
+                        i18n.t('purchasePartyB'),
                         widget.preview.realName.trim().isNotEmpty
                             ? widget.preview.realName
                             : widget.preview.investorNo,
                       ),
-                      _line('投资金额', '¥${widget.preview.amount.toStringAsFixed(0)}'),
-                      _line('投资期限', '${widget.preview.cycleDays}天'),
-                      _line('预期收益率', '${widget.preview.rate.toStringAsFixed(3)}%'),
+                      _line(i18n.t('purchaseInvestAmount'), '¥${widget.preview.amount.toStringAsFixed(0)}'),
+                      _line(i18n.t('purchaseInvestPeriod'), '${widget.preview.cycleDays}${i18n.t('signDayUnit')}'),
+                      _line(i18n.t('purchaseExpectedRate'), '${widget.preview.rate.toStringAsFixed(3)}%'),
                       const SizedBox(height: 16),
-                      const Text('合同条款：', style: TextStyle(fontSize: 22, color: Color(0xFF8A8A8A), fontWeight: FontWeight.w600)),
+                      Text(i18n.t('purchaseContractTerms'), style: const TextStyle(fontSize: 22, color: Color(0xFF8A8A8A), fontWeight: FontWeight.w600)),
                       const SizedBox(height: 8),
                       Text(
                         widget.preview.contractText,
@@ -764,7 +773,7 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
                           value: _agreed,
                           onChanged: (bool? v) => setState(() => _agreed = v ?? false),
                         ),
-                        const Text('我已阅读并同意上述合同条款', style: TextStyle(fontSize: 20 / 1.2)),
+                        Text(i18n.t('purchaseAgreeTerms'), style: const TextStyle(fontSize: 20 / 1.2)),
                       ],
                     ),
                     SizedBox(
@@ -777,7 +786,7 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
                           disabledBackgroundColor: const Color(0xFF94A5D9),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
                         ),
-                        child: const Text('提交', style: TextStyle(fontSize: 22 / 1.2, fontWeight: FontWeight.w700)),
+                        child: Text(i18n.t('submit'), style: const TextStyle(fontSize: 22 / 1.2, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],
@@ -807,9 +816,9 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text('甲方（平台方）', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                Text(i18n.t('purchasePartyA'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
-                const Text('签章', style: TextStyle(fontSize: 12, color: Color(0xFF7B7B7B))),
+                Text(i18n.t('purchaseStamp'), style: const TextStyle(fontSize: 12, color: Color(0xFF7B7B7B))),
                 const SizedBox(height: 6),
                 SizedBox(
                   height: 86,
@@ -849,9 +858,9 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: <Widget>[
-                const Text('乙方（投资方）', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
+                Text(i18n.t('purchasePartyB'), style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 6),
-                const Text('签名', style: TextStyle(fontSize: 12, color: Color(0xFF7B7B7B))),
+                Text(i18n.t('purchaseSignature'), style: const TextStyle(fontSize: 12, color: Color(0xFF7B7B7B))),
                 const SizedBox(height: 6),
                 InkWell(
                   onTap: _openSignaturePage,
@@ -865,7 +874,7 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
                       border: Border.all(color: const Color(0xFFD8E1EF)),
                     ),
                     child: signBytes == null
-                        ? const Text('点击签名', style: TextStyle(color: Color(0xFF6374A8)))
+                        ? Text(i18n.t('purchaseTapToSign'), style: const TextStyle(color: Color(0xFF6374A8)))
                         : Image.memory(signBytes, fit: BoxFit.contain),
                   ),
                 ),
@@ -892,7 +901,7 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
   }
 
   Future<void> _openSignaturePage() async {
-    final String? result = await SignatureTool.show(context, title: '乙方签名');
+    final String? result = await SignatureTool.show(context, title: i18n.t('purchasePartyBSignTitle'));
     if (!mounted || result == null) {
       return;
     }
@@ -914,8 +923,8 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
   void _submit() {
     if (_signatureBase64.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('请先完成签名'),
+        SnackBar(
+          content: Text(i18n.t('purchaseNeedSignature')),
           backgroundColor: Color(0xFFFFA500),
         ),
       );

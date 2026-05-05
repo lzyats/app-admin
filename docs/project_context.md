@@ -1,6 +1,15 @@
 # 项目全局上下文 - Trae 永久记忆文件 
- > 所有AI编码、修改、优化、新增功能，必须严格遵守本文档约束，不得擅自变更规则 
+ > 所有AI编码、修改、优化、新增功能，必须严格遵守本文档约束，不得擅自变更规则
  
+## 0. 入口索引
+
+- 文档总入口：`docs/README.md`
+- 项目级长期约定：`docs/project_conventions.md`
+- 工作流地图：`docs/workflow_map.md`
+- 模块级永久索引：`docs/module_registry.md`
+- 登录注册专项约定：`docs/module_registry_login_register.md`
+- 接口总览：`docs/API_DOCUMENT.md`
+
  ## 一、项目基础信息 
  - 项目名称：投资理财后台系统 
  - 开发框架：RuoYi-Vue 若依框架 

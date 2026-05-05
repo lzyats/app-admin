@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/pages/product/invest_product_list_page.dart';
 import 'package:myapp/pages/product/invest_product_detail_page.dart';
 import 'package:myapp/request/invest_product_api.dart';
@@ -35,6 +36,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
   int _adPage = 0;
   int _noticePage = 0;
   int _hotPage = 0;
+  AppLocalizations get i18n => AppLocalizations.of(context);
 
   Future<T?> _pushHomeRoute<T extends Object?>(
     String routeName, {
@@ -341,7 +343,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
   Widget _buildTopActions() {
     final List<_HomeActionItem> items = <_HomeActionItem>[
       _HomeActionItem(
-        '充值',
+        i18n.t('homeActionRecharge'),
         Icons.savings_outlined,
         const Color(0xFF39E6FF),
         () {
@@ -349,21 +351,21 @@ class _HomeTabPageState extends State<HomeTabPage> {
       },
       ),
       _HomeActionItem(
-        '提现',
+        i18n.t('homeActionWithdraw'),
         Icons.account_balance_wallet_outlined,
         const Color(0xFF38FFB3),
         () {
         _pushHomeRoute(AppRouter.withdraw);
       },
       ),
-      _HomeActionItem('领矿', Icons.memory_rounded, const Color(0xFFFFA500), () {
+      _HomeActionItem(i18n.t('homeActionClaimMiner'), Icons.memory_rounded, const Color(0xFFFFA500), () {
         _pushHomeRoute(AppRouter.miner);
       }),
-      _HomeActionItem('推广', Icons.groups_outlined, const Color(0xFF39E6FF), () {
+      _HomeActionItem(i18n.t('homeActionPromote'), Icons.groups_outlined, const Color(0xFF39E6FF), () {
         _pushHomeRoute(AppRouter.myTeam);
       }),
       _HomeActionItem(
-        '邀请',
+        i18n.t('homeActionInvite'),
         Icons.person_add_alt_1_outlined,
         const Color(0xFF38FFB3),
         () {
@@ -462,7 +464,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
   Widget _buildFeatureGrid() {
     final List<_HomeActionItem> items = <_HomeActionItem>[
       _HomeActionItem(
-        '每日签到',
+        i18n.t('homeActionDailySignIn'),
         Icons.event_available_outlined,
         const Color(0xFFE2FF59),
         () {
@@ -470,7 +472,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
       },
       ),
       _HomeActionItem(
-        '会员等级',
+        i18n.t('homeActionVipLevel'),
         Icons.workspace_premium_outlined,
         const Color(0xFFE2FF59),
         () {
@@ -478,18 +480,18 @@ class _HomeTabPageState extends State<HomeTabPage> {
       },
       ),
       _HomeActionItem(
-        '实名认证',
+        i18n.t('homeActionRealName'),
         Icons.verified_user_outlined,
         const Color(0xFFE2FF59),
         () {
         _pushHomeRoute(AppRouter.realNameAuth);
       },
       ),
-      _HomeActionItem('我的团队', Icons.groups_outlined, const Color(0xFF39E6FF), () {
+      _HomeActionItem(i18n.t('homeActionMyTeam'), Icons.groups_outlined, const Color(0xFF39E6FF), () {
         _pushHomeRoute(AppRouter.myTeam);
       }),
       _HomeActionItem(
-        '我的矿机',
+        i18n.t('homeActionMyMiner'),
         Icons.precision_manufacturing_outlined,
         const Color(0xFFFFA500),
         () {
@@ -497,14 +499,14 @@ class _HomeTabPageState extends State<HomeTabPage> {
       },
       ),
       _HomeActionItem(
-        '幸运魔方',
+        i18n.t('homeActionLuckyCube'),
         Icons.view_in_ar_outlined,
         const Color(0xFF9DB1C9),
         () {},
       ),
-      _HomeActionItem('口令红包', Icons.redeem_outlined, const Color(0xFF39E6FF), () {}),
+      _HomeActionItem(i18n.t('homeActionCodeRedPacket'), Icons.redeem_outlined, const Color(0xFF39E6FF), () {}),
       _HomeActionItem(
-        '余额宝',
+        i18n.t('homeActionYebao'),
         Icons.savings_rounded,
         const Color(0xFFFFA500),
         () {
@@ -512,14 +514,14 @@ class _HomeTabPageState extends State<HomeTabPage> {
       },
       ),
       _HomeActionItem(
-        '我的资产',
+        i18n.t('homeActionMyAssets'),
         Icons.account_balance_wallet_rounded,
         const Color(0xFFFFA500),
         () {
         _pushHomeRoute(AppRouter.assets);
       },
       ),
-      _HomeActionItem('算力奖池', Icons.pool_outlined, const Color(0xFF38FFB3), () {}),
+      _HomeActionItem(i18n.t('homeActionPowerPool'), Icons.pool_outlined, const Color(0xFF38FFB3), () {}),
     ];
     return Container(
       padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
@@ -677,7 +679,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
           context,
           MaterialPageRoute<void>(
             builder: (_) => const InvestProductListPage(
-              initialTag: '拼团',
+              initialTag: 'group',
               showBottomNav: true,
             ),
           ),
@@ -706,7 +708,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
           categoryId: 0,
           categoryCode: '',
           categoryName: '',
-          articleTitle: '广告详情',
+          articleTitle: i18n.t('homeAdDetailTitle'),
           summary: '',
           coverImage: '',
           articleContent: '<p><a href="$v">$v</a></p>',
@@ -724,7 +726,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
             .map((HomeNotice item) => item.noticeTitle.trim().isNotEmpty ? item.noticeTitle.trim() : item.noticeContent.trim())
             .where((String text) => text.isNotEmpty)
             .toList()
-        : <String>['系统通知：欢迎使用'];
+        : <String>[i18n.t('homeSystemNoticeDefault')];
     final String notice = noticeTexts[_noticePage % noticeTexts.length];
     return Container(
       height: 38,
@@ -768,9 +770,9 @@ class _HomeTabPageState extends State<HomeTabPage> {
           colors: const <Color>[Color(0xCC101C30), Color(0xCC0E1A2D)],
         ),
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-        child: const Text(
-          '暂无推荐产品',
-          style: TextStyle(color: Color(0xFFE9F3FF), fontSize: 16),
+        child: Text(
+          i18n.t('homeNoHotProducts'),
+          style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 16),
         ),
       );
     }
@@ -830,8 +832,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: const Color(0x334CE3FF)),
                   ),
-                  child: const Text(
-                    '购买',
+                  child: Text(
+                    i18n.t('homeBuyAction'),
                     style: TextStyle(
                       color: Color(0xFF8DD3FF),
                       fontSize: 13,
@@ -847,7 +849,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                 Expanded(
                   child: _statCell(
                     value: '${item.singleRate.toStringAsFixed(3)} %',
-                    label: '单购利率',
+                    label: i18n.t('productSingleRate'),
                   ),
                 ),
                 Container(
@@ -858,7 +860,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                 Expanded(
                   child: _statCell(
                     value: '${item.cycleDays} 天',
-                    label: '${item.minInvestAmount.toStringAsFixed(0)}元起投',
+                    label: i18n.t('homeMinInvestLabel').replaceAll('{amount}', item.minInvestAmount.toStringAsFixed(0)),
                     alignEnd: true,
                   ),
                 ),
@@ -875,7 +877,10 @@ class _HomeTabPageState extends State<HomeTabPage> {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  '${item.currency} 剩余 ${item.remainingAmount.toStringAsFixed(2)}',
+                  i18n
+                      .t('homeRemainingAmount')
+                      .replaceAll('{currency}', item.currency)
+                      .replaceAll('{amount}', item.remainingAmount.toStringAsFixed(2)),
                   style: const TextStyle(
                     color: Color(0xFF9DB1C9),
                     fontSize: 12,
@@ -886,8 +891,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
             const SizedBox(height: 8),
             Row(
               children: <Widget>[
-                const Text(
-                  '进度',
+                Text(
+                  i18n.t('productProgress'),
                   style: TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
                 ),
                 const SizedBox(width: 8),
@@ -950,8 +955,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
-        const Text(
-          '最新资讯',
+        Text(
+          i18n.t('homeLatestNewsTitle'),
           style: TextStyle(
             color: Color(0xFFF1F7FF),
             fontSize: 19,
@@ -977,7 +982,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
   Widget _buildNewsCard(HomeLatestNewsItem item) {
     final String? cover = item.resolvedCoverUrl();
-    final String summary = item.summary.trim().isEmpty ? '暂无摘要' : item.summary.trim();
+    final String summary = item.summary.trim().isEmpty ? i18n.t('homeNoSummary') : item.summary.trim();
     return InkWell(
       onTap: () => _openNewsDetail(item),
       borderRadius: BorderRadius.circular(10),

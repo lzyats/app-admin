@@ -3,7 +3,26 @@
 > 本文档为 APP 端常用接口总览与约定说明。
 > 模块级详细链路（前后端文件、缓存、改动清单）请优先参考 `docs/module_registry.md`。
 
+> 推荐阅读顺序:
+> - 先看 `docs/project_context.md`，确认全局规则。
+> - 再看 `docs/module_registry.md`，找到具体模块链路。
+> - 最后回到本文档确认接口路径、请求字段和返回字段。
+
 ---
+
+## 快速入口
+
+下面这些接口和场景最常用，建议优先查看：
+
+- 认证登录：`/login`、`/register`、`/getInfo`
+- APP 配置：`/app/config/bootstrap`
+- 用户资料：`/system/user/profile`、`/system/user/profile/avatar`
+- 钱包与资产：`/app/user/wallets`、`/app/user/wallet/log/investList`
+- 投资认购：`/app/invest/order/contract/preview`、`/app/invest/order/submit`
+- 充值提现：`/app/recharge/submit`、`/app/withdraw/submit`
+- 银行卡：`/app/bankCard/list`、`/app/bankCard`
+- 实名认证：`/app/auth/realName/status`、`/app/auth/realName/submit`
+- 签到：`/app/sign/config`、`/app/sign/status`、`/app/sign/submit`
 
 ## 一、API 基础规范
 
@@ -198,6 +217,22 @@ POST /app/invite/qr
   - `sys_config` 数据
   - Flutter `AppBootstrapConfigData`
   - 后台 `ruoyi-ui` 配置管理页
+
+## 目录（按场景）
+
+| 场景 | 重点接口 |
+|---|---|
+| 认证与会话 | `/captchaImage`、`/login`、`/register`、`/getInfo` |
+| APP 配置 | `/app/config/bootstrap` |
+| 用户资料 | `/system/user/profile`、`/system/user/profile/avatar` |
+| 支付密码 | `/app/user/payPwd/check`、`/app/user/payPwd/set`、`/app/user/payPwd/update`、`/app/user/payPwd/verify` |
+| 钱包与资产 | `/app/user/wallets`、`/app/user/wallet/log/investList` |
+| 充值提现 | `/app/recharge/submit`、`/app/recharge/list`、`/app/withdraw/submit`、`/app/withdraw/list` |
+| 银行卡 | `/app/bankCard/list`、`/app/bankCard`、`/app/bankCard/delete` |
+| 实名认证 | `/app/auth/realName/status`、`/app/auth/realName/submit` |
+| 签到 | `/app/sign/config`、`/app/sign/status`、`/app/sign/submit` |
+| 投资与理财 | `/app/invest/product/list`、`/app/invest/product/{productId}`、`/app/invest/order/contract/preview`、`/app/invest/order/submit`、`/app/invest/order/list`、`/app/invest/order/incomes` |
+| 团队与邀请 | `/app/team/stats/me`、`/app/team/reward/info`、`/app/upgrade/config`、`/app/invite/qr` |
 
 ---
 

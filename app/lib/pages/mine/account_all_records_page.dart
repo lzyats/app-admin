@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/invest_order_api.dart';
 
 class AccountAllRecordsPage extends StatefulWidget {
@@ -19,6 +20,7 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
   int _pageNum = 1;
   static const int _pageSize = 10;
   static const double _scrollThreshold = 160;
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
@@ -143,27 +145,27 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
   String _typeText(String type) {
     switch (type.toLowerCase()) {
       case 'recharge':
-        return '充值';
+        return i18n.t('walletTypeRecharge');
       case 'withdraw':
-        return '提现';
+        return i18n.t('walletTypeWithdraw');
       case 'invest':
-        return '投资';
+        return i18n.t('walletTypeInvest');
       case 'redeem':
-        return '赎回';
+        return i18n.t('walletTypeRedeem');
       case 'profit':
-        return '收益';
+        return i18n.t('walletTypeProfit');
       case 'exchange_in':
-        return '兑换转入';
+        return i18n.t('walletTypeExchangeIn');
       case 'exchange_out':
-        return '兑换转出';
+        return i18n.t('walletTypeExchangeOut');
       case 'invest_level_bonus':
-        return '等级加成';
+        return i18n.t('walletTypeLevelBonus');
       case 'invest_team_bonus':
-        return '团队加成';
+        return i18n.t('walletTypeTeamBonus');
       case 'invest_red_packet':
-        return '产品红包';
+        return i18n.t('walletTypeRedPacket');
       default:
-        return type.isEmpty ? '账变' : type;
+        return type.isEmpty ? i18n.t('walletTypeDefault') : type;
     }
   }
 
@@ -172,7 +174,7 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
     return Scaffold(
       backgroundColor: const Color(0xFF0A1220),
       appBar: AppBar(
-        title: const Text('所有账变'),
+        title: Text(i18n.t('walletAllTitle')),
         backgroundColor: const Color(0xFF0A1220),
         elevation: 0,
       ),
@@ -206,10 +208,10 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
     if (_items.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
-        children: const <Widget>[
+        children: <Widget>[
           SizedBox(height: 120),
           Center(
-            child: Text('暂无记录', style: TextStyle(color: Color(0xFF9DB1C9))),
+            child: Text(i18n.t('recordEmpty'), style: const TextStyle(color: Color(0xFF9DB1C9))),
           ),
         ],
       );
@@ -281,18 +283,18 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
           ),
           const SizedBox(height: 8),
           Text(
-            '订单号: ${item.orderNo.isEmpty ? '--' : item.orderNo}',
+            '${i18n.t('orderNo')}: ${item.orderNo.isEmpty ? '--' : item.orderNo}',
             style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
           ),
           const SizedBox(height: 4),
           Text(
-            '时间: ${_time(item.createTime)}',
+            '${i18n.t('time')}: ${_time(item.createTime)}',
             style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
           ),
           if (item.remark.trim().isNotEmpty) ...<Widget>[
             const SizedBox(height: 4),
             Text(
-              '备注: ${item.remark.trim()}',
+              '${i18n.t('remark')}: ${item.remark.trim()}',
               style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
             ),
           ],
@@ -318,12 +320,12 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
       );
     }
     if (_noMore) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(vertical: 18),
         child: Center(
           child: Text(
-            '没有更多了',
-            style: TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
+            i18n.t('noMore'),
+            style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
           ),
         ),
       );
