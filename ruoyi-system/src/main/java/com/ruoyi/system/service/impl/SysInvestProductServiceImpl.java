@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.ruoyi.common.core.redis.RedisCache;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysInvestProduct;
@@ -16,8 +17,13 @@ import com.ruoyi.system.service.ISysInvestProductService;
 @Service
 public class SysInvestProductServiceImpl implements ISysInvestProductService
 {
+    private static final String HOME_HOT_PRODUCTS_CACHE_KEY = "invest:home:hot:v1";
+
     @Autowired
     private SysInvestProductMapper productMapper;
+
+    @Autowired
+    private RedisCache redisCache;
 
     @Override
     public SysInvestProduct selectInvestProductById(Long productId)
@@ -45,6 +51,7 @@ public class SysInvestProductServiceImpl implements ISysInvestProductService
         if (rows > 0)
         {
             saveTagRel(product.getProductId(), product.getTagIds());
+            clearHomeHotCache();
         }
         return rows;
     }
@@ -59,6 +66,7 @@ public class SysInvestProductServiceImpl implements ISysInvestProductService
         {
             productMapper.deleteProductTagRelByProductId(product.getProductId());
             saveTagRel(product.getProductId(), product.getTagIds());
+            clearHomeHotCache();
         }
         return rows;
     }
@@ -71,7 +79,12 @@ public class SysInvestProductServiceImpl implements ISysInvestProductService
         {
             productMapper.deleteProductTagRelByProductId(productId);
         }
-        return productMapper.deleteInvestProductByIds(productIds);
+        int rows = productMapper.deleteInvestProductByIds(productIds);
+        if (rows > 0)
+        {
+            clearHomeHotCache();
+        }
+        return rows;
     }
 
     @Override
@@ -89,8 +102,14 @@ public class SysInvestProductServiceImpl implements ISysInvestProductService
         if (rows > 0)
         {
             saveTagRel(target.getProductId(), source.getTagIds());
+            clearHomeHotCache();
         }
         return rows;
+    }
+
+    private void clearHomeHotCache()
+    {
+        redisCache.deleteObject(HOME_HOT_PRODUCTS_CACHE_KEY);
     }
 
     private void saveTagRel(Long productId, Long[] tagIds)

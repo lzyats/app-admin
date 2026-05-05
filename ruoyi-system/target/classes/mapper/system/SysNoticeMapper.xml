@@ -86,5 +86,13 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             #{noticeId}
         </foreach>
     </delete>
+
+    <select id="selectAppNoticesForHome" parameterType="int" resultMap="SysNoticeResult">
+        <include refid="selectNoticeVo"/>
+        where status = '0'
+          and cast(notice_type as unsigned) &lt;= 2
+        order by notice_id desc
+        limit #{limit}
+    </select>
     
 </mapper>

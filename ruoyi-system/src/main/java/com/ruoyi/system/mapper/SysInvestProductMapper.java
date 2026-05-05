@@ -27,4 +27,6 @@ public interface SysInvestProductMapper
     SysInvestProduct selectInvestProductByIdForUpdate(Long productId);
 
     int increaseSoldShares(@Param("productId") Long productId, @Param("delta") Long delta, @Param("amountDelta") java.math.BigDecimal amountDelta);
+
+    int decreaseSoldShares(@Param("productId") Long productId, @Param("delta") Long delta, @Param("amountDelta") java.math.BigDecimal amountDelta);
 }

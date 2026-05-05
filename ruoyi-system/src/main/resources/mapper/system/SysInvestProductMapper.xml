@@ -183,4 +183,19 @@
             update_time = now()
         where product_id = #{productId}
     </update>
+
+    <update id="decreaseSoldShares">
+        update sys_invest_product
+        set sold_shares = greatest(0, ifnull(sold_shares, 0) - #{delta}),
+            sold_amount = greatest(0, ifnull(sold_amount, 0) - #{amountDelta}),
+            progress_percent = least(100, greatest(0, case
+                when upper(ifnull(invest_mode, 'SHARE')) = 'AMOUNT' and ifnull(total_amount, 0) &gt; 0
+                    then round(greatest(0, ifnull(sold_amount, 0) - #{amountDelta}) * 100 / ifnull(total_amount, 0), 4)
+                when ifnull(total_shares, 0) &gt; 0
+                    then round(greatest(0, ifnull(sold_shares, 0) - #{delta}) * 100 / ifnull(total_shares, 0), 4)
+                else 0
+                end)),
+            update_time = now()
+        where product_id = #{productId}
+    </update>
 </mapper>

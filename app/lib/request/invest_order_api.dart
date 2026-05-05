@@ -77,6 +77,7 @@ class InvestOrderApi {
     required String contractText,
     required String clientReqNo,
     required bool groupMode,
+    String? joinGroupNo,
   }) async {
     return ApiClient.instance.post(
       RuoYiEndpoints.appInvestOrderSubmit,
@@ -91,6 +92,7 @@ class InvestOrderApi {
         'contractText': contractText,
         'clientReqNo': clientReqNo,
         'groupMode': groupMode ? 1 : 0,
+        'groupNo': (joinGroupNo ?? '').trim(),
       },
     );
   }
@@ -210,6 +212,12 @@ class InvestOrderListItem {
     required this.status,
     required this.createTime,
     required this.endTime,
+    required this.groupMode,
+    required this.groupId,
+    required this.groupNo,
+    required this.groupStatus,
+    required this.groupDeadlineTime,
+    required this.groupCountdownSeconds,
   });
 
   final int orderId;
@@ -224,6 +232,12 @@ class InvestOrderListItem {
   final String status;
   final DateTime? createTime;
   final DateTime? endTime;
+  final bool groupMode;
+  final int groupId;
+  final String groupNo;
+  final String groupStatus;
+  final DateTime? groupDeadlineTime;
+  final int groupCountdownSeconds;
 
   factory InvestOrderListItem.fromJson(Map<String, dynamic> json) {
     return InvestOrderListItem(
@@ -239,6 +253,12 @@ class InvestOrderListItem {
       status: '${json['status'] ?? '0'}',
       createTime: _toDateTime(json['createTime']),
       endTime: _toDateTime(json['endTime']),
+      groupMode: '${json['groupMode'] ?? '0'}' == '1',
+      groupId: _toInt(json['groupId']),
+      groupNo: '${json['groupNo'] ?? ''}',
+      groupStatus: '${json['groupStatus'] ?? '9'}',
+      groupDeadlineTime: _toDateTime(json['groupDeadlineTime']),
+      groupCountdownSeconds: _toInt(json['groupCountdownSeconds']),
     );
   }
 }

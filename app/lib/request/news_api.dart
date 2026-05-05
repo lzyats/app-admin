@@ -87,6 +87,80 @@ class NewsArticle {
   }
 }
 
+class HomeNotice {
+  const HomeNotice({
+    required this.noticeId,
+    required this.noticeTitle,
+    required this.noticeType,
+    required this.noticeContent,
+    required this.status,
+  });
+
+  final int noticeId;
+  final String noticeTitle;
+  final String noticeType;
+  final String noticeContent;
+  final String status;
+
+  factory HomeNotice.fromJson(Map<String, dynamic> json) {
+    return HomeNotice(
+      noticeId: _toInt(json['noticeId'] ?? json['notice_id']),
+      noticeTitle: (json['noticeTitle'] ?? json['notice_title'] ?? '').toString(),
+      noticeType: (json['noticeType'] ?? json['notice_type'] ?? '').toString(),
+      noticeContent: (json['noticeContent'] ?? json['notice_content'] ?? '').toString(),
+      status: (json['status'] ?? '').toString(),
+    );
+  }
+}
+
+class HomeNewsPayload {
+  const HomeNewsPayload({
+    required this.banners,
+    required this.ads,
+    required this.notices,
+  });
+
+  final List<NewsArticle> banners;
+  final List<NewsArticle> ads;
+  final List<HomeNotice> notices;
+}
+
+class HomeLatestNewsItem {
+  const HomeLatestNewsItem({
+    required this.articleId,
+    required this.articleTitle,
+    required this.coverImage,
+    required this.summary,
+  });
+
+  final int articleId;
+  final String articleTitle;
+  final String coverImage;
+  final String summary;
+
+  factory HomeLatestNewsItem.fromJson(Map<String, dynamic> json) {
+    return HomeLatestNewsItem(
+      articleId: _toInt(json['articleId'] ?? json['article_id']),
+      articleTitle: (json['articleTitle'] ?? json['article_title'] ?? '').toString(),
+      coverImage: (json['coverImage'] ?? json['cover_image'] ?? '').toString(),
+      summary: (json['summary'] ?? '').toString(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return <String, dynamic>{
+      'articleId': articleId,
+      'articleTitle': articleTitle,
+      'coverImage': coverImage,
+      'summary': summary,
+    };
+  }
+
+  String? resolvedCoverUrl() {
+    return ApiClient.instance.resolveImageUrl(coverImage);
+  }
+}
+
 class NewsApi {
   const NewsApi._();
 
@@ -95,6 +169,9 @@ class NewsApi {
   static const String _categoriesUpdatedAtKey = 'news.cache.categories.updatedAt.v1';
   static const String _articlesCachePrefix = 'news.cache.articles.v1.';
   static const String _articlesUpdatedAtPrefix = 'news.cache.articles.updatedAt.v1.';
+  static const Duration _homeLatestCacheMaxAge = Duration(minutes: 30);
+  static const String _homeLatestCacheKey = 'news.cache.home.latest.v1';
+  static const String _homeLatestUpdatedAtKey = 'news.cache.home.latest.updatedAt.v1';
 
   static Future<List<NewsCategory>> fetchCategories({bool forceRefresh = false}) async {
     if (!forceRefresh) {
@@ -155,12 +232,54 @@ class NewsApi {
     final ApiResponse<dynamic> response = await ApiClient.instance.get(RuoYiEndpoints.newsDetail(articleId));
     final dynamic raw = response.data;
     final dynamic payload = raw is Map<String, dynamic>
-        ? (raw['data'] ?? raw['rows'] ?? raw['list'])
+        ? (raw['data'] ?? raw['rows'] ?? raw['list'] ?? raw)
         : response.raw['data'] ?? response.raw['rows'] ?? response.raw['list'];
     final Map<String, dynamic> data = payload is Map
         ? Map<String, dynamic>.from(payload as Map)
         : <String, dynamic>{};
     return NewsArticle.fromJson(data);
+  }
+
+  static Future<HomeNewsPayload> fetchHomePayload() async {
+    final ApiResponse<dynamic> response = await ApiClient.instance.get(RuoYiEndpoints.newsHome);
+    final dynamic raw = response.data;
+    final dynamic payload = raw is Map<String, dynamic>
+        ? (raw['data'] ?? raw['rows'] ?? raw['list'] ?? raw)
+        : response.raw['data'] ?? response.raw['rows'] ?? response.raw['list'];
+    final Map<String, dynamic> data = payload is Map
+        ? Map<String, dynamic>.from(payload as Map)
+        : <String, dynamic>{};
+
+    final List<NewsArticle> banners = _toArticleList(data['banners']);
+    final List<NewsArticle> ads = _toArticleList(data['ads']);
+    final List<HomeNotice> notices = _toNoticeList(data['notices']);
+    return HomeNewsPayload(banners: banners, ads: ads, notices: notices);
+  }
+
+  static Future<List<HomeLatestNewsItem>> getCachedHomeLatestNews() async {
+    return (await _readHomeLatestNewsCache(allowStale: true)) ?? const <HomeLatestNewsItem>[];
+  }
+
+  static Future<List<HomeLatestNewsItem>> fetchHomeLatestNews({bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      final List<HomeLatestNewsItem>? cached =
+          await _readHomeLatestNewsCache(allowStale: true);
+      if (cached != null) {
+        final bool fresh = await _readHomeLatestNewsCache() != null;
+        if (!fresh) {
+          unawaited(_refreshHomeLatestNewsInBackground());
+        }
+        return cached;
+      }
+    }
+    try {
+      final List<HomeLatestNewsItem> remote = await _fetchHomeLatestNewsRemote();
+      await _saveHomeLatestNewsCache(remote);
+      return remote;
+    } catch (_) {
+      return (await _readHomeLatestNewsCache(allowStale: true)) ??
+          const <HomeLatestNewsItem>[];
+    }
   }
 
   static Future<List<NewsCategory>> _fetchCategoriesRemote() async {
@@ -211,6 +330,29 @@ class NewsApi {
     } catch (_) {}
   }
 
+  static Future<List<HomeLatestNewsItem>> _fetchHomeLatestNewsRemote() async {
+    final ApiResponse<dynamic> response =
+        await ApiClient.instance.get(RuoYiEndpoints.newsHomeLatest);
+    final dynamic raw = response.data;
+    final dynamic payload = raw is Map<String, dynamic>
+        ? (raw['data'] ?? raw)
+        : response.raw['data'] ?? response.raw;
+    final dynamic rowsAny = payload is Map<String, dynamic> ? payload['rows'] : payload;
+    final List<dynamic> rows = rowsAny is List ? rowsAny : <dynamic>[];
+    return rows
+        .whereType<Map>()
+        .map((dynamic item) =>
+            HomeLatestNewsItem.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
+
+  static Future<void> _refreshHomeLatestNewsInBackground() async {
+    try {
+      final List<HomeLatestNewsItem> rows = await _fetchHomeLatestNewsRemote();
+      await _saveHomeLatestNewsCache(rows);
+    } catch (_) {}
+  }
+
   static Future<List<NewsCategory>?> _readCategoryCache({bool allowStale = false}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String raw = (prefs.getString(_categoriesCacheKey) ?? '').trim();
@@ -258,12 +400,56 @@ class NewsApi {
     await prefs.setInt(_articlesUpdatedAtKey(categoryCode), DateTime.now().millisecondsSinceEpoch);
   }
 
+  static Future<List<HomeLatestNewsItem>?> _readHomeLatestNewsCache({
+    bool allowStale = false,
+  }) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String raw = (prefs.getString(_homeLatestCacheKey) ?? '').trim();
+    if (raw.isEmpty) {
+      return null;
+    }
+    final int? updatedAt = prefs.getInt(_homeLatestUpdatedAtKey);
+    if (!allowStale && !_isHomeLatestNewsCacheFresh(updatedAt)) {
+      return null;
+    }
+    try {
+      final dynamic decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        return const <HomeLatestNewsItem>[];
+      }
+      return decoded
+          .whereType<Map>()
+          .map((dynamic item) =>
+              HomeLatestNewsItem.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList();
+    } catch (_) {
+      return const <HomeLatestNewsItem>[];
+    }
+  }
+
+  static Future<void> _saveHomeLatestNewsCache(List<HomeLatestNewsItem> rows) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _homeLatestCacheKey,
+      jsonEncode(rows.map((HomeLatestNewsItem item) => item.toJson()).toList()),
+    );
+    await prefs.setInt(_homeLatestUpdatedAtKey, DateTime.now().millisecondsSinceEpoch);
+  }
+
   static bool _isCacheFresh(int? updatedAt) {
     if (updatedAt == null) {
       return true;
     }
     final int ageMs = DateTime.now().millisecondsSinceEpoch - updatedAt;
     return ageMs >= 0 && ageMs <= _cacheMaxAge.inMilliseconds;
+  }
+
+  static bool _isHomeLatestNewsCacheFresh(int? updatedAt) {
+    if (updatedAt == null) {
+      return true;
+    }
+    final int ageMs = DateTime.now().millisecondsSinceEpoch - updatedAt;
+    return ageMs >= 0 && ageMs <= _homeLatestCacheMaxAge.inMilliseconds;
   }
 
   static String _articlesCacheKey(String categoryCode) {
@@ -302,6 +488,22 @@ class NewsApi {
     } catch (_) {
       return <NewsArticle>[];
     }
+  }
+
+  static List<NewsArticle> _toArticleList(dynamic value) {
+    final List<dynamic> rows = value is List ? value : <dynamic>[];
+    return rows
+        .whereType<Map>()
+        .map((dynamic item) => NewsArticle.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
+  }
+
+  static List<HomeNotice> _toNoticeList(dynamic value) {
+    final List<dynamic> rows = value is List ? value : <dynamic>[];
+    return rows
+        .whereType<Map>()
+        .map((dynamic item) => HomeNotice.fromJson(Map<String, dynamic>.from(item as Map)))
+        .toList();
   }
 }
 

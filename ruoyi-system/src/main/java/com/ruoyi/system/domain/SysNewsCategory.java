@@ -15,6 +15,11 @@ public class SysNewsCategory extends BaseEntity
 
     private String categoryName;
 
+    /**
+     * 分类类型：NEWS=新闻分类，APP_HOME_BANNER=首页Banner，APP_HOME_AD=首页广告
+     */
+    private String categoryType;
+
     private Integer sortOrder;
 
     private String status;
@@ -57,6 +62,16 @@ public class SysNewsCategory extends BaseEntity
     public void setSortOrder(Integer sortOrder)
     {
         this.sortOrder = sortOrder;
+    }
+
+    public String getCategoryType()
+    {
+        return categoryType;
+    }
+
+    public void setCategoryType(String categoryType)
+    {
+        this.categoryType = categoryType;
     }
 
     public String getStatus()

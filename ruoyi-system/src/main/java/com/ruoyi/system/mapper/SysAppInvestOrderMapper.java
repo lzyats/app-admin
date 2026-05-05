@@ -21,11 +21,62 @@ public interface SysAppInvestOrderMapper
         @Param("groupRate") java.math.BigDecimal groupRate,
         @Param("effectiveRate") java.math.BigDecimal effectiveRate,
         @Param("cycleDays") Integer cycleDays,
+        @Param("investShares") Long investShares,
         @Param("expectedIncome") java.math.BigDecimal expectedIncome,
         @Param("contractNo") String contractNo,
+        @Param("groupId") Long groupId,
+        @Param("groupNo") String groupNo,
+        @Param("groupStatus") String groupStatus,
+        @Param("groupDeadlineTime") Date groupDeadlineTime,
         @Param("createBy") String createBy,
         @Param("remark") String remark
     );
+
+    int insertInvestGroup(
+        @Param("groupNo") String groupNo,
+        @Param("productId") Long productId,
+        @Param("productName") String productName,
+        @Param("currency") String currency,
+        @Param("initiatorUserId") Long initiatorUserId,
+        @Param("targetSize") Integer targetSize,
+        @Param("deadlineTime") Date deadlineTime,
+        @Param("createBy") String createBy,
+        @Param("remark") String remark
+    );
+
+    Long selectInvestGroupIdByNo(@Param("groupNo") String groupNo);
+
+    Map<String, Object> selectInvestGroupByNoForUpdate(@Param("groupNo") String groupNo);
+
+    Map<String, Object> selectInvestGroupByIdForUpdate(@Param("groupId") Long groupId);
+
+    Map<String, Object> selectAutoJoinableGroupForUpdate(
+        @Param("productId") Long productId,
+        @Param("excludeUserId") Long excludeUserId,
+        @Param("now") Date now
+    );
+
+    int updateInvestGroupAddMember(
+        @Param("groupId") Long groupId,
+        @Param("amountDelta") java.math.BigDecimal amountDelta,
+        @Param("targetSize") Integer targetSize
+    );
+
+    int updateInvestGroupStatus(
+        @Param("groupId") Long groupId,
+        @Param("status") String status,
+        @Param("remark") String remark
+    );
+
+    int updateInvestOrderGroupStatusByGroupId(
+        @Param("groupId") Long groupId,
+        @Param("groupStatus") String groupStatus,
+        @Param("remark") String remark
+    );
+
+    List<Map<String, Object>> selectExpiredGroups(@Param("now") Date now);
+
+    List<Map<String, Object>> selectRunningOrdersByGroupIdForUpdate(@Param("groupId") Long groupId);
 
     int insertContractSign(
         @Param("contractNo") String contractNo,

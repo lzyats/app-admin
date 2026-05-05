@@ -14,6 +14,10 @@ class AppImages {
   static const String investCardBg = 'assets/images/bg.webp';
   static const String investToken = 'assets/images/t.webp';
   static const String investContractStamp = 'assets/images/2.webp';
+  static const String homeBanner1 = 'assets/images/home-banner.webp';
+  static const String homeBanner2 = 'assets/images/home-banner2.webp';
+  static const String homeLogo = 'assets/images/mlogo.webp';
+  static const String homeLogo1 = 'assets/images/mylogo1.webp';
 
   static String currencyBrand(String currencyType, {bool usePurpleVariant = false}) {
     final String code = currencyType.toUpperCase();

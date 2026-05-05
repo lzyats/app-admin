@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
+import 'package:myapp/pages/main/home_tab_page.dart';
 import 'package:myapp/pages/mine/miner_page.dart';
 import 'package:myapp/pages/product/invest_product_list_page.dart';
 import 'package:myapp/routers/app_router.dart';
@@ -15,10 +16,12 @@ class MainPage extends StatefulWidget {
     super.key,
     this.onLocaleChanged,
     this.selectedLocale,
+    this.initialIndex = 0,
   });
 
   final Function(Locale)? onLocaleChanged;
   final Locale? selectedLocale;
+  final int initialIndex;
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -28,6 +31,12 @@ class _MainPageState extends State<MainPage> {
   int _currentIndex = 0;
 
   AppLocalizations get i18n => AppLocalizations.of(context)!;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentIndex = widget.initialIndex.clamp(0, 3);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +49,7 @@ class _MainPageState extends State<MainPage> {
   Widget _buildBody() {
     switch (_currentIndex) {
       case 0:
-        return _buildPlaceholder(i18n.t('tabHome'), Icons.home_rounded);
+        return const HomeTabPage();
       case 1:
         return const InvestProductListPage();
       case 2:
@@ -157,6 +166,18 @@ class _MineTabState extends State<_MineTab> {
   bool _hasCheckedSecurityQuestion = false;
   AuthUserProfile? _userInfo;
   bool _loading = true;
+
+  Future<T?> _pushMineRoute<T extends Object?>(
+    String routeName, {
+    Map<String, dynamic>? extraArgs,
+  }) {
+    final Map<String, dynamic> args = <String, dynamic>{
+      'showBottomNav': true,
+      'showBottomNavIndex': 3,
+      ...?extraArgs,
+    };
+    return Navigator.pushNamed<T>(context, routeName, arguments: args);
+  }
 
   @override
   void initState() {
@@ -442,8 +463,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF39E6FF),
                                 label: i18n.t('mineRecharge'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.recharge);
+                                  _pushMineRoute(AppRouter.recharge);
                                 },
                               ),
                               _MineShortcutItem(
@@ -451,8 +471,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF38FFB3),
                                 label: i18n.t('mineWithdraw'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.withdraw);
+                                  _pushMineRoute(AppRouter.withdraw);
                                 },
                               ),
                               _MineShortcutItem(
@@ -460,8 +479,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFFE2FF59),
                                 label: i18n.t('signTitle'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.signIn);
+                                  _pushMineRoute(AppRouter.signIn);
                                 },
                               ),
                               _MineShortcutItem(
@@ -469,8 +487,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFFFFA500),
                                 label: i18n.t('mineAssetsNav'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.assets);
+                                  _pushMineRoute(AppRouter.assets);
                                 },
                               ),
                             ],
@@ -485,7 +502,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF39E6FF),
                                 label: i18n.t('mineMyTeam'),
                                 onTap: () {
-                                  Navigator.pushNamed(context, AppRouter.myTeam);
+                                  _pushMineRoute(AppRouter.myTeam);
                                 },
                               ),
                               _MineShortcutItem(
@@ -493,8 +510,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF38FFB3),
                                 label: i18n.t('mineBankCard'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.bankCard);
+                                  _pushMineRoute(AppRouter.bankCard);
                                 },
                               ),
                               _MineShortcutItem(
@@ -502,8 +518,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFFE2FF59),
                                 label: i18n.t('mineRealNameAuth'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.realNameAuth);
+                                  _pushMineRoute(AppRouter.realNameAuth);
                                 },
                               ),
                               _MineShortcutItem(
@@ -511,8 +526,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFFFFA500),
                                 label: i18n.t('mineBalanceTreasure'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.balanceTreasure);
+                                  _pushMineRoute(AppRouter.balanceTreasure);
                                 },
                               ),
                               _MineShortcutItem(
@@ -520,23 +534,23 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF9DB1C9),
                                 label: i18n.t('mineMyInvest'),
                                 onTap: () {
-                                  Navigator.pushNamed(context, AppRouter.myInvestOrders);
+                                  _pushMineRoute(AppRouter.myInvestOrders);
                                 },
                               ),
                               _MineShortcutItem(
-                                icon: Icons.confirmation_num_outlined,
+                                icon: Icons.groups_outlined,
                                 iconColor: const Color(0xFF39E6FF),
                                 label: i18n.t('mineCoupon'),
-                                onTap: () => _showComingSoonSnackBar(
-                                    context, i18n.t('mineFeatureComingSoon')),
+                                onTap: () {
+                                  _pushMineRoute(AppRouter.myGroup);
+                                },
                               ),
                               _MineShortcutItem(
                                 icon: Icons.person_add_alt_1_outlined,
                                 iconColor: const Color(0xFF38FFB3),
                                 label: i18n.t('mineInviteFriend'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.inviteFriend);
+                                  _pushMineRoute(AppRouter.inviteFriend);
                                 },
                               ),
                               _MineShortcutItem(
@@ -556,11 +570,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF39E6FF),
                                 label: i18n.t('mineProfileNav'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRouter.mineProfile,
-                                    arguments: _userInfo,
-                                  ).then((_) {
+                                  _pushMineRoute(AppRouter.mineProfile).then((_) {
                                     if (mounted) {
                                       _loadUserInfo();
                                     }
@@ -574,8 +584,7 @@ class _MineTabState extends State<_MineTab> {
                                     ? '账变记录'
                                     : 'Account Records',
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.accountChangeRecords);
+                                  _pushMineRoute(AppRouter.accountChangeRecords);
                                 },
                               ),
                               _buildMineAction(
@@ -585,8 +594,7 @@ class _MineTabState extends State<_MineTab> {
                                     ? '会员中心'
                                     : 'Member Center',
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.memberCenter);
+                                  _pushMineRoute(AppRouter.memberCenter);
                                 },
                               ),
                               _buildMineAction(
@@ -594,8 +602,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFFFFA500),
                                 label: i18n.t('mineSecurityCenter'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                      context, AppRouter.securityCenter);
+                                  _pushMineRoute(AppRouter.securityCenter);
                                 },
                               ),
                               _buildMineAction(
@@ -603,7 +610,7 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF38FFB3),
                                 label: i18n.t('mineNewsCenter'),
                                 onTap: () {
-                                  Navigator.pushNamed(context, AppRouter.news);
+                                  _pushMineRoute(AppRouter.news);
                                 },
                               ),
 
@@ -612,10 +619,9 @@ class _MineTabState extends State<_MineTab> {
                                 iconColor: const Color(0xFF39E6FF),
                                 label: i18n.t('mineSoftwareSettingNav'),
                                 onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
+                                  _pushMineRoute(
                                     AppRouter.softwareSettings,
-                                    arguments: {
+                                    extraArgs: <String, dynamic>{
                                       'onLocaleChanged': widget.onLocaleChanged,
                                       'selectedLocale': widget.selectedLocale,
                                     },

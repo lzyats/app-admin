@@ -3138,3 +3138,518 @@ POST /system/user/profile/google2fa/unbind
 
 - [SysAppRealNameAuthController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/system/SysAppRealNameAuthController.java)
 - [index.vue](../ruoyi-ui/src/views/system/realNameAuth/index.vue)
+
+## 51. 矿机兑换账变显示修正
+
+### 51.1 调整说明
+
+- 矿机 WAG 兑换入账写钱包账变时，类型由 `other` 调整为 `exchange_in`，确保 APP 账变记录按“进账(+)”展示。
+- 账变备注统一为 `WAG兑换`。
+
+### 51.2 关键文件
+
+- [SysMinerAppServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysMinerAppServiceImpl.java)
+
+## 52. 产品详情有效期按开始/结束分行展示
+
+### 52.1 调整说明
+
+- APP 产品详情页中，“产品有效期”改为仅在配置了开始/结束时间时显示。
+- 展示形式改为换行：
+- 第一行：`产品开放时间  {startTime}`
+- 第二行：`产品结束时间  {endTime}`
+- 当开始时间和结束时间都为空时，整块不显示。
+
+### 52.2 关键文件
+
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+
+## 53. 提现冻结账变类型与负号显示修正
+
+### 53.1 调整说明
+
+- 提现提交冻结金额时，钱包账变类型由 `frozen` 调整为 `提现冻结`。
+- APP“所有账变”金额展示改为对账变金额取绝对值后再拼接 `+/-`，避免后端负数金额叠加前端负号导致 `--` 显示。
+
+### 53.2 关键文件
+
+- [SysUserWithdrawServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysUserWithdrawServiceImpl.java)
+- [account_all_records_page.dart](../app/lib/pages/mine/account_all_records_page.dart)
+
+## 54. APP配置新增真实拼团开关
+
+### 54.1 调整说明
+
+- 新增 APP 参数 `app.invest.realGroupEnabled`（开关，默认 `false`），用于控制是否启用真实拼团下单链路。
+- Flutter 端 App 启动配置模型新增该字段并写入缓存，前端可通过 `AppBootstrapTool.config` 直接读取。
+- 产品详情页下单路由增加双条件：仅当“产品支持拼团 + 真实拼团开关开启”时进入拼团下单，否则进入普通下单。
+- 补充 SQL 脚本用于在线库增量写入该参数（含幂等更新）。
+
+### 54.2 关键文件
+
+- [app_config_api.dart](../app/lib/request/app_config_api.dart)
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+- [app_config_manage_page.dart](../app/lib/pages/settings/app_config_manage_page.dart)
+- [app_real_group_enabled_20260504.sql](../sql/app_real_group_enabled_20260504.sql)
+- [ry_20260417.sql](../sql/ry_20260417.sql)
+
+## 55. 真实拼团流程落地（开团/参团/超时失败退款）
+
+### 55.1 调整说明
+
+- 当 `app.invest.realGroupEnabled=false` 时，继续沿用原有认购流程（兼容历史逻辑）。
+- 当开关为 `true` 且产品启用拼团时，下单进入真实拼团分支：
+- 支持“发起拼团（未传团号）/参团（传 groupNo）”。
+- 下单写入 `group_id/group_no/group_status/group_deadline_time`，并回传给 APP。
+- 拼团达标后自动把同团订单状态从“拼团中”更新为“已成团”。
+- 定时任务执行前先处理超时拼团：未达标自动失败，批量取消未执行计划并退回本金，回滚产品销量与用户累计投资，写入钱包账变 `invest_group_refund`。
+- APP订单列表新增拼团字段返回：`groupMode/groupId/groupNo/groupStatus/groupDeadlineTime/groupCountdownSeconds`，前端已接收并展示“拼团状态/团号”。
+
+### 55.2 关键文件
+
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+- [SysAppInvestOrderMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysAppInvestOrderMapper.java)
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+- [SysInvestOrderServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysInvestOrderServiceImpl.java)
+- [ISysInvestOrderService.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/ISysInvestOrderService.java)
+- [InvestOrderTask.java](../ruoyi-quartz/src/main/java/com/ruoyi/quartz/task/InvestOrderTask.java)
+- [SysInvestProductMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysInvestProductMapper.java)
+- [SysInvestProductMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysInvestProductMapper.xml)
+- [invest_order_api.dart](../app/lib/request/invest_order_api.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+- [my_invest_orders_page.dart](../app/lib/pages/mine/my_invest_orders_page.dart)
+- [invest_real_group_20260504.sql](../sql/invest_real_group_20260504.sql)
+
+## 56. APP配置页面开关控件交互优化
+
+### 56.1 调整说明
+
+- 后台 `system/appConfig` 页面中，开关类配置项不再使用下拉选择。
+- 开关类编辑控件改为左右切换开关（`el-switch`），直接展示“开启/关闭”状态并支持一键切换。
+
+### 56.2 关键文件
+
+- [index.vue](../ruoyi-ui/src/views/system/appConfig/index.vue)
+
+## 57. APP配置保存 selectOne 异常修复
+
+### 57.1 问题现象
+
+- 后台 `system/appConfig` 保存时报错：`Expected one result (or null) to be returned by selectOne(), but found: 2`。
+- 根因是 `sys_config` 存在重复 `config_key`，而保存链路按单条查询读取配置，触发 MyBatis `selectOne` 异常。
+
+### 57.2 修复内容
+
+- `SysConfigMapper.selectConfig` 查询改为 `order by config_id desc limit 1`，重复 key 场景下优先取最新记录，避免保存接口直接报错。
+- 新增 SQL 修复脚本，先按 `config_id` 清理重复 `config_key`，再补 `uk_sys_config_key(config_key)` 唯一索引防止复发。
+
+### 57.3 关键文件
+
+- [SysConfigMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysConfigMapper.xml)
+- [sys_config_deduplicate_key_20260505.sql](../sql/sys_config_deduplicate_key_20260505.sql)
+
+## 58. 产品详情页拼团利率展示口径统一
+
+### 58.1 调整说明
+
+- APP 产品详情页在拼团产品（`groupEnabled=true`）场景下，利率展示由“单购利率”切换为“拼团利率”，并显示 `groupRate`。
+- 该口径同时应用在顶部大数字区域与“产品详情”TAB中的利率字段，避免同页出现两套利率。
+- 收益计算 TAB 的默认公式也改为沿用同一展示利率口径（拼团产品用拼团利率，普通产品用单购利率）。
+- 拼团产品场景补充保留“单购利率”展示：顶部利率区增加次级文案，详情 TAB 追加“单购利率”字段，确保两种利率同时可见。
+
+### 58.2 关键文件
+
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+
+## 59. 拼团下单 insertInvestGroup 主键回填异常修复
+
+### 59.1 问题现象
+
+- APP 拼团下单调用 `/app/invest/order/submit` 报错：`Could not determine which parameter to assign generated keys to`。
+- 原因是 `SysAppInvestOrderMapper.xml` 的 `insertInvestGroup` 配置了 `useGeneratedKeys/keyProperty=groupId`，但该 Mapper 方法是多参数 `@Param` 形式，且实际流程并不依赖该回填值，导致 MyBatis 参数映射冲突。
+
+### 59.2 修复内容
+
+- 移除 `insertInvestGroup` 的 `useGeneratedKeys/keyProperty` 配置。
+- 保持现有逻辑：插入成功后通过 `groupNo` 查询 `groupId`（`selectInvestGroupIdByNo`）继续后续流程。
+
+### 59.3 关键文件
+
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+
+## 60. 我的拼团入口与页面完善
+
+### 60.1 调整说明
+
+- 投资认购提交逻辑进一步显式化：输入团号时按参团提交；未输入团号时按系统自动开团提交。
+- 我的页面快捷入口文案调整：
+- `优惠券` 改为 `我的拼团`，并接入实际页面路由；
+- `等级体验券` 改为 `优惠体验`（当前仍保留原占位能力）。
+- 新增“我的拼团”页面，用于聚合展示当前用户全部拼团记录（从投资订单中筛选拼团单）。
+- 页面支持展示团号、拼团状态、剩余成团时间，并提供“复制团号/复制分享文案”以便对外分享。
+
+### 60.2 关键文件
+
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+- [my_group_page.dart](../app/lib/pages/mine/my_group_page.dart)
+- [app_router.dart](../app/lib/routers/app_router.dart)
+- [main_page.dart](../app/lib/pages/main/main_page.dart)
+- [zh-CN.json](../app/assets/i18n/zh-CN.json)
+- [en-US.json](../app/assets/i18n/en-US.json)
+
+## 61. 拼团下单时间类型兼容修复
+
+### 61.1 问题现象
+
+- 拼团下单 `/app/invest/order/submit` 在成团流程报错：`class java.time.LocalDateTime cannot be cast to class java.util.Date`。
+- 触发点为读取拼团表 `deadline_time` 时直接强转 `Date`。
+
+### 61.2 修复内容
+
+- `AppInvestOrderController` 增加 `toDate(Object)` 兼容转换，支持 `Date / LocalDateTime / LocalDate`。
+- 参团与开团后读取截止时间统一改为 `toDate(...)`，避免 JDBC 驱动返回 `LocalDateTime` 时的类型转换异常。
+
+### 61.3 关键文件
+
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+
+## 62. 产品与投资页面提醒样式统一
+
+### 62.1 调整说明
+
+- 按“我的页面”口径统一提醒样式：产品页与投资相关页 `SnackBar` 背景统一改为黄色 `#FFA500`。
+
+### 62.2 覆盖范围
+
+- 产品详情页下单拦截提醒。
+- 投资认购页的校验提示与签约弹窗签名提示。
+- 我的投资收益页复制订单号提示。
+- 我的拼团页复制团号与分享文案提示。
+
+### 62.3 关键文件
+
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+- [my_invest_income_page.dart](../app/lib/pages/mine/my_invest_income_page.dart)
+- [my_group_page.dart](../app/lib/pages/mine/my_group_page.dart)
+
+## 63. 提醒颜色按成功态区分
+
+### 63.1 规则调整
+
+- 产品与投资相关页面提醒继续保持“默认黄色”。
+- 成功态提醒统一为绿色（`#38FFB3`），非成功态保持黄色（`#FFA500`）。
+
+### 63.2 已应用点位
+
+- 投资认购页：`签约并提交成功` 改为绿色，其余校验/失败提醒保持黄色。
+- 我的拼团页：`复制团号/复制分享文案` 成功提示改为绿色。
+- 我的投资收益页：`订单号已复制` 成功提示改为绿色。
+
+### 63.3 关键文件
+
+- [invest_purchase_page.dart](../app/lib/pages/product/invest_purchase_page.dart)
+- [my_group_page.dart](../app/lib/pages/mine/my_group_page.dart)
+- [my_invest_income_page.dart](../app/lib/pages/mine/my_invest_income_page.dart)
+
+## 64. 我的拼团倒计时组件化
+
+### 64.1 调整说明
+
+- 新增通用倒计时控件 `CountdownText`，支持传入初始秒数并按 1 秒粒度自动递减。
+- 控件支持前缀文案、结束文案、样式与结束回调，便于后续页面复用。
+- 我的拼团页面对“拼团中”记录改为进入页面即开始倒计时显示，不再只展示静态剩余秒数字符串。
+
+### 64.2 关键文件
+
+- [countdown_text.dart](../app/lib/widgets/countdown_text.dart)
+- [my_group_page.dart](../app/lib/pages/mine/my_group_page.dart)
+
+## 65. 我的投资页拼团状态与倒计时优化
+
+### 65.1 调整说明
+
+- 我的投资列表中，订单为拼团且团状态为进行中时，右上角订单状态由“进行中”改为“拼团中”。
+- 列表详情中“拼团状态”“拼团团号”值字体各下调 1 号，减少换行风险。
+- 拼团进行中新增“剩余成团时间”行，改为复用 `CountdownText` 组件实时倒计时显示。
+
+### 65.2 关键文件
+
+- [my_invest_orders_page.dart](../app/lib/pages/mine/my_invest_orders_page.dart)
+
+## 66. 待拼团收益不展示与结算拦截
+
+### 66.1 业务规则
+
+- 拼团未成团（`group_mode=1` 且 `group_status!=1`）时，收益计划可先写入库，但不应在 APP 收益明细展示为“待收”。
+- 定时收益结算也不应处理未成团拼团订单，避免成团前提前结算。
+- 拼团失败仍沿用现有处理：取消未执行计划（`status=2`）并自动退款。
+
+### 66.2 本次改动
+
+- 收益明细日志查询：过滤掉“未成团拼团单”的待执行收益记录。
+- 收益汇总查询（总览与按币种）：待收统计仅计入“非拼团或已成团拼团单”。
+- 定时到期计划查询：仅选择“非拼团或已成团拼团单”进入结算。
+- 我的投资页“拼团团号”字体再下调为比原值小 2 号，降低换行概率。
+
+### 66.3 关键文件
+
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+- [my_invest_orders_page.dart](../app/lib/pages/mine/my_invest_orders_page.dart)
+
+### 66.4 启动解析异常修复
+
+- 修复 MyBatis XML 解析错误：在 mapper SQL 条件中补齐 `<>` 的 XML 转义（`&lt;&gt;`），避免 `SqlSessionFactory` 启动时报 SAX 解析异常。
+
+### 66.5 我的投资文案微调
+
+- 我的投资页拼团倒计时标题文案由“剩余成团时间”调整为“待成团时间”。
+
+## 67. 产品详情页标签间距压缩
+
+### 67.1 调整说明
+
+- 产品详情页“产品详情 / 收益计算”两个标签之间的横向间距进一步压缩至最小可用值，减少左右留白。
+
+### 67.2 关键文件
+
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+
+## 68. 拼团自动匹配与自拼团限制
+
+### 68.1 业务规则
+
+- 当用户提交拼团订单且未填写团号时：系统优先自动匹配“同产品、进行中、未满员、未超时、且非本人发起”的可参团记录。
+- 若无可匹配团：系统再自动创建新团并返回新团号。
+- 当用户填写团号参团时：新增“不能参与自己发起的拼团”校验，防止自拼团。
+
+### 68.2 技术实现
+
+- Mapper 新增 `selectAutoJoinableGroupForUpdate`，按成团优先策略排序（成员数多优先，其次截止时间早优先）并加行级锁。
+- 控制器 `submit` 的无团号分支改为“先匹配后开团”。
+- 控制器 `submit` 的有团号分支增加发起人校验，命中本人发起团时直接拒绝。
+
+### 68.3 关键文件
+
+- [SysAppInvestOrderMapper.java](../ruoyi-system/src/main/java/com/ruoyi/system/mapper/SysAppInvestOrderMapper.java)
+- [SysAppInvestOrderMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysAppInvestOrderMapper.xml)
+- [AppInvestOrderController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppInvestOrderController.java)
+
+## 69. 首页改版与APP广告管理
+
+### 69.1 APP首页样式与内容
+
+- 新增首页独立页面 `HomeTabPage`，替换原首页占位页，采用深色金融风格布局：
+  - 顶部品牌区（`mlogo.webp`）；
+  - 快捷入口（充值/提现/领矿/推广/邀请）；
+  - 核心视觉区（`mylogo1.webp` + 标语）；
+  - 二级功能宫格、公告栏、产品推荐卡、最新资讯区。
+- 首页 Banner 默认优先使用本地两张占位图：
+  - `assets/images/home-banner.webp`
+  - `assets/images/home-banner2.webp`
+- 同时支持后台配置远程 Banner 覆盖；未配置时自动回落本地默认图。
+
+### 69.2 APP广告管理（后台）
+
+- 新增后台页面 `system/appAd/index`，命名“APP广告管理”，用于上传和维护 APP 首页 Banner/广告：
+  - 广告类型：`APP_HOME_BANNER`、`APP_HOME_AD`
+  - 支持图片上传、标题、排序、状态、跳转链接（摘要字段）与内容编辑。
+- 复用现有 `sys_news_article` 存储与 `system/news/article` 接口能力，避免新增表与重复接口维护。
+- 新增 SQL 初始化脚本：
+  - 初始化广告分类：`APP_HOME_BANNER`、`APP_HOME_AD`
+  - 新增后台菜单：内容管理 -> APP广告管理
+
+### 69.3 关键文件
+
+- [home_tab_page.dart](../app/lib/pages/main/home_tab_page.dart)
+- [main_page.dart](../app/lib/pages/main/main_page.dart)
+- [app_images.dart](../app/lib/config/app_images.dart)
+- [appAd.js](../ruoyi-ui/src/api/system/appAd.js)
+- [index.vue](../ruoyi-ui/src/views/system/appAd/index.vue)
+- [app_ad_manage_20260505.sql](../sql/app_ad_manage_20260505.sql)
+
+## 70. APP图标替换（Android/iOS）
+
+### 70.1 替换说明
+
+- 按 `app/ico` 目录中的新图标资源，完成 Android 与 iOS 的应用图标替换。
+- Android 使用各密度图替换 `mipmap-*` 下 `ic_launcher.png`；其中 `mdpi` 缺少 48x48 原图，使用 60x60 高质量缩放生成 48x48 后写入。
+- iOS 按 `AppIcon.appiconset` 既有命名规则，逐一替换所有 `Icon-App-*` 图标文件。
+
+### 70.2 关键目录
+
+- `app/ico`
+- `app/android/app/src/main/res/mipmap-*/ic_launcher.png`
+- `app/ios/Runner/Assets.xcassets/AppIcon.appiconset`
+
+### 70.3 首页跳转详情参数修正
+
+- 修复首页产品卡跳转产品详情页时参数不匹配问题：由错误的 `item` 对象传参改为 `productId` 传参，适配 `InvestProductDetailPage({required int productId})` 构造函数。
+- 修复后可正常打开产品详情，不再触发 `missing_required_argument`。
+
+## 71. 首页视觉统一优化
+
+### 71.1 优化目标
+
+- 在不改变首页布局结构与模块顺序的前提下，按 APP 现有深蓝科技风统一首页视觉样式。
+
+### 71.2 优化内容
+
+- 统一区块样式为“深蓝渐变玻璃卡片”（圆角、描边、阴影）并抽离通用装饰方法 `_panelDecoration`。
+- 顶部品牌区、快捷入口、主视觉区、功能宫格、Banner 区、公告区、产品卡、资讯区全部套用一致风格。
+- 调整首页核心字号与对比度，避免过大字体导致的信息拥挤，提升整体可读性与一致性。
+- 保持原有交互与数据逻辑不变，仅做 UI 与样式层优化。
+
+### 71.3 关键文件
+
+- [home_tab_page.dart](../app/lib/pages/main/home_tab_page.dart)
+
+### 71.4 首页色调对齐“我的页面”
+
+- 将首页整体背景渐变改为与“我的页面”一致的深色青蓝系（`0xFF0A1220 -> 0xFF0D1B2A -> 0xFF14233A`）。
+- 各模块卡片统一采用“我的页面”同系卡片底色与边框高光（`0xCC101C30`、`0x334CE3FF`）及阴影强度。
+- 快捷入口、功能图标、公告条、产品卡、资讯卡颜色同步收敛，去除偏紫高饱和蓝，统一为青蓝科技风。
+
+### 71.5 首页背景氛围层同步
+
+- 首页在保持原布局不变的前提下，新增与“我的页面”同系发光背景层（顶部/底部/中部光晕球），强化整体氛围一致性。
+- 背景层仅做视觉增强，不影响列表滚动与交互逻辑。
+
+### 71.6 同功能图标与色彩统一
+
+- 首页中与“我的页面”重复的功能入口，统一采用同一图标与色彩映射（同功能=同图标=同主色）。
+- 统一范围包括：充值、提现、每日签到、我的资产、我的团队、实名认证、余额宝、邀请好友等。
+- 首页快捷入口与宫格入口均改为读取同一按钮配置（图标 + 主色）渲染，避免后续样式漂移。
+
+### 71.7 按钮视觉效果统一
+
+- 首页快捷入口按钮与功能宫格按钮统一为同款“圆形发光图标”效果（同透明度渐变、同阴影、同图标尺寸）。
+- 按钮文案样式统一为与“我的页面”一致的小字号与色值，确保按钮感受一致。
+- 抽离 `_buildGlowCircleIcon` 作为统一图标效果渲染入口，避免不同区域按钮效果分叉。
+
+## 72. 我的节点页面UI同风格优化
+
+### 72.1 视觉统一
+
+- “我的节点”页面按首页/我的页面统一为深色青蓝科技风：背景渐变、发光氛围层、卡片玻璃化样式。
+- 页面卡片统一使用同系描边与阴影参数，弱化原先偏黑背景与蓝紫色差异。
+
+### 72.2 组件统一
+
+- 顶部统计卡、节点详情卡、快捷入口卡统一使用 `_panelDecoration`。
+- 快捷入口按钮改为与首页一致的“圆形发光图标 + 同级文字样式”。
+- 底部主操作按钮统一为青/绿渐变并补充同系阴影。
+
+### 72.3 交互提示统一
+
+- 节点未领取与不可兑换提示改为黄色背景提醒，保持与项目其他页面一致的“非成功提示色”规范。
+
+### 72.4 关键文件
+
+- [miner_page.dart](../app/lib/pages/mine/miner_page.dart)
+
+## 73. 产品页UI同风格优化
+
+### 73.1 页面风格统一
+
+- 产品列表页整体视觉切换到与首页/我的页面一致的青蓝科技风（背景渐变 + 发光氛围层）。
+- 统一列表区域内搜索框、分类标签、产品卡片、投资按钮的卡片化风格与描边阴影规则。
+
+### 73.2 卡片与控件优化
+
+- 搜索框与产品卡采用同系玻璃卡片底色（`0xCC101C30`、`0xCC0E1A2D`）与高光边框（`0x334CE3FF`）。
+- 分类标签选中态与未选中态统一到同一套青蓝交互规范，字号与可读性同步优化。
+- 产品卡内部标签、币种徽标、利率文案与“投资”按钮配色收敛，减少高饱和杂色，增强一致性。
+
+### 73.3 技术实现
+
+- 新增 `_panelDecoration` 与 `_blurBall` 样式方法，作为产品页统一视觉基类。
+- 保持原有业务逻辑、数据过滤、下单跳转与接口调用不变，仅调整 UI 样式层。
+
+### 73.4 关键文件
+
+- [invest_product_list_page.dart](../app/lib/pages/product/invest_product_list_page.dart)
+
+## 74. 产品详情页UI同风格优化
+
+### 74.1 页面风格统一
+
+- 产品详情页背景统一为与首页/我的页面一致的青蓝深色渐变，并增加发光氛围层。
+- 顶部产品信息卡、详情TAB、收益TAB全部切换为同系玻璃卡片样式（统一描边与阴影）。
+
+### 74.2 组件风格优化
+
+- 标签（风险/起投）改为同系半透明标签样式，替换高饱和红色块。
+- TAB 选中态统一为青蓝描边高亮，未选中态保留弱描边，视觉与产品列表页一致。
+- 底部“下单”主按钮改为同系青色按钮风格，保持项目主行动按钮一致性。
+
+### 74.3 关键文件
+
+- [invest_product_detail_page.dart](../app/lib/pages/product/invest_product_detail_page.dart)
+
+### 74.4 下单按钮与图层透明度微调
+
+- 产品详情页底部“下单”按钮改为亮青色大圆角实心样式（左右渐变 + 轻发光阴影 + 深色粗体文案），提升主行动按钮识别度。
+- 页面卡片层透明度进一步降低（更接近实色，仅保留少量透明）：主卡片底色由 `0xCC` 提升到 `0xF2`，内部信息块透明层同步收敛。
+
+## 75. 产品列表页透明度同步
+
+### 75.1 调整说明
+
+- 产品列表页图层透明度同步到与产品详情页一致：卡片层更接近实色，仅保留少量透明感。
+- 列表页统一卡片基底透明度由 `0xCC` 提升到 `0xF2`，同时标签底色透明度同步收敛。
+
+### 75.2 关键文件
+
+- [invest_product_list_page.dart](../app/lib/pages/product/invest_product_list_page.dart)
+
+### 75.3 可读性增强微调
+
+- 产品列表页卡片透明度继续收敛为近不透明（主卡片层改为 `0xFF`），提升正文与指标可读性。
+- 顶部分类导航标签未选中态文字改为白色，提高暗背景下识别度。
+- 风险标签红色增强（改为更高饱和红），避免提示色偏灰导致辨识不足。
+
+### 75.4 详情页风险提示同步
+
+- 产品详情页风险标签同步使用与产品列表一致的高饱和红色样式，确保风险提示在列表与详情之间视觉一致。
+
+### 75.5 列表页完全不透明化
+
+- 产品列表页卡片与分类标签图层改为不透明实色渲染，移除半透明底色对正文可读性的影响。
+- 投资按钮底色改为实色填充，并统一白色文案提升暗背景下对比度。
+- 卡片边框由半透明描边改为不透明描边，保证深色底图下轮廓稳定可见。
+
+### 76. APP广告新增分类ID兜底修复
+
+- 修复后台 `content/appAd` 新增广告时报错 `category_id doesn't have a default value`。
+- 在新闻文章服务保存链路增加分类ID兜底：当仅传 `categoryCode` 且 `categoryId` 为空时，后端自动按分类编码查询并回填 `categoryId`。
+- 新增分类 Mapper 按 `categoryCode` 查询能力，避免前端漏传 `categoryId` 时插入失败。
+
+## 77. 首页聚合接口与运营位联动
+
+### 77.1 首页聚合接口
+
+- 新增 APP 首页聚合接口：`GET /app/news/home`，一次返回 `banners + ads + notices`。
+- `banners` 读取分类 `APP_HOME_BANNER`，`ads` 读取分类 `APP_HOME_AD`，状态均为启用（`status='0'`）。
+- `notices` 仅返回 `sys_notice.notice_type <= 2` 且启用状态的数据，供首页跑马灯展示。
+
+### 77.2 缓存策略与失效
+
+- 首页聚合结果使用 Redis 缓存键 `news:home:mix:v1`，默认缓存 10 分钟，减少首页重复读库压力。
+- 后台新增/编辑/删除新闻文章（含 `content/appAd` Banner/广告管理）后，统一通过 `SysNewsArticleServiceImpl.clearCache()` 立即清理：
+- 清理首页聚合缓存键 `news:home:mix:v1`。
+- 清理文章缓存前缀 `news:article:*`，保证首页 Banner/广告与新闻内容同步生效。
+
+### 77.3 APP首页展示行为
+
+- 首页顶部图片位改为 Banner 数据驱动（支持自动轮播与点击跳转）。
+- 首页广告位改为广告数据驱动（左右滑动展示）。
+- 首页通知位改为纵向跑马灯切换，仅展示公告类型 `<=2` 的系统通知。
+
+### 77.4 关键文件
+
+- [AppNewsController.java](../ruoyi-admin/src/main/java/com/ruoyi/web/controller/app/AppNewsController.java)
+- [SysNoticeMapper.xml](../ruoyi-system/src/main/resources/mapper/system/SysNoticeMapper.xml)
+- [SysNewsArticleServiceImpl.java](../ruoyi-system/src/main/java/com/ruoyi/system/service/impl/SysNewsArticleServiceImpl.java)
+- [news_api.dart](../app/lib/request/news_api.dart)
+- [home_tab_page.dart](../app/lib/pages/main/home_tab_page.dart)

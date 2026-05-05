@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
+import 'package:myapp/pages/main/main_page.dart';
+import 'package:myapp/request/app_config_api.dart';
 import 'package:myapp/request/api_client.dart';
 import 'package:myapp/request/invest_product_api.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/tools/app_bootstrap_tool.dart';
 import 'package:myapp/widgets/app_network_image.dart';
 
 class InvestProductDetailPage extends StatefulWidget {
@@ -21,6 +25,8 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   late Future<InvestProductItem> _future;
   int _tabIndex = 0;
 
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
+
   @override
   void initState() {
     super.initState();
@@ -37,16 +43,41 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080A2D),
+      backgroundColor: const Color(0xFF0A1220),
       appBar: AppBar(
         title: const Text('产品详情'),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
       ),
-      body: FutureBuilder<InvestProductItem>(
-        future: _future,
-        builder: (BuildContext context, AsyncSnapshot<InvestProductItem> snapshot) {
+      body: Stack(
+        children: <Widget>[
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  Color(0xFF0A1220),
+                  Color(0xFF0D1B2A),
+                  Color(0xFF14233A),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: -120,
+            right: -90,
+            child: _blurBall(size: 260, color: const Color(0x5539E6FF)),
+          ),
+          Positioned(
+            bottom: -140,
+            left: -90,
+            child: _blurBall(size: 300, color: const Color(0x5538FFB3)),
+          ),
+          FutureBuilder<InvestProductItem>(
+            future: _future,
+            builder: (BuildContext context, AsyncSnapshot<InvestProductItem> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: Color(0xFF39E6FF)));
           }
@@ -64,7 +95,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             color: const Color(0xFF39E6FF),
             child: ListView(
               physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(10, 0, 10, 16),
+              padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
               children: <Widget>[
                 _buildTopCard(item),
                 const SizedBox(height: 12),
@@ -77,7 +108,80 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             ),
           );
         },
+          ),
+        ],
       ),
+      bottomNavigationBar: _buildBottomNavBar(),
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF0A1220),
+        border: Border(
+          top: BorderSide(
+            color: Color(0x33FFFFFF),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              _buildNavItem(0, Icons.home_rounded, i18n.t('tabHome')),
+              _buildNavItem(1, Icons.calendar_view_month_rounded, i18n.t('tabProduct')),
+              _buildNavItem(2, Icons.memory_rounded, i18n.t('tabMiner')),
+              _buildNavItem(3, Icons.person_rounded, i18n.t('tabMine')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    const int currentIndex = 1;
+    final bool isSelected = index == currentIndex;
+    const Color activeColor = Color(0xFF39E6FF);
+    const Color inactiveColor = Color(0xFF9DB1C9);
+    return GestureDetector(
+      onTap: () => _openMainTab(index),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected ? activeColor : inactiveColor,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected ? activeColor : inactiveColor,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openMainTab(int index) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (_) => MainPage(initialIndex: index),
+      ),
+      (Route<dynamic> route) => false,
     );
   }
 
@@ -86,15 +190,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     final double remainingAmount = _calcRemainingAmount(item);
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF171C59), Color(0xFF171444)],
-        ),
-        border: Border.all(color: const Color(0x224CE3FF)),
-      ),
+      decoration: _panelDecoration(radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -122,7 +218,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
           Row(
             children: <Widget>[
               Expanded(
-                child: _buildBigData('${item.singleRate.toStringAsFixed(2)}%', '单购利率'),
+                child: _buildRatePanel(item),
               ),
                 const SizedBox(width: 12),
               Expanded(
@@ -158,7 +254,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
                     value: (item.progressPercent.clamp(0, 100)) / 100,
                     minHeight: 10,
                     valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF38DFFF)),
-                    backgroundColor: const Color(0xFF2B315E),
+                    backgroundColor: const Color(0x331E2A44),
                   ),
                 ),
               ),
@@ -213,16 +309,48 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     );
   }
 
+  Widget _buildRatePanel(InvestProductItem item) {
+    if (!item.groupEnabled) {
+      return _buildBigData(_displayRateText(item), _displayRateLabel(item));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        _buildBigData(_displayRateText(item), _displayRateLabel(item)),
+        const SizedBox(height: 6),
+        Row(
+          children: <Widget>[
+            const Text(
+              '单购利率',
+              style: TextStyle(color: Color(0xFF7E89B5), fontSize: 13),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              '${item.singleRate.toStringAsFixed(2)}%',
+              style: const TextStyle(
+                color: Color(0xFF35DAFF),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _chip(String text) {
+    final bool isRisk = text.contains('风险');
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF5A5A),
+        color: isRisk ? const Color(0xCCFF3B30) : const Color(0x4039E6FF),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: const Color(0x334CE3FF)),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700),
+        style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 13, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -231,7 +359,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     return Row(
       children: <Widget>[
         Expanded(child: _tabButton('产品详情', 0)),
-        const SizedBox(width: 12),
+        const SizedBox(width: 2),
         Expanded(child: _tabButton('收益计算', 1)),
       ],
     );
@@ -246,7 +374,8 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: selected ? const Color(0xFF2E8FFF) : Colors.transparent),
+          color: selected ? const Color(0x331F3E66) : Colors.transparent,
+          border: Border.all(color: selected ? const Color(0xFF39E6FF) : const Color(0x334CE3FF)),
         ),
         child: Text(
           text,
@@ -264,11 +393,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     final bool shareMode = item.investMode != 'AMOUNT';
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141B52),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x224CE3FF)),
-      ),
+      decoration: _panelDecoration(),
       child: Column(
         children: <Widget>[
           _kv('项目名', item.productName),
@@ -285,9 +410,10 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
           _kv('剩余金额', _fmt(_calcRemainingAmount(item))),
           _kv('成长值', '${item.growthPerUnit.toStringAsFixed(0)}'),
           _kv('限购等级', item.limitLevel <= 0 ? '无' : 'VIP.${item.limitLevel}'),
-          _kv('单购利率', '${item.singleRate.toStringAsFixed(2)}%'),
+          _kv(_displayRateLabel(item), _displayRateText(item)),
+          if (item.groupEnabled) _kv('单购利率', '${item.singleRate.toStringAsFixed(2)}%'),
           _kv('限投次数', item.limitTimes <= 0 ? '不限' : '限投${item.limitTimes}次'),
-          _kv('产品有效期', _buildValidPeriodText(item)),
+          if (_hasValidPeriod(item)) _buildValidPeriodBlock(item),
           if (item.galleryImages.isNotEmpty) ...<Widget>[
             const SizedBox(height: 8),
             Align(
@@ -321,8 +447,9 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0x1EFFFFFF),
+              color: const Color(0x14FFFFFF),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0x224CE3FF)),
             ),
             child: Text(
               _stripHtml(item.productContent),
@@ -336,15 +463,11 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
 
   Widget _buildIncomeTab(InvestProductItem item) {
     final double principal = item.minInvestAmount <= 0 ? 1000 : item.minInvestAmount;
-    final double income = principal * item.singleRate / 100 * item.cycleDays;
+    final double income = principal * _displayRateValue(item) / 100 * item.cycleDays;
     final List<String> tradeRules = _buildTradeRules(item, principal, income);
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF141B52),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x224CE3FF)),
-      ),
+      decoration: _panelDecoration(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
@@ -361,8 +484,9 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
               margin: const EdgeInsets.only(bottom: 10),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: const Color(0x1AFFFFFF),
+                color: const Color(0x14FFFFFF),
                 borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0x224CE3FF)),
               ),
               child: Text(
                 ruleText,
@@ -415,6 +539,9 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   }
 
   Widget _buildBottomButton(InvestProductItem item) {
+    final bool realGroupEnabled =
+        AppBootstrapTool.config.getByItem(AppConfigOptionItem.realGroupEnabled);
+    final bool useGroupPurchase = item.groupEnabled && realGroupEnabled;
     return SizedBox(
       height: 56,
       child: ElevatedButton(
@@ -426,29 +553,42 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
           }
           Navigator.pushNamed(
             context,
-            item.groupEnabled ? AppRouter.investGroupPurchase : AppRouter.investPurchase,
+            useGroupPurchase ? AppRouter.investGroupPurchase : AppRouter.investPurchase,
             arguments: <String, dynamic>{'productId': item.productId},
           );
         },
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF1F3CF5),
+          backgroundColor: Colors.transparent,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+          elevation: 0,
+          padding: EdgeInsets.zero,
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Image.asset(
-              AppImages.currencyBrand(item.currency, usePurpleVariant: true),
-              width: 20,
-              height: 20,
-              fit: BoxFit.contain,
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: <Color>[Color(0xFF39F3FF), Color(0xFF2DFFD6)],
             ),
-            const SizedBox(width: 6),
-            Text(
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x5539E6FF),
+                blurRadius: 14,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Text(
               '${item.currency}下单',
-              style: const TextStyle(color: Color(0xFF35DAFF), fontSize: 38 / 2, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                color: Color(0xFF031B2E),
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -499,23 +639,20 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     if (configured.isNotEmpty) {
       return configured.take(8).toList();
     }
-    final String fallback = '1. ${item.currency}收益：${_fmt(principal)}*${item.singleRate.toStringAsFixed(2)}%*${item.cycleDays}=${_fmt(income)} ${item.currency}';
+    final String fallback = '1. ${item.currency}收益：${_fmt(principal)}*${_displayRateText(item)}*${item.cycleDays}=${_fmt(income)} ${item.currency}';
     return List<String>.filled(4, fallback);
   }
 
-  String _buildValidPeriodText(InvestProductItem item) {
-    final String start = _normalizeDateText(item.startTime);
-    final String end = _normalizeDateText(item.endTime);
-    if (start.isEmpty && end.isEmpty) {
-      return '长期有效';
-    }
-    if (start.isNotEmpty && end.isNotEmpty) {
-      return '$start ~ $end';
-    }
-    if (start.isNotEmpty) {
-      return '$start 起';
-    }
-    return '截至 $end';
+  double _displayRateValue(InvestProductItem item) {
+    return item.groupEnabled ? item.groupRate : item.singleRate;
+  }
+
+  String _displayRateText(InvestProductItem item) {
+    return '${_displayRateValue(item).toStringAsFixed(2)}%';
+  }
+
+  String _displayRateLabel(InvestProductItem item) {
+    return item.groupEnabled ? '拼团利率' : '单购利率';
   }
 
   String _normalizeDateText(String raw) {
@@ -524,6 +661,45 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       return '';
     }
     return value.length >= 19 ? value.substring(0, 19) : value;
+  }
+
+  bool _hasValidPeriod(InvestProductItem item) {
+    return _normalizeDateText(item.startTime).isNotEmpty ||
+        _normalizeDateText(item.endTime).isNotEmpty;
+  }
+
+  Widget _buildValidPeriodBlock(InvestProductItem item) {
+    final String start = _normalizeDateText(item.startTime);
+    final String end = _normalizeDateText(item.endTime);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Expanded(child: Text('产品有效期', style: _labelStyle)),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: <Widget>[
+                if (start.isNotEmpty)
+                  Text(
+                    '产品开放时间  $start',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(color: Color(0xFF8E9AC6), fontSize: 16),
+                  ),
+                if (start.isNotEmpty && end.isNotEmpty) const SizedBox(height: 6),
+                if (end.isNotEmpty)
+                  Text(
+                    '产品结束时间  $end',
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(color: Color(0xFF8E9AC6), fontSize: 16),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   String? _resolveOrderBlockedReason(InvestProductItem item) {
@@ -562,7 +738,49 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
   }
 
   void _showToast(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: const Color(0xFFFFA500),
+      ),
+    );
+  }
+
+  BoxDecoration _panelDecoration({double radius = 14}) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(radius),
+      gradient: const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: <Color>[Color(0xF2101C30), Color(0xF20E1A2D)],
+      ),
+      border: Border.all(color: const Color(0x334CE3FF)),
+      boxShadow: const <BoxShadow>[
+        BoxShadow(
+          color: Color(0x66000000),
+          blurRadius: 22,
+          offset: Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
+  Widget _blurBall({required double size, required Color color}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: color,
+            blurRadius: size * 0.55,
+            spreadRadius: size * 0.08,
+          ),
+        ],
+      ),
+    );
   }
 }
 

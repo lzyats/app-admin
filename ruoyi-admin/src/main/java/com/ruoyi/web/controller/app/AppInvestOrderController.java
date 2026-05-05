@@ -3,6 +3,9 @@ package com.ruoyi.web.controller.app;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -47,6 +50,8 @@ public class AppInvestOrderController extends BaseController
     private static final String CONTRACT_TEMPLATE_KEY = "app.invest.contract.template";
     private static final String IDEMPOTENT_LOCK_KEY = "app:invest:submit:lock:";
     private static final String IDEMPOTENT_RESULT_KEY = "app:invest:submit:result:";
+    private static final String REAL_GROUP_ENABLED_CONFIG_KEY = "app.invest.realGroupEnabled";
+    private static final String GROUP_EXPIRE_MINUTES_CONFIG_KEY = "app.invest.groupExpireMinutes";
 
     @Autowired
     private ISysConfigService configService;
@@ -378,6 +383,85 @@ public class AppInvestOrderController extends BaseController
         BigDecimal singleRate = parseDecimal(product.getSingleRate(), BigDecimal.ZERO);
         BigDecimal groupRate = parseDecimal(product.getGroupRate(), BigDecimal.ZERO);
         boolean groupMode = parseBoolean(payload.get("groupMode"));
+        boolean realGroupEnabled = parseBoolean(configService.selectConfigByKey(REAL_GROUP_ENABLED_CONFIG_KEY));
+        boolean realGroupMode = groupMode && "1".equals(StringUtils.trim(product.getGroupEnabled())) && realGroupEnabled;
+        Long groupId = null;
+        String groupNo = null;
+        String groupStatus = "9";
+        Date groupDeadlineTime = null;
+        Integer targetGroupSize = product.getGroupSize() == null || product.getGroupSize() < 2 ? 2 : product.getGroupSize();
+        if (realGroupMode)
+        {
+            String joinGroupNo = StringUtils.trim((String) payload.get("groupNo"));
+            if (StringUtils.isBlank(joinGroupNo))
+            {
+                joinGroupNo = StringUtils.trim((String) payload.get("joinGroupNo"));
+            }
+            Map<String, Object> targetGroup;
+            if (StringUtils.isNotBlank(joinGroupNo))
+            {
+                targetGroup = appInvestOrderMapper.selectInvestGroupByNoForUpdate(joinGroupNo);
+                if (targetGroup == null || targetGroup.isEmpty())
+                {
+                    throw new ServiceException("拼团不存在或已结束");
+                }
+                if (!String.valueOf(productId).equals(String.valueOf(targetGroup.get("product_id"))))
+                {
+                    throw new ServiceException("仅可参与当前产品拼团");
+                }
+                Long initiatorUserId = parseLong(targetGroup.get("initiator_user_id"), 0L);
+                if (initiatorUserId != null && initiatorUserId.longValue() == userId.longValue())
+                {
+                    throw new ServiceException("不能参与自己发起的拼团");
+                }
+                String status = String.valueOf(targetGroup.get("status"));
+                if (!"0".equals(status))
+                {
+                    throw new ServiceException("拼团状态不可参与");
+                }
+                Date deadline = toDate(targetGroup.get("deadline_time"));
+                if (deadline != null && now.after(deadline))
+                {
+                    throw new ServiceException("拼团已超时");
+                }
+                Integer memberCount = parseInt(targetGroup.get("member_count"), 0);
+                Integer groupTargetSize = parseInt(targetGroup.get("target_size"), targetGroupSize);
+                if (memberCount != null && groupTargetSize != null && memberCount.intValue() >= groupTargetSize.intValue())
+                {
+                    throw new ServiceException("拼团人数已满");
+                }
+            }
+            else
+            {
+                targetGroup = appInvestOrderMapper.selectAutoJoinableGroupForUpdate(productId, userId, now);
+                if (targetGroup == null || targetGroup.isEmpty())
+                {
+                    String newGroupNo = buildNo("IG", userId);
+                    Date deadlineTime = plusMinutes(now, resolveGroupExpireMinutes());
+                    appInvestOrderMapper.insertInvestGroup(
+                        newGroupNo,
+                        productId,
+                        productName,
+                        currency,
+                        userId,
+                        targetGroupSize,
+                        deadlineTime,
+                        userName,
+                        "APP发起拼团"
+                    );
+                    Long createdGroupId = appInvestOrderMapper.selectInvestGroupIdByNo(newGroupNo);
+                    if (createdGroupId == null || createdGroupId <= 0L)
+                    {
+                        throw new ServiceException("创建拼团失败，请重试");
+                    }
+                    targetGroup = appInvestOrderMapper.selectInvestGroupByIdForUpdate(createdGroupId);
+                }
+            }
+            groupId = parseLong(targetGroup.get("group_id"), 0L);
+            groupNo = StringUtils.trim(String.valueOf(targetGroup.get("group_no")));
+            groupDeadlineTime = toDate(targetGroup.get("deadline_time"));
+            groupStatus = "0";
+        }
         BigDecimal effectiveRate = groupMode ? groupRate : singleRate;
         Integer cycleDays = product.getCycleDays() == null ? 1 : product.getCycleDays();
         BigDecimal expectedIncome = orderPrincipalAmount.multiply(effectiveRate)
@@ -397,8 +481,13 @@ public class AppInvestOrderController extends BaseController
             groupRate,
             effectiveRate,
             cycleDays,
+            investShares,
             expectedIncome,
             contractNo,
+            groupId,
+            groupNo,
+            groupStatus,
+            groupDeadlineTime,
             userName,
             "APP在线签约认购"
         );
@@ -437,6 +526,17 @@ public class AppInvestOrderController extends BaseController
             writeOrderPlans(orderId, userId, product, orderPrincipalAmount, effectiveRate, expectedIncome);
         }
 
+        if (realGroupMode && groupId != null && groupId > 0L)
+        {
+            appInvestOrderMapper.updateInvestGroupAddMember(groupId, orderPrincipalAmount, targetGroupSize);
+            Map<String, Object> latestGroup = appInvestOrderMapper.selectInvestGroupByIdForUpdate(groupId);
+            String latestGroupStatus = latestGroup == null ? "0" : String.valueOf(latestGroup.get("status"));
+            if ("1".equals(latestGroupStatus))
+            {
+                appInvestOrderMapper.updateInvestOrderGroupStatusByGroupId(groupId, "1", "拼团已成团");
+            }
+        }
+
         investProductMapper.increaseSoldShares(productId, investShares, orderPrincipalAmount);
 
         SysUserWalletLog log = new SysUserWalletLog();
@@ -466,6 +566,11 @@ public class AppInvestOrderController extends BaseController
         data.put("contractNo", contractNo);
         data.put("signed", true);
         data.put("signedAt", new Date());
+        data.put("groupMode", realGroupMode || groupMode);
+        data.put("groupId", groupId);
+        data.put("groupNo", groupNo);
+        data.put("groupStatus", groupStatus);
+        data.put("groupDeadlineTime", groupDeadlineTime);
         data.put("msg", "签约并认购成功");
         stringRedisTemplate.opsForValue().set(resultKey, objectMapper.writeValueAsString(data), 10, TimeUnit.MINUTES);
         return AjaxResult.success(data);
@@ -793,6 +898,47 @@ public class AppInvestOrderController extends BaseController
         return cal.getTime();
     }
 
+    private Date plusMinutes(Date baseTime, int minutes)
+    {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(baseTime == null ? new Date() : baseTime);
+        cal.add(Calendar.MINUTE, Math.max(minutes, 1));
+        return cal.getTime();
+    }
+
+    private Date toDate(Object value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+        if (value instanceof Date)
+        {
+            return (Date) value;
+        }
+        if (value instanceof LocalDateTime)
+        {
+            LocalDateTime localDateTime = (LocalDateTime) value;
+            return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+        }
+        if (value instanceof LocalDate)
+        {
+            LocalDate localDate = (LocalDate) value;
+            return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        }
+        return null;
+    }
+
+    private int resolveGroupExpireMinutes()
+    {
+        Integer minutes = parseInt(configService.selectConfigByKey(GROUP_EXPIRE_MINUTES_CONFIG_KEY), 0);
+        if (minutes == null || minutes <= 0)
+        {
+            return 24 * 60;
+        }
+        return minutes;
+    }
+
     private String buildNo(String prefix, Long userId)
     {
         return prefix + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()) + String.format("%06d", userId);
@@ -844,6 +990,10 @@ public class AppInvestOrderController extends BaseController
         data.put("contractNo", existingOrder.get("contractNo"));
         data.put("signed", true);
         data.put("signedAt", existingOrder.get("createTime"));
+        data.put("groupId", existingOrder.get("groupId"));
+        data.put("groupNo", existingOrder.get("groupNo"));
+        data.put("groupStatus", existingOrder.get("groupStatus"));
+        data.put("groupDeadlineTime", existingOrder.get("groupDeadlineTime"));
         data.put("idempotent", true);
         data.put("msg", "请勿重复提交，已返回原订单");
         return data;

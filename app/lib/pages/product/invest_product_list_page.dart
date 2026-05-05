@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
+import 'package:myapp/config/app_localizations.dart';
+import 'package:myapp/pages/main/main_page.dart';
 import 'package:myapp/request/invest_product_api.dart';
 import 'package:myapp/routers/app_router.dart';
 
 class InvestProductListPage extends StatefulWidget {
-  const InvestProductListPage({super.key});
+  const InvestProductListPage({
+    super.key,
+    this.initialTag,
+    this.showBottomNav = false,
+  });
+
+  final String? initialTag;
+  final bool showBottomNav;
 
   @override
   State<InvestProductListPage> createState() => _InvestProductListPageState();
@@ -15,10 +24,18 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
   final TextEditingController _searchController = TextEditingController();
   List<String> _tagGroups = const <String>['全部'];
   String _selectedTag = '全部';
+  String _initialTagKeyword = '';
+
+  AppLocalizations get i18n => AppLocalizations.of(context)!;
 
   @override
   void initState() {
     super.initState();
+    final String initialTag = (widget.initialTag ?? '').trim();
+    if (initialTag.isNotEmpty) {
+      _initialTagKeyword = initialTag;
+      _selectedTag = initialTag;
+    }
     _future = InvestProductApi.fetchCatalog();
     _loadCachedTagGroups();
     _searchController.addListener(_onSearchChanged);
@@ -51,6 +68,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
     }
     setState(() {
       _tagGroups = _normalizeTagGroups(cached);
+      _applyInitialTagSelection();
       if (!_tagGroups.contains(_selectedTag)) {
         _selectedTag = '全部';
       }
@@ -60,11 +78,36 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF080A2D),
-      body: SafeArea(
-        child: FutureBuilder<InvestProductCatalog>(
-          future: _future,
-          builder: (BuildContext context, AsyncSnapshot<InvestProductCatalog> snapshot) {
+      backgroundColor: const Color(0xFF0A1220),
+      body: Stack(
+        children: <Widget>[
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  Color(0xFF0A1220),
+                  Color(0xFF0D1B2A),
+                  Color(0xFF14233A),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            top: -120,
+            right: -90,
+            child: _blurBall(size: 260, color: const Color(0x5539E6FF)),
+          ),
+          Positioned(
+            bottom: -140,
+            left: -90,
+            child: _blurBall(size: 300, color: const Color(0x5538FFB3)),
+          ),
+          SafeArea(
+            child: FutureBuilder<InvestProductCatalog>(
+              future: _future,
+              builder: (BuildContext context, AsyncSnapshot<InvestProductCatalog> snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator(color: Color(0xFF39E6FF)));
             }
@@ -86,6 +129,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                 }
                 setState(() {
                   _tagGroups = currentTags;
+                  _applyInitialTagSelection();
                   if (!_tagGroups.contains(_selectedTag)) {
                     _selectedTag = '全部';
                   }
@@ -99,7 +143,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
               color: const Color(0xFF39E6FF),
               child: ListView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 16),
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
                 children: <Widget>[
                   _buildSearchBox(),
                   const SizedBox(height: 10),
@@ -111,8 +155,81 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
               ),
             );
           },
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: widget.showBottomNav ? _buildBottomNavBar() : null,
+    );
+  }
+
+  Widget _buildBottomNavBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF0A1220),
+        border: Border(
+          top: BorderSide(
+            color: Color(0x33FFFFFF),
+            width: 0.5,
+          ),
         ),
       ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: <Widget>[
+              _buildNavItem(0, Icons.home_rounded, i18n.t('tabHome')),
+              _buildNavItem(1, Icons.calendar_view_month_rounded, i18n.t('tabProduct')),
+              _buildNavItem(2, Icons.memory_rounded, i18n.t('tabMiner')),
+              _buildNavItem(3, Icons.person_rounded, i18n.t('tabMine')),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, IconData icon, String label) {
+    const int currentIndex = 1;
+    final bool isSelected = index == currentIndex;
+    const Color activeColor = Color(0xFF39E6FF);
+    const Color inactiveColor = Color(0xFF9DB1C9);
+    return GestureDetector(
+      onTap: () => _openMainTab(index),
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected ? activeColor : inactiveColor,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected ? activeColor : inactiveColor,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openMainTab(int index) {
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute<void>(
+        builder: (_) => MainPage(initialIndex: index),
+      ),
+      (Route<dynamic> route) => false,
     );
   }
 
@@ -137,14 +254,10 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
     return Container(
       height: 46,
       padding: const EdgeInsets.symmetric(horizontal: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFF111743),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x2A4CE3FF)),
-      ),
+      decoration: _panelDecoration(radius: 12),
       child: Row(
         children: <Widget>[
-          const Icon(Icons.search, color: Color(0xFF8290BC), size: 22),
+          const Icon(Icons.search, color: Color(0xFF9DB1C9), size: 22),
           const SizedBox(width: 8),
           Expanded(
             child: TextField(
@@ -152,7 +265,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
               style: const TextStyle(color: Colors.white, fontSize: 15),
               decoration: const InputDecoration(
                 hintText: '搜索',
-                hintStyle: TextStyle(color: Color(0xFF6877A9)),
+                hintStyle: TextStyle(color: Color(0xFF9DB1C9)),
                 border: InputBorder.none,
               ),
             ),
@@ -177,9 +290,9 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
-                color: selected ? const Color(0xFF0F1E66) : Colors.transparent,
+                color: selected ? const Color(0xFF1F3E66) : const Color(0xFF101C30),
                 border: Border.all(
-                  color: selected ? const Color(0xFF39E6FF) : Colors.transparent,
+                  color: selected ? const Color(0xFF39E6FF) : const Color(0xFF2F577D),
                 ),
                 boxShadow: selected
                     ? const <BoxShadow>[
@@ -190,8 +303,8 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
               child: Text(
                 tag,
                 style: TextStyle(
-                  color: selected ? const Color(0xFF39E6FF) : const Color(0xFF8C99C9),
-                  fontSize: 17,
+                  color: selected ? const Color(0xFF39E6FF) : const Color(0xFFEAF4FF),
+                  fontSize: 15,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 ),
               ),
@@ -212,14 +325,10 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.fromLTRB(12, 14, 12, 12),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: cardTheme.gradientColors,
-          ),
-          border: Border.all(color: cardTheme.borderColor),
+        decoration: _panelDecoration(
+          colors: cardTheme.gradientColors,
+          borderColor: cardTheme.borderColor,
+          radius: 16,
         ),
         child: Column(
           children: <Widget>[
@@ -235,8 +344,8 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
+                          color: Color(0xFFE9F3FF),
+                          fontSize: 18,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -327,19 +436,20 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
     badges.add('${item.cycleDays}天');
     return badges.take(3).map((String text) {
       final Color bg = text.contains('风险')
-          ? const Color(0xFFFF5A5A)
+          ? const Color(0xFFFF3B30)
           : text.endsWith('天')
-              ? const Color(0xFF2FC84A)
-              : const Color(0xFFFF4D4F);
+              ? const Color(0xFF1F7A66)
+              : const Color(0xFF1B4C7A);
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: const Color(0x334CE3FF)),
         ),
         child: Text(
           text,
-          style: const TextStyle(color: Colors.white, fontSize: 14 / 2 * 1.7, fontWeight: FontWeight.w700),
+          style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 12, fontWeight: FontWeight.w700),
         ),
       );
     }).toList();
@@ -360,7 +470,7 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
           currency.isEmpty ? '--' : currency,
           style: TextStyle(
             color: accentColor,
-            fontSize: 18,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -430,12 +540,13 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
+          color: borderColor,
           border: Border.all(color: borderColor),
         ),
         child: Text(
           '投资',
           style: TextStyle(
-            color: textColor,
+            color: Colors.white,
             fontSize: compact ? 16 : 18,
             fontWeight: FontWeight.w600,
           ),
@@ -526,48 +637,110 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
     return tags;
   }
 
+  void _applyInitialTagSelection() {
+    if (_initialTagKeyword.isEmpty) {
+      return;
+    }
+    final String keyword = _initialTagKeyword.toLowerCase();
+    for (final String tag in _tagGroups) {
+      final String lower = tag.toLowerCase();
+      if (lower == keyword || lower.contains(keyword)) {
+        _selectedTag = tag;
+        _initialTagKeyword = '';
+        return;
+      }
+      if ((keyword.contains('拼团') || keyword.contains('团购') || keyword.contains('group')) &&
+          (lower.contains('拼团') || lower.contains('团购') || lower.contains('group'))) {
+        _selectedTag = tag;
+        _initialTagKeyword = '';
+        return;
+      }
+    }
+  }
+
   _CardThemeStyle _resolveCardTheme(InvestProductItem item) {
     final String key = item.cardTheme.trim().toLowerCase();
     if (key == 'purple') {
       return const _CardThemeStyle(
-        gradientColors: <Color>[Color(0xFF2A185C), Color(0xFF1E144A)],
-        borderColor: Color(0x226E5AFF),
-        accentColor: Color(0xFF8A7DFF),
+        gradientColors: <Color>[Color(0xFF111E38), Color(0xFF0E1A2D)],
+        borderColor: Color(0xFF2F577D),
+        accentColor: Color(0xFF39E6FF),
       );
     }
     if (key == 'green') {
       return const _CardThemeStyle(
-        gradientColors: <Color>[Color(0xFF13434C), Color(0xFF122F45)],
-        borderColor: Color(0x2256D8B6),
-        accentColor: Color(0xFF56D8B6),
+        gradientColors: <Color>[Color(0xFF101F34), Color(0xFF0E1A2D)],
+        borderColor: Color(0xFF2F577D),
+        accentColor: Color(0xFF38FFB3),
       );
     }
     if (key == 'red') {
       return const _CardThemeStyle(
-        gradientColors: <Color>[Color(0xFF4A1C3D), Color(0xFF28163D)],
-        borderColor: Color(0x22FF7A8A),
-        accentColor: Color(0xFFFF7A8A),
+        gradientColors: <Color>[Color(0xFF1B1E33), Color(0xFF0E1A2D)],
+        borderColor: Color(0xFF2F577D),
+        accentColor: Color(0xFFFFA500),
       );
     }
     if (key == 'blue') {
       return const _CardThemeStyle(
-        gradientColors: <Color>[Color(0xFF161B56), Color(0xFF171444)],
-        borderColor: Color(0x224CE3FF),
+        gradientColors: <Color>[Color(0xFF101C30), Color(0xFF0E1A2D)],
+        borderColor: Color(0xFF2F577D),
         accentColor: Color(0xFF39E6FF),
       );
     }
     final String currency = item.currency.trim().toUpperCase();
     if (currency == 'USD') {
       return const _CardThemeStyle(
-        gradientColors: <Color>[Color(0xFF2A185C), Color(0xFF1E144A)],
-        borderColor: Color(0x226E5AFF),
-        accentColor: Color(0xFF8A7DFF),
+        gradientColors: <Color>[Color(0xFF111E38), Color(0xFF0E1A2D)],
+        borderColor: Color(0xFF2F577D),
+        accentColor: Color(0xFF39E6FF),
       );
     }
     return const _CardThemeStyle(
-      gradientColors: <Color>[Color(0xFF161B56), Color(0xFF171444)],
-      borderColor: Color(0x224CE3FF),
+      gradientColors: <Color>[Color(0xFF101C30), Color(0xFF0E1A2D)],
+      borderColor: Color(0xFF2F577D),
       accentColor: Color(0xFF39E6FF),
+    );
+  }
+
+  BoxDecoration _panelDecoration({
+    List<Color> colors = const <Color>[Color(0xFF101C30), Color(0xFF0E1A2D)],
+    Color borderColor = const Color(0xFF2F577D),
+    double radius = 14,
+  }) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(radius),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: colors,
+      ),
+      border: Border.all(color: borderColor),
+      boxShadow: const <BoxShadow>[
+        BoxShadow(
+          color: Color(0x66000000),
+          blurRadius: 22,
+          offset: Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
+  Widget _blurBall({required double size, required Color color}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: color,
+            blurRadius: size * 0.55,
+            spreadRadius: size * 0.08,
+          ),
+        ],
+      ),
     );
   }
 }

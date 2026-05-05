@@ -8,6 +8,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <id property="categoryId" column="category_id" />
         <result property="categoryCode" column="category_code" />
         <result property="categoryName" column="category_name" />
+        <result property="categoryType" column="category_type" />
         <result property="sortOrder" column="sort_order" />
         <result property="status" column="status" />
         <result property="createTime" column="create_time" />
@@ -16,7 +17,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectNewsCategoryVo">
-        select category_id, category_code, category_name, sort_order, status, create_time, update_time, remark
+        select category_id, category_code, category_name, category_type, sort_order, status, create_time, update_time, remark
         from sys_news_category
     </sql>
 
@@ -28,6 +29,9 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             </if>
             <if test="categoryName != null and categoryName != ''">
                 and category_name like concat('%', #{categoryName}, '%')
+            </if>
+            <if test="categoryType != null and categoryType != ''">
+                and category_type = #{categoryType}
             </if>
             <if test="status != null and status != ''">
                 and status = #{status}
@@ -47,10 +51,17 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where category_id = #{categoryId}
     </select>
 
+    <select id="selectNewsCategoryByCode" parameterType="String" resultMap="SysNewsCategoryResult">
+        <include refid="selectNewsCategoryVo"/>
+        where category_code = #{categoryCode}
+        limit 1
+    </select>
+
     <insert id="insertNewsCategory" parameterType="SysNewsCategory" useGeneratedKeys="true" keyProperty="categoryId">
         insert into sys_news_category (
             <if test="categoryCode != null and categoryCode != ''">category_code,</if>
             <if test="categoryName != null and categoryName != ''">category_name,</if>
+            <if test="categoryType != null and categoryType != ''">category_type,</if>
             <if test="sortOrder != null">sort_order,</if>
             <if test="status != null and status != ''">status,</if>
             <if test="remark != null and remark != ''">remark,</if>
@@ -58,6 +69,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         ) values (
             <if test="categoryCode != null and categoryCode != ''">#{categoryCode},</if>
             <if test="categoryName != null and categoryName != ''">#{categoryName},</if>
+            <if test="categoryType != null and categoryType != ''">#{categoryType},</if>
             <if test="sortOrder != null">#{sortOrder},</if>
             <if test="status != null and status != ''">#{status},</if>
             <if test="remark != null and remark != ''">#{remark},</if>
@@ -70,6 +82,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <set>
             <if test="categoryCode != null and categoryCode != ''">category_code = #{categoryCode},</if>
             <if test="categoryName != null and categoryName != ''">category_name = #{categoryName},</if>
+            <if test="categoryType != null and categoryType != ''">category_type = #{categoryType},</if>
             <if test="sortOrder != null">sort_order = #{sortOrder},</if>
             <if test="status != null and status != ''">status = #{status},</if>
             <if test="remark != null">remark = #{remark},</if>

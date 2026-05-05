@@ -15,6 +15,7 @@ import com.ruoyi.system.service.ISysNewsCategoryService;
 @Service
 public class SysNewsCategoryServiceImpl implements ISysNewsCategoryService
 {
+    private static final String CATEGORY_TYPE_NEWS = "NEWS";
     private static final String CACHE_PREFIX = "news:category:";
     private static final String CACHE_ALL_KEY = CACHE_PREFIX + "all";
 
@@ -59,6 +60,10 @@ public class SysNewsCategoryServiceImpl implements ISysNewsCategoryService
     @Override
     public int insertNewsCategory(SysNewsCategory category)
     {
+        if (category != null && StringUtils.isBlank(category.getCategoryType()))
+        {
+            category.setCategoryType(CATEGORY_TYPE_NEWS);
+        }
         int rows = newsCategoryMapper.insertNewsCategory(category);
         clearCache();
         return rows;
@@ -67,6 +72,10 @@ public class SysNewsCategoryServiceImpl implements ISysNewsCategoryService
     @Override
     public int updateNewsCategory(SysNewsCategory category)
     {
+        if (category != null && StringUtils.isBlank(category.getCategoryType()))
+        {
+            category.setCategoryType(CATEGORY_TYPE_NEWS);
+        }
         int rows = newsCategoryMapper.updateNewsCategory(category);
         clearCache();
         return rows;

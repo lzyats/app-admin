@@ -7,13 +7,130 @@
     <insert id="insertInvestOrder">
         insert into sys_invest_order
         (order_no, client_req_no, user_id, user_name, product_id, product_name, currency, group_mode, invest_amount,
-         single_rate, group_rate, effective_rate, cycle_days, expected_income, contract_no,
+         single_rate, group_rate, effective_rate, cycle_days, invest_shares, expected_income, contract_no,
+         group_id, group_no, group_status, group_deadline_time,
          status, create_by, create_time, remark)
         values
         (#{orderNo}, #{clientReqNo}, #{userId}, #{userName}, #{productId}, #{productName}, #{currency}, #{groupMode}, #{investAmount},
-         #{singleRate}, #{groupRate}, #{effectiveRate}, #{cycleDays}, #{expectedIncome}, #{contractNo},
+         #{singleRate}, #{groupRate}, #{effectiveRate}, #{cycleDays}, #{investShares}, #{expectedIncome}, #{contractNo},
+         #{groupId}, #{groupNo}, #{groupStatus}, #{groupDeadlineTime},
          '0', #{createBy}, now(), #{remark})
     </insert>
+
+    <insert id="insertInvestGroup">
+        insert into sys_invest_group
+        (group_no, product_id, product_name, currency, initiator_user_id, target_size, member_count,
+         total_amount, status, deadline_time, create_by, create_time, remark)
+        values
+        (#{groupNo}, #{productId}, #{productName}, #{currency}, #{initiatorUserId}, #{targetSize}, 0,
+         0, '0', #{deadlineTime}, #{createBy}, now(), #{remark})
+    </insert>
+
+    <select id="selectInvestGroupIdByNo" resultType="long">
+        select group_id
+        from sys_invest_group
+        where group_no = #{groupNo}
+        limit 1
+    </select>
+
+    <select id="selectInvestGroupByNoForUpdate" resultType="map">
+        select *
+        from sys_invest_group
+        where group_no = #{groupNo}
+        limit 1
+            for update
+    </select>
+
+    <select id="selectInvestGroupByIdForUpdate" resultType="map">
+        select *
+        from sys_invest_group
+        where group_id = #{groupId}
+        limit 1
+            for update
+    </select>
+
+    <select id="selectAutoJoinableGroupForUpdate" resultType="map">
+        select *
+        from sys_invest_group
+        where product_id = #{productId}
+          and status = '0'
+          and initiator_user_id &lt;&gt; #{excludeUserId}
+          and ifnull(target_size, 0) &gt; 0
+          and ifnull(member_count, 0) &lt; ifnull(target_size, 0)
+          and deadline_time is not null
+          and deadline_time &gt; #{now}
+        order by ifnull(member_count, 0) desc, deadline_time asc, group_id asc
+        limit 1
+            for update
+    </select>
+
+    <update id="updateInvestGroupAddMember">
+        update sys_invest_group
+        set member_count = ifnull(member_count, 0) + 1,
+            total_amount = ifnull(total_amount, 0) + #{amountDelta},
+            status = case
+                         when ifnull(member_count, 0) + 1 >= #{targetSize} then '1'
+                         else status
+                end,
+            success_time = case
+                               when ifnull(member_count, 0) + 1 >= #{targetSize} then now()
+                               else success_time
+                end,
+            update_time = now()
+        where group_id = #{groupId}
+    </update>
+
+    <update id="updateInvestGroupStatus">
+        update sys_invest_group
+        set status = #{status},
+            fail_time = case when #{status} = '2' then now() else fail_time end,
+            close_time = case when #{status} = '3' then now() else close_time end,
+            update_time = now(),
+            remark = case
+                        when #{remark} is null or #{remark} = '' then remark
+                        else #{remark}
+                end
+        where group_id = #{groupId}
+    </update>
+
+    <update id="updateInvestOrderGroupStatusByGroupId">
+        update sys_invest_order
+        set group_status = #{groupStatus},
+            update_time = now(),
+            remark = case
+                        when #{remark} is null or #{remark} = '' then remark
+                        else #{remark}
+                end
+        where group_id = #{groupId}
+          and status = '0'
+    </update>
+
+    <select id="selectExpiredGroups" resultType="map">
+        select group_id as groupId,
+               group_no as groupNo,
+               product_id as productId,
+               product_name as productName,
+               currency,
+               target_size as targetSize,
+               member_count as memberCount,
+               total_amount as totalAmount,
+               status,
+               deadline_time as deadlineTime
+        from sys_invest_group
+        where status = '0'
+          and deadline_time is not null
+          and deadline_time &lt;= #{now}
+        order by deadline_time asc, group_id asc
+    </select>
+
+    <select id="selectRunningOrdersByGroupIdForUpdate" resultType="map">
+        select *
+        from sys_invest_order
+        where group_id = #{groupId}
+          and status = '0'
+        order by order_id asc
+            for update
+    </select>
 
     <insert id="insertContractSign">
         insert into sys_invest_contract_sign
@@ -49,7 +166,13 @@
     </select>
 
     <select id="selectOrderByUserAndClientReqNo" resultType="map">
-        select order_no as orderNo, contract_no as contractNo, create_time as createTime
+        select order_no as orderNo,
+               contract_no as contractNo,
+               create_time as createTime,
+               group_id as groupId,
+               group_no as groupNo,
+               ifnull(group_status, '9') as groupStatus,
+               group_deadline_time as groupDeadlineTime
         from sys_invest_order
         where user_id = #{userId}
           and client_req_no = #{clientReqNo}
@@ -73,6 +196,16 @@
                product_id as productId,
                product_name as productName,
                currency,
+               group_mode as groupMode,
+               group_id as groupId,
+               group_no as groupNo,
+               ifnull(group_status, '9') as groupStatus,
+               group_deadline_time as groupDeadlineTime,
+               case
+                   when group_deadline_time is null then 0
+                   when timestampdiff(second, now(), group_deadline_time) &gt; 0 then timestampdiff(second, now(), group_deadline_time)
+                   else 0
+                   end as groupCountdownSeconds,
                invest_amount as investAmount,
                effective_rate as effectiveRate,
                expected_income as expectedIncome,
@@ -87,7 +220,7 @@
             and date_add(create_time, interval ifnull(cycle_days, 0) day) &gt; now()
         </if>
         <if test="tab == 'ended'">
-            and (status = '1' or date_add(create_time, interval ifnull(cycle_days, 0) day) &lt;= now())
+            and (status in ('1', '2') or date_add(create_time, interval ifnull(cycle_days, 0) day) &lt;= now())
         </if>
         order by create_time desc
     </select>
@@ -95,7 +228,7 @@
     <select id="selectAppInvestOrderStat" resultType="map">
         select count(1) as totalCount,
                sum(case when status = '0' and date_add(create_time, interval ifnull(cycle_days, 0) day) &gt; now() then 1 else 0 end) as runningCount,
-               sum(case when status = '1' or date_add(create_time, interval ifnull(cycle_days, 0) day) &lt;= now() then 1 else 0 end) as endedCount
+               sum(case when status in ('1', '2') or date_add(create_time, interval ifnull(cycle_days, 0) day) &lt;= now() then 1 else 0 end) as endedCount
         from sys_invest_order
         where user_id = #{userId}
     </select>
@@ -115,24 +248,38 @@
                  left join sys_invest_order o on o.order_id = p.order_id
         where p.user_id = #{userId}
           and p.plan_type = 'INTEREST'
+          and (
+            p.status &lt;&gt; '0'
+            or ifnull(o.group_mode, '0') &lt;&gt; '1'
+            or ifnull(o.group_status, '9') = '1'
+          )
         order by p.plan_time desc, p.plan_id desc
     </select>
 
     <select id="selectAppInvestIncomeSummary" resultType="map">
         select sum(case when p.plan_type = 'INTEREST' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedInterest,
-               sum(case when p.plan_type = 'INTEREST' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingInterest,
+               sum(case when p.plan_type = 'INTEREST' and p.status = '0'
+                           and (ifnull(o.group_mode, '0') &lt;&gt; '1' or ifnull(o.group_status, '9') = '1')
+                        then ifnull(p.plan_amount, 0) else 0 end) as pendingInterest,
                sum(case when p.plan_type = 'PRINCIPAL' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedPrincipal,
-               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingPrincipal
+               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '0'
+                           and (ifnull(o.group_mode, '0') &lt;&gt; '1' or ifnull(o.group_status, '9') = '1')
+                        then ifnull(p.plan_amount, 0) else 0 end) as pendingPrincipal
         from sys_invest_order_plan p
+                 left join sys_invest_order o on o.order_id = p.order_id
         where p.user_id = #{userId}
     </select>
 
     <select id="selectAppInvestIncomeSummaryByCurrency" resultType="map">
         select o.currency,
                sum(case when p.plan_type = 'INTEREST' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedInterest,
-               sum(case when p.plan_type = 'INTEREST' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingInterest,
+               sum(case when p.plan_type = 'INTEREST' and p.status = '0'
+                           and (ifnull(o.group_mode, '0') &lt;&gt; '1' or ifnull(o.group_status, '9') = '1')
+                        then ifnull(p.plan_amount, 0) else 0 end) as pendingInterest,
                sum(case when p.plan_type = 'PRINCIPAL' and p.status = '1' then ifnull(p.plan_amount, 0) else 0 end) as receivedPrincipal,
-               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '0' then ifnull(p.plan_amount, 0) else 0 end) as pendingPrincipal
+               sum(case when p.plan_type = 'PRINCIPAL' and p.status = '0'
+                           and (ifnull(o.group_mode, '0') &lt;&gt; '1' or ifnull(o.group_status, '9') = '1')
+                        then ifnull(p.plan_amount, 0) else 0 end) as pendingPrincipal
         from sys_invest_order_plan p
                  left join sys_invest_order o on o.order_id = p.order_id
         where p.user_id = #{userId}
@@ -290,6 +437,7 @@
         where p.status = '0'
           and p.plan_time &lt;= #{now}
           and o.status = '0'
+          and (ifnull(o.group_mode, '0') &lt;&gt; '1' or ifnull(o.group_status, '9') = '1')
         order by p.plan_time asc, p.plan_id asc
     </select>
 

@@ -1,5 +1,6 @@
 package com.ruoyi.web.controller.app;
 
+import com.alibaba.fastjson2.JSON;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -7,6 +8,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.redis.RedisCache;
 import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.SecurityUtils;
 import com.ruoyi.common.utils.StringUtils;
@@ -27,6 +30,9 @@ import com.ruoyi.system.service.ISysInvestTagService;
 @RequestMapping("/app/invest/product")
 public class AppInvestProductController extends BaseController
 {
+    private static final String HOME_HOT_PRODUCTS_CACHE_KEY = "invest:home:hot:v1";
+    private static final Integer HOME_HOT_PRODUCTS_CACHE_MINUTES = 15;
+
     @Autowired
     private ISysInvestProductService productService;
 
@@ -35,6 +41,9 @@ public class AppInvestProductController extends BaseController
 
     @Autowired
     private SysAppInvestOrderMapper appInvestOrderMapper;
+
+    @Autowired
+    private RedisCache redisCache;
 
     @GetMapping("/list")
     public AjaxResult list()
@@ -93,6 +102,67 @@ public class AppInvestProductController extends BaseController
         }
         Long userId = SecurityUtils.getUserId();
         return AjaxResult.success(toProductMap(product, tagNameMap, userId));
+    }
+
+    @GetMapping("/home/hot")
+    public AjaxResult homeHot()
+    {
+        String cached = redisCache.getCacheObject(HOME_HOT_PRODUCTS_CACHE_KEY);
+        if (StringUtils.isNotBlank(cached))
+        {
+            return AjaxResult.success(JSON.parseObject(cached));
+        }
+
+        SysInvestTag tagQuery = new SysInvestTag();
+        tagQuery.setStatus("0");
+        tagQuery.setTagType("PRODUCT");
+        List<SysInvestTag> tags = tagService.selectInvestTagList(tagQuery);
+        Map<Long, String> tagNameMap = new HashMap<Long, String>();
+        Long hotTagId = null;
+        for (SysInvestTag tag : tags)
+        {
+            if (tag.getTagId() == null)
+            {
+                continue;
+            }
+            tagNameMap.put(tag.getTagId(), tag.getTagName());
+            if (StringUtils.equalsIgnoreCase("HOT", StringUtils.trim(tag.getTagCode())))
+            {
+                hotTagId = tag.getTagId();
+            }
+        }
+
+        List<Map<String, Object>> rows = new ArrayList<Map<String, Object>>();
+        if (hotTagId != null)
+        {
+            SysInvestProduct query = new SysInvestProduct();
+            query.setStatus("0");
+            List<SysInvestProduct> products = productService.selectInvestProductList(query);
+            Long userId = SecurityUtils.getUserId();
+            for (SysInvestProduct item : products)
+            {
+                if (rows.size() >= 5)
+                {
+                    break;
+                }
+                SysInvestProduct detail = productService.selectInvestProductById(item.getProductId());
+                if (detail == null || !containsTag(detail.getTagIds(), hotTagId))
+                {
+                    continue;
+                }
+                rows.add(toProductMap(detail, tagNameMap, userId));
+            }
+        }
+
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("rows", rows);
+        redisCache.setCacheObject(
+            HOME_HOT_PRODUCTS_CACHE_KEY,
+            JSON.toJSONString(data),
+            HOME_HOT_PRODUCTS_CACHE_MINUTES,
+            TimeUnit.MINUTES
+        );
+        return AjaxResult.success(data);
     }
 
     private Map<String, Object> toProductMap(SysInvestProduct product, Map<Long, String> tagNameMap, Long userId)
@@ -233,5 +303,21 @@ public class AppInvestProductController extends BaseController
             }
         }
         return names;
+    }
+
+    private boolean containsTag(Long[] tagIds, Long targetTagId)
+    {
+        if (tagIds == null || targetTagId == null)
+        {
+            return false;
+        }
+        for (Long tagId : tagIds)
+        {
+            if (targetTagId.equals(tagId))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/pages/auth/forgot/forgot_page.dart';
 import 'package:myapp/pages/auth/register/register_page.dart';
 import 'package:myapp/pages/gateway/gateway_page.dart';
 import 'package:myapp/pages/line/line_page.dart';
+import 'package:myapp/pages/main/main_page.dart';
 import 'package:myapp/pages/mine/profile_page.dart';
 import 'package:myapp/pages/mine/pay_password_set_page.dart';
 import 'package:myapp/pages/mine/pay_password_update_page.dart';
@@ -29,6 +31,7 @@ import 'package:myapp/pages/mine/account_withdraw_records_page.dart';
 import 'package:myapp/pages/mine/account_point_records_page.dart';
 import 'package:myapp/pages/mine/account_invest_records_page.dart';
 import 'package:myapp/pages/mine/member_center_page.dart';
+import 'package:myapp/pages/mine/my_group_page.dart';
 import 'package:myapp/pages/mine/my_team_page.dart';
 import 'package:myapp/pages/mine/team_reward_page.dart';
 import 'package:myapp/pages/mine/vip_guide_page.dart';
@@ -86,6 +89,7 @@ class AppRouter {
   static const String accountInvestRecords = '/mine/account/records/invest';
   static const String memberCenter = '/mine/memberCenter';
   static const String myTeam = '/mine/memberCenter/myTeam';
+  static const String myGroup = '/mine/memberCenter/myGroup';
   static const String vipGuide = '/mine/memberCenter/vipGuide';
   static const String teamReward = '/mine/memberCenter/teamReward';
   static const String investProductDetail = '/product/detail';
@@ -93,6 +97,32 @@ class AppRouter {
   static const String investGroupPurchase = '/product/purchase/group';
   static const String myInvestOrders = '/mine/myInvest/orders';
   static const String myInvestIncomes = '/mine/myInvest/incomes';
+
+  static bool _needBottomNav(RouteSettings settings) {
+    final Object? args = settings.arguments;
+    return args is Map && args['showBottomNav'] == true;
+  }
+
+  static Route<dynamic> _buildRoute(
+    RouteSettings settings,
+    Widget page, {
+    int navIndex = 3,
+  }) {
+    int selectedIndex = navIndex;
+    final Object? args = settings.arguments;
+    if (args is Map && args['showBottomNavIndex'] is int) {
+      selectedIndex = (args['showBottomNavIndex'] as int).clamp(0, 3);
+    }
+    if (_needBottomNav(settings)) {
+      return MaterialPageRoute(
+        builder: (_) => _RouteWithBottomNav(
+          child: page,
+          navIndex: selectedIndex,
+        ),
+      );
+    }
+    return MaterialPageRoute(builder: (_) => page);
+  }
 
   /// 鏍规嵁璺敱鍚嶇О鏋勫缓瀵瑰簲椤甸潰銆?
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) {
@@ -108,11 +138,11 @@ class AppRouter {
       case forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPage());
       case mineProfile:
-        return MaterialPageRoute(builder: (_) => const ProfilePage());
+        return _buildRoute(settings, const ProfilePage(), navIndex: 3);
       case recharge:
-        return MaterialPageRoute(builder: (_) => const RechargePage());
+        return _buildRoute(settings, const RechargePage(), navIndex: 3);
       case withdraw:
-        return MaterialPageRoute(builder: (_) => const WithdrawPage());
+        return _buildRoute(settings, const WithdrawPage(), navIndex: 3);
       case payPasswordSet:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
@@ -133,37 +163,41 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const LoginPasswordUpdatePage());
       case softwareSettings:
         final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => SoftwareSettingsPage(
+        return _buildRoute(
+          settings,
+          SoftwareSettingsPage(
             onLocaleChanged: args?['onLocaleChanged'] as Function(Locale)?,
             selectedLocale: args?['selectedLocale'] as Locale?,
           ),
+          navIndex: 3,
         );
       case realNameAuth:
-        return MaterialPageRoute(builder: (_) => const RealNameAuthPage());
+        return _buildRoute(settings, const RealNameAuthPage(), navIndex: 3);
       case bankCard:
-        return MaterialPageRoute(builder: (_) => const BankCardPage());
+        return _buildRoute(settings, const BankCardPage(), navIndex: 3);
       case assets:
-        return MaterialPageRoute(builder: (_) => const AssetsPage());
+        return _buildRoute(settings, const AssetsPage(), navIndex: 3);
       case inviteFriend:
-        return MaterialPageRoute(builder: (_) => const InviteFriendPage());
+        return _buildRoute(settings, const InviteFriendPage(), navIndex: 3);
       case news:
-        return MaterialPageRoute(builder: (_) => const NewsPage());
+        return _buildRoute(settings, const NewsPage(), navIndex: 3);
       case newsDetail:
         final args = settings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => NewsDetailPage(
+        return _buildRoute(
+          settings,
+          NewsDetailPage(
             article: args?['article'] as NewsArticle?,
           ),
+          navIndex: 0,
         );
       case miner:
-        return MaterialPageRoute(builder: (_) => const MinerPage());
+        return _buildRoute(settings, const MinerPage(), navIndex: 2);
       case minerClaim:
-        return MaterialPageRoute(builder: (_) => const MinerClaimPage());
+        return _buildRoute(settings, const MinerClaimPage(), navIndex: 2);
       case minerRewardLogs:
-        return MaterialPageRoute(builder: (_) => const MinerRewardLogsPage());
+        return _buildRoute(settings, const MinerRewardLogsPage(), navIndex: 2);
       case minerExchangeLogs:
-        return MaterialPageRoute(builder: (_) => const MinerExchangeLogsPage());
+        return _buildRoute(settings, const MinerExchangeLogsPage(), navIndex: 2);
       case exchange:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
@@ -172,15 +206,15 @@ class AppRouter {
           ),
         );
       case signIn:
-        return MaterialPageRoute(builder: (_) => const SignPage());
+        return _buildRoute(settings, const SignPage(), navIndex: 3);
       case balanceTreasure:
-        return MaterialPageRoute(builder: (_) => const YebaoPage());
+        return _buildRoute(settings, const YebaoPage(), navIndex: 3);
       case balanceTreasureOrders:
         return MaterialPageRoute(builder: (_) => const YebaoOrdersPage());
       case balanceTreasureIncomes:
         return MaterialPageRoute(builder: (_) => const YebaoIncomePage());
       case accountChangeRecords:
-        return MaterialPageRoute(builder: (_) => const AccountChangeRecordsPage());
+        return _buildRoute(settings, const AccountChangeRecordsPage(), navIndex: 3);
       case accountAllRecords:
         return MaterialPageRoute(builder: (_) => const AccountAllRecordsPage());
       case accountRechargeRecords:
@@ -192,13 +226,15 @@ class AppRouter {
       case accountInvestRecords:
         return MaterialPageRoute(builder: (_) => const AccountInvestRecordsPage());
       case memberCenter:
-        return MaterialPageRoute(builder: (_) => const MemberCenterPage());
+        return _buildRoute(settings, const MemberCenterPage(), navIndex: 3);
       case myTeam:
-        return MaterialPageRoute(builder: (_) => const MyTeamPage());
+        return _buildRoute(settings, const MyTeamPage(), navIndex: 3);
+      case myGroup:
+        return _buildRoute(settings, const MyGroupPage(), navIndex: 3);
       case vipGuide:
-        return MaterialPageRoute(builder: (_) => const VipGuidePage());
+        return _buildRoute(settings, const VipGuidePage(), navIndex: 3);
       case teamReward:
-        return MaterialPageRoute(builder: (_) => const TeamRewardPage());
+        return _buildRoute(settings, const TeamRewardPage(), navIndex: 3);
       case investProductDetail:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
@@ -223,11 +259,99 @@ class AppRouter {
           ),
         );
       case myInvestOrders:
-        return MaterialPageRoute(builder: (_) => const MyInvestOrdersPage());
+        return _buildRoute(settings, const MyInvestOrdersPage(), navIndex: 3);
       case myInvestIncomes:
-        return MaterialPageRoute(builder: (_) => const MyInvestIncomePage());
+        return _buildRoute(settings, const MyInvestIncomePage(), navIndex: 3);
       default:
         return null;
     }
+  }
+}
+
+class _RouteWithBottomNav extends StatelessWidget {
+  const _RouteWithBottomNav({
+    required this.child,
+    required this.navIndex,
+  });
+
+  final Widget child;
+  final int navIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final AppLocalizations i18n = AppLocalizations.of(context)!;
+    return Scaffold(
+      body: child,
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0A1220),
+          border: Border(
+            top: BorderSide(
+              color: Color(0x33FFFFFF),
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: <Widget>[
+                _buildNavItem(context, 0, navIndex, Icons.home_rounded, i18n.t('tabHome')),
+                _buildNavItem(context, 1, navIndex, Icons.calendar_view_month_rounded, i18n.t('tabProduct')),
+                _buildNavItem(context, 2, navIndex, Icons.memory_rounded, i18n.t('tabMiner')),
+                _buildNavItem(context, 3, navIndex, Icons.person_rounded, i18n.t('tabMine')),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(
+    BuildContext context,
+    int index,
+    int selectedIndex,
+    IconData icon,
+    String label,
+  ) {
+    final bool isSelected = index == selectedIndex;
+    const Color activeColor = Color(0xFF39E6FF);
+    const Color inactiveColor = Color(0xFF9DB1C9);
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(
+            builder: (_) => MainPage(initialIndex: index),
+          ),
+          (Route<dynamic> route) => false,
+        );
+      },
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(
+              icon,
+              size: 24,
+              color: isSelected ? activeColor : inactiveColor,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected ? activeColor : inactiveColor,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

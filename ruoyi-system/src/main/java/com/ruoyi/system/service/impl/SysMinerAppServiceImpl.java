@@ -429,13 +429,13 @@ public class SysMinerAppServiceImpl implements ISysMinerAppService
             walletLog.setWalletId(currencyWallet.getWalletId());
             walletLog.setCurrencyType(targetCurrency);
             walletLog.setAmount(delta);
-            walletLog.setType("other");
+            walletLog.setType("exchange_in");
             walletLog.setStatus("success");
             walletLog.setBalanceBefore(before);
             walletLog.setBalanceAfter(after);
             walletLog.setOrderNo(req);
             walletLog.setOperatorName(SecurityUtils.getUsername());
-            walletLog.setRemark("WAG exchange");
+            walletLog.setRemark("WAG兑换");
             walletLogService.insertLog(walletLog);
 
             log.setTargetAmount(targetAmount);

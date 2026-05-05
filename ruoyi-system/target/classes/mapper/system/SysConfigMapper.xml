@@ -42,6 +42,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     <select id="selectConfig" parameterType="SysConfig" resultMap="SysConfigResult">
         <include refid="selectConfigVo"/>
         <include refid="sqlwhereSearch"/>
+        order by config_id desc
+        limit 1
     </select>
 
     <select id="selectConfigList" parameterType="SysConfig" resultMap="SysConfigResult">

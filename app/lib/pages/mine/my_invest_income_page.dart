@@ -382,6 +382,7 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                               const SnackBar(
                                 content: Text('订单号已复制'),
                                 duration: Duration(milliseconds: 1200),
+                                backgroundColor: Color(0xFF38FFB3),
                               ),
                             );
                           },

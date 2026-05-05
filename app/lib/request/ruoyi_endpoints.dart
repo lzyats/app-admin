@@ -70,6 +70,7 @@ class RuoYiEndpoints {
   static const String signConfig = '/app/sign/config';
   static const String newsCategories = '/app/news/categories';
   static const String newsList = '/app/news/list';
+  static const String newsHome = '/app/news/home';
   static const String minerOverview = '/app/miner/overview';
   static const String minerAvailable = '/app/miner/available';
   static const String minerClaim = '/app/miner/claim';
@@ -84,6 +85,8 @@ class RuoYiEndpoints {
   static const String appTeamStatsMe = '/app/team/stats/me';
   static const String appInvestProductList = '/app/invest/product/list';
   static const String appInvestProductDetail = '/app/invest/product';
+  static const String appInvestProductHomeHot = '/app/invest/product/home/hot';
+  static const String newsHomeLatest = '/app/news/home/latest';
   static const String appInvestOrderContractPreview = '/app/invest/order/contract/preview';
   static const String appInvestOrderSubmit = '/app/invest/order/submit';
   static const String appInvestOrderList = '/app/invest/order/list';

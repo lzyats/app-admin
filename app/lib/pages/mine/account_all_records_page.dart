@@ -233,7 +233,7 @@ class _AccountAllRecordsPageState extends State<AccountAllRecordsPage> {
     final Color amountColor =
         positive ? const Color(0xFF38FFB3) : const Color(0xFFFF6B6B);
     final String amount =
-        '${positive ? '+' : '-'}${item.amount.toStringAsFixed(2)} ${item.currencyType}';
+        '${positive ? '+' : '-'}${item.amount.abs().toStringAsFixed(2)} ${item.currencyType}';
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),

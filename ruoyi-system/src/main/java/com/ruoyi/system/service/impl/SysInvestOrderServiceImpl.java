@@ -209,6 +209,145 @@ public class SysInvestOrderServiceImpl implements ISysInvestOrderService
         return settled.get();
     }
 
+    @Override
+    public int processExpiredGroups()
+    {
+        List<Map<String, Object>> groups = appInvestOrderMapper.selectExpiredGroups(new Date());
+        if (groups == null || groups.isEmpty())
+        {
+            return 0;
+        }
+        AtomicInteger processed = new AtomicInteger(0);
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        for (Map<String, Object> group : groups)
+        {
+            Long groupId = parseLong(group.get("groupId"), 0L);
+            if (groupId == null || groupId <= 0L)
+            {
+                continue;
+            }
+            try
+            {
+                Integer rows = transactionTemplate.execute(status -> failExpiredGroup(groupId));
+                if (rows != null && rows > 0)
+                {
+                    processed.addAndGet(rows);
+                }
+            }
+            catch (Exception e)
+            {
+                log.warn("process expired invest group failed, groupId={}", groupId, e);
+            }
+        }
+        return processed.get();
+    }
+
+    private int failExpiredGroup(Long groupId)
+    {
+        Map<String, Object> group = appInvestOrderMapper.selectInvestGroupByIdForUpdate(groupId);
+        if (group == null || group.isEmpty())
+        {
+            return 0;
+        }
+        if (!"0".equals(String.valueOf(group.get("status"))))
+        {
+            return 0;
+        }
+        Date deadline = (Date) group.get("deadline_time");
+        Date now = new Date();
+        if (deadline != null && now.before(deadline))
+        {
+            return 0;
+        }
+        Integer memberCount = parseInt(group.get("member_count"), 0);
+        Integer targetSize = parseInt(group.get("target_size"), 0);
+        if (memberCount != null && targetSize != null && memberCount.intValue() >= targetSize.intValue() && targetSize.intValue() > 0)
+        {
+            appInvestOrderMapper.updateInvestGroupStatus(groupId, "1", "拼团超时前已成团");
+            appInvestOrderMapper.updateInvestOrderGroupStatusByGroupId(groupId, "1", "拼团已成团");
+            return 1;
+        }
+
+        List<Map<String, Object>> orderList = appInvestOrderMapper.selectRunningOrdersByGroupIdForUpdate(groupId);
+        if (orderList != null)
+        {
+            for (Map<String, Object> order : orderList)
+            {
+                refundGroupFailedOrder(order);
+            }
+        }
+        appInvestOrderMapper.updateInvestGroupStatus(groupId, "2", "拼团失败，系统自动退款");
+        appInvestOrderMapper.updateInvestOrderGroupStatusByGroupId(groupId, "2", "拼团失败，系统自动退款");
+        return 1;
+    }
+
+    private void refundGroupFailedOrder(Map<String, Object> order)
+    {
+        Long orderId = parseLong(order.get("order_id"), 0L);
+        Long userId = parseLong(order.get("user_id"), 0L);
+        Long productId = parseLong(order.get("product_id"), 0L);
+        if (orderId == null || orderId <= 0L || userId == null || userId <= 0L)
+        {
+            return;
+        }
+        String status = String.valueOf(order.get("status"));
+        if (!"0".equals(status))
+        {
+            return;
+        }
+        String currency = normalizeWalletCurrency(String.valueOf(order.get("currency")));
+        BigDecimal amount = parseDecimal(order.get("invest_amount"), BigDecimal.ZERO).setScale(2, RoundingMode.DOWN);
+        if (amount.compareTo(BigDecimal.ZERO) <= 0)
+        {
+            return;
+        }
+        Long investShares = parseLong(order.get("invest_shares"), 0L);
+        if (investShares == null || investShares < 0L)
+        {
+            investShares = 0L;
+        }
+
+        SysUserWallet wallet = walletService.selectWalletByUserIdAndCurrencyTypeForUpdate(userId, currency);
+        if (wallet == null)
+        {
+            throw new ServiceException(currency + "钱包不存在");
+        }
+        BigDecimal balanceBefore = parseDecimal(wallet.getAvailableBalance(), BigDecimal.ZERO);
+        BigDecimal balanceAfter = balanceBefore.add(amount).setScale(2, RoundingMode.DOWN);
+        BigDecimal totalInvestBefore = parseDecimal(wallet.getTotalInvest(), BigDecimal.ZERO);
+        BigDecimal totalInvestAfter = totalInvestBefore.subtract(amount).setScale(2, RoundingMode.DOWN);
+        if (totalInvestAfter.compareTo(BigDecimal.ZERO) < 0)
+        {
+            totalInvestAfter = BigDecimal.ZERO.setScale(2, RoundingMode.DOWN);
+        }
+        wallet.setAvailableBalance(balanceAfter.doubleValue());
+        wallet.setTotalInvest(totalInvestAfter.doubleValue());
+        wallet.setUpdateTime(new Date());
+        walletService.updateWallet(wallet);
+
+        appInvestOrderMapper.cancelPendingPlansByOrderId(orderId, "拼团失败取消收益计划");
+        appInvestOrderMapper.updateInvestOrderStatus(orderId, "2", "system", "拼团失败自动退款");
+        teamStatService.revokeInvestOrderEvent(orderId);
+        if (productId != null && productId > 0L)
+        {
+            investProductMapper.decreaseSoldShares(productId, investShares, amount);
+        }
+        BigDecimal investDeltaCny = toCnyAmount(currency, amount).negate();
+        userMapper.addUserTotalAmounts(userId, investDeltaCny, BigDecimal.ZERO);
+        insertWalletLog(
+            userId,
+            wallet.getWalletId(),
+            currency,
+            amount,
+            "invest_group_refund",
+            balanceBefore,
+            balanceAfter,
+            String.valueOf(order.get("order_no")),
+            "system",
+            "拼团失败退款"
+        );
+    }
+
     private int doRedeemByAdmin(Long orderId, String operatorName)
     {
         Map<String, Object> order = appInvestOrderMapper.selectInvestOrderByIdForUpdate(orderId);
@@ -783,6 +922,26 @@ public class SysInvestOrderServiceImpl implements ISysInvestOrderService
         try
         {
             return Long.parseLong(String.valueOf(value).trim());
+        }
+        catch (Exception e)
+        {
+            return defaultValue;
+        }
+    }
+
+    private Integer parseInt(Object value, Integer defaultValue)
+    {
+        if (value == null)
+        {
+            return defaultValue;
+        }
+        if (value instanceof Number)
+        {
+            return ((Number) value).intValue();
+        }
+        try
+        {
+            return Integer.parseInt(String.valueOf(value).trim());
         }
         catch (Exception e)
         {

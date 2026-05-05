@@ -161,6 +161,9 @@ class InvestProductApi {
   static const String _productsCacheKey = 'invest.products.cache.v1';
   static const String _tagGroupsCacheKey = 'invest.products.tags.v1';
   static const String _updatedAtKey = 'invest.products.cache.updatedAt.v1';
+  static const Duration _homeHotCacheMaxAge = Duration(minutes: 15);
+  static const String _homeHotCacheKey = 'invest.home.hot.cache.v1';
+  static const String _homeHotUpdatedAtKey = 'invest.home.hot.cache.updatedAt.v1';
 
   static Future<InvestProductCatalog> fetchCatalog({bool forceRefresh = false}) async {
     if (!forceRefresh) {
@@ -197,6 +200,30 @@ class InvestProductApi {
     return _fetchProductsRemote();
   }
 
+  static Future<List<InvestProductItem>> getCachedHomeHotProducts() async {
+    return (await _readHomeHotCache(allowStale: true)) ?? const <InvestProductItem>[];
+  }
+
+  static Future<List<InvestProductItem>> fetchHomeHotProducts({bool forceRefresh = false}) async {
+    if (!forceRefresh) {
+      final List<InvestProductItem>? cached = await _readHomeHotCache(allowStale: true);
+      if (cached != null) {
+        final bool fresh = await _readHomeHotCache() != null;
+        if (!fresh) {
+          unawaited(_refreshHomeHotInBackground());
+        }
+        return cached;
+      }
+    }
+    try {
+      final List<InvestProductItem> remote = await _fetchHomeHotProductsRemote();
+      await _saveHomeHotCache(remote);
+      return remote;
+    } catch (_) {
+      return (await _readHomeHotCache(allowStale: true)) ?? const <InvestProductItem>[];
+    }
+  }
+
   static Future<List<InvestProductItem>> _fetchProductsRemote() async {
     final ApiResponse<dynamic> response = await ApiClient.instance.get(
       RuoYiEndpoints.appInvestProductList,
@@ -231,12 +258,38 @@ class InvestProductApi {
     return InvestProductItem.fromJson(map);
   }
 
+  static Future<List<InvestProductItem>> _fetchHomeHotProductsRemote() async {
+    final ApiResponse<dynamic> response = await ApiClient.instance.get(
+      RuoYiEndpoints.appInvestProductHomeHot,
+      encrypt: true,
+    );
+    final dynamic raw = response.data;
+    final dynamic payload = raw is Map<String, dynamic>
+        ? (raw['data'] ?? raw)
+        : response.raw['data'] ?? response.raw;
+    final dynamic rowsAny = payload is Map<String, dynamic> ? payload['rows'] : payload;
+    if (rowsAny is! List) {
+      return const <InvestProductItem>[];
+    }
+    return rowsAny
+        .whereType<Map>()
+        .map((Map item) => InvestProductItem.fromJson(Map<String, dynamic>.from(item)))
+        .toList();
+  }
+
   static Future<void> _refreshInBackground() async {
     try {
       final List<InvestProductItem> remoteProducts = await _fetchProductsRemote();
       final InvestProductCatalog current =
           InvestProductCatalog(products: remoteProducts, tagGroups: _buildTagGroups(remoteProducts));
       await _saveCache(current);
+    } catch (_) {}
+  }
+
+  static Future<void> _refreshHomeHotInBackground() async {
+    try {
+      final List<InvestProductItem> remote = await _fetchHomeHotProductsRemote();
+      await _saveHomeHotCache(remote);
     } catch (_) {}
   }
 
@@ -288,12 +341,52 @@ class InvestProductApi {
     }
   }
 
+  static Future<void> _saveHomeHotCache(List<InvestProductItem> items) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final List<Map<String, dynamic>> values =
+        items.map((InvestProductItem e) => e.toJson()).toList();
+    await prefs.setString(_homeHotCacheKey, jsonEncode(values));
+    await prefs.setInt(_homeHotUpdatedAtKey, DateTime.now().millisecondsSinceEpoch);
+  }
+
+  static Future<List<InvestProductItem>?> _readHomeHotCache({bool allowStale = false}) async {
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String raw = (prefs.getString(_homeHotCacheKey) ?? '').trim();
+    if (raw.isEmpty) {
+      return null;
+    }
+    final int? updatedAt = prefs.getInt(_homeHotUpdatedAtKey);
+    if (!allowStale && !_isHomeHotCacheFresh(updatedAt)) {
+      return null;
+    }
+    try {
+      final dynamic decoded = jsonDecode(raw);
+      if (decoded is! List) {
+        return const <InvestProductItem>[];
+      }
+      return decoded
+          .whereType<Map>()
+          .map((Map e) => InvestProductItem.fromJson(Map<String, dynamic>.from(e)))
+          .toList();
+    } catch (_) {
+      return const <InvestProductItem>[];
+    }
+  }
+
   static bool _isCacheFresh(int? updatedAt) {
     if (updatedAt == null) {
       return true;
     }
     final int ageMs = DateTime.now().millisecondsSinceEpoch - updatedAt;
     return ageMs >= 0 && ageMs <= _cacheMaxAge.inMilliseconds;
+  }
+
+  static bool _isHomeHotCacheFresh(int? updatedAt) {
+    if (updatedAt == null) {
+      return true;
+    }
+    final int ageMs = DateTime.now().millisecondsSinceEpoch - updatedAt;
+    return ageMs >= 0 && ageMs <= _homeHotCacheMaxAge.inMilliseconds;
   }
 
   static List<String> _buildTagGroups(List<InvestProductItem> products) {

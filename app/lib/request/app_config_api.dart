@@ -17,6 +17,7 @@ class AppBootstrapConfigData {
     required this.yebaoRedeemAfter24h,
     required this.signRewardType,
     required this.signRewardAmount,
+    required this.realGroupEnabled,
   });
 
   final Map<String, dynamic> values;
@@ -31,6 +32,7 @@ class AppBootstrapConfigData {
   final bool yebaoRedeemAfter24h;
   final String signRewardType;
   final double signRewardAmount;
+  final bool realGroupEnabled;
 
   @Deprecated('Use supportRmbToUsd')
   bool get supportRmbToUsdExchange => supportRmbToUsd;
@@ -148,6 +150,10 @@ class AppBootstrapConfigData {
       AppConfigOptionItem.signRewardAmount,
       'signRewardAmount',
     ], 1.0);
+    final bool realGroupEnabled = _readBool(json, <String>[
+      AppConfigOptionItem.realGroupEnabled,
+      'realGroupEnabled',
+    ], false);
 
     values[AppConfigOptionItem.multiLanguageEnabled] = multiLanguageEnabled;
     values['multiLanguageEnabled'] = multiLanguageEnabled;
@@ -178,6 +184,8 @@ class AppBootstrapConfigData {
     values['signRewardType'] = signRewardType;
     values[AppConfigOptionItem.signRewardAmount] = signRewardAmount;
     values['signRewardAmount'] = signRewardAmount;
+    values[AppConfigOptionItem.realGroupEnabled] = realGroupEnabled;
+    values['realGroupEnabled'] = realGroupEnabled;
 
     return AppBootstrapConfigData(
       values: values,
@@ -192,6 +200,7 @@ class AppBootstrapConfigData {
       yebaoRedeemAfter24h: yebaoRedeemAfter24h,
       signRewardType: signRewardType,
       signRewardAmount: signRewardAmount,
+      realGroupEnabled: realGroupEnabled,
     );
   }
 
@@ -393,6 +402,7 @@ class AppBootstrapConfigData {
       AppConfigOptionItem.captchaEnabled: true,
       AppConfigOptionItem.signRewardType: 'POINT',
       AppConfigOptionItem.signRewardAmount: 1.0,
+      AppConfigOptionItem.realGroupEnabled: false,
     },
     multiLanguageEnabled: true,
     registerEnabled: true,
@@ -404,6 +414,7 @@ class AppBootstrapConfigData {
     yebaoRedeemAfter24h: true,
     signRewardType: 'POINT',
     signRewardAmount: 1.0,
+    realGroupEnabled: false,
     inviteRewardRule: '[]',
   );
 }
@@ -528,6 +539,7 @@ class AppConfigOptionItem {
   static const String yebaoRedeemAfter24h = 'app.yebao.redeemAfter24h';
   static const String signRewardType = 'app.sign.rewardType';
   static const String signRewardAmount = 'app.sign.rewardAmount';
+  static const String realGroupEnabled = 'app.invest.realGroupEnabled';
   static const String htimg1 = 'app.htimg1';
   static const String htimg2 = 'app.htimg2';
 
@@ -555,6 +567,7 @@ class AppConfigOptionItem {
     yebaoRedeemAfter24h,
     signRewardType,
     signRewardAmount,
+    realGroupEnabled,
     htimg1,
     htimg2,
   ];
@@ -654,6 +667,12 @@ class AppConfigOptionItemMeta {
       configKey: 'app.sign.rewardAmount',
       name: 'Sign reward amount',
       defaultValue: 1.0,
+    ),
+    AppConfigOptionItemMeta(
+      item: AppConfigOptionItem.realGroupEnabled,
+      configKey: 'app.invest.realGroupEnabled',
+      name: 'Real group purchase enabled',
+      defaultValue: false,
     ),
     AppConfigOptionItemMeta(
       item: AppConfigOptionItem.htimg1,

@@ -11,6 +11,8 @@ public interface SysNewsCategoryMapper
 
     SysNewsCategory selectNewsCategoryById(Long categoryId);
 
+    SysNewsCategory selectNewsCategoryByCode(String categoryCode);
+
     int insertNewsCategory(SysNewsCategory category);
 
     int updateNewsCategory(SysNewsCategory category);

@@ -216,6 +216,8 @@ class _AppConfigManagePageState extends State<AppConfigManagePage> {
         return i18n.t('appConfigItemSignRewardType');
       case AppConfigOptionItem.signRewardAmount:
         return i18n.t('appConfigItemSignRewardAmount');
+      case AppConfigOptionItem.realGroupEnabled:
+        return '真实拼团开关';
       default:
         return option.configKey;
     }

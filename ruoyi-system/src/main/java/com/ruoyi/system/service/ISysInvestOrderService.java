@@ -16,4 +16,6 @@ public interface ISysInvestOrderService
     int settleByAdmin(Long orderId, String confirmText, String operatorName);
 
     int settleDuePlans();
+
+    int processExpiredGroups();
 }

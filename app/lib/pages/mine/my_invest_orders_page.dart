@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
 import 'package:myapp/request/invest_order_api.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/widgets/countdown_text.dart';
 
 class MyInvestOrdersPage extends StatefulWidget {
   const MyInvestOrdersPage({super.key});
@@ -390,6 +391,34 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
           _kv('预期收益', '${_fmtMoney(item.expectedIncome)} $unit'),
           _kv('投资期限', '${item.cycleDays}天'),
           _kv('投资利率', '${item.effectiveRate.toStringAsFixed(3)}%', valueColor: theme.valueColor),
+          if (item.groupMode)
+            _kv('拼团状态', _groupStatusText(item), valueFontSize: 16),
+          if (item.groupMode && item.groupNo.isNotEmpty)
+            _kv('拼团团号', item.groupNo, valueColor: const Color(0xFF9DB1C9), valueFontSize: 14),
+          if (item.groupMode && item.groupStatus == '0')
+            _kvWidget(
+              '待成团时间',
+              item.groupCountdownSeconds > 0
+                  ? CountdownText(
+                      key: ValueKey<String>('order_${item.orderNo}_${item.groupNo}'),
+                      initialSeconds: item.groupCountdownSeconds,
+                      finishedText: '状态更新中，请下拉刷新',
+                      textStyle: const TextStyle(
+                        color: Color(0xFFFFA500),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    )
+                  : const Text(
+                      '状态更新中，请下拉刷新',
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        color: Color(0xFFFFA500),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
           const SizedBox(height: 8),
           Row(
             children: <Widget>[
@@ -449,6 +478,12 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
         bgColor: Color(0x66FF6B6B),
       );
     }
+    if (item.groupMode && item.groupStatus == '0') {
+      return _OrderStatusView(
+        text: '拼团中',
+        bgColor: themeForStatus(item),
+      );
+    }
     return _OrderStatusView(
       text: '进行中',
       bgColor: themeForStatus(item),
@@ -459,7 +494,12 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
     return _themeFor(item.currency).statusColor;
   }
 
-  Widget _kv(String k, String v, {Color valueColor = const Color(0xFF7B86AA)}) {
+  Widget _kv(
+    String k,
+    String v, {
+    Color valueColor = const Color(0xFF7B86AA),
+    double valueFontSize = 17,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Row(
@@ -472,12 +512,46 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
             child: Text(
               v,
               textAlign: TextAlign.right,
-              style: TextStyle(color: valueColor, fontSize: 17, fontWeight: FontWeight.w600),
+              style: TextStyle(color: valueColor, fontSize: valueFontSize, fontWeight: FontWeight.w600),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _kvWidget(String k, Widget valueWidget) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          SizedBox(
+            width: 90,
+            child: Text(k, style: const TextStyle(color: Color(0xFF717EA8), fontSize: 15)),
+          ),
+          Expanded(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: valueWidget,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _groupStatusText(InvestOrderListItem item) {
+    switch (item.groupStatus) {
+      case '0':
+        return '拼团中';
+      case '1':
+        return '已成团';
+      case '2':
+        return '拼团失败已退款';
+      default:
+        return '普通订单';
+    }
   }
 }
 

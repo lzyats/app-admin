@@ -7,9 +7,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.alibaba.fastjson2.JSON;
 import com.ruoyi.common.core.redis.RedisCache;
+import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysNewsArticle;
+import com.ruoyi.system.domain.SysNewsCategory;
 import com.ruoyi.system.mapper.SysNewsArticleMapper;
+import com.ruoyi.system.mapper.SysNewsCategoryMapper;
 import com.ruoyi.system.service.ISysNewsArticleService;
 
 @Service
@@ -18,12 +21,16 @@ public class SysNewsArticleServiceImpl implements ISysNewsArticleService
     private static final String CACHE_PREFIX = "news:article:";
     private static final String CACHE_DETAIL_PREFIX = CACHE_PREFIX + "detail:";
     private static final String CACHE_LIST_PREFIX = CACHE_PREFIX + "list:";
+    private static final String HOME_MIX_CACHE_KEY = "news:home:mix:v1";
 
     @Autowired
     private SysNewsArticleMapper newsArticleMapper;
 
     @Autowired
     private RedisCache redisCache;
+
+    @Autowired
+    private SysNewsCategoryMapper newsCategoryMapper;
 
     @Override
     public List<SysNewsArticle> selectNewsArticleList(SysNewsArticle article)
@@ -91,6 +98,7 @@ public class SysNewsArticleServiceImpl implements ISysNewsArticleService
     @Override
     public int insertNewsArticle(SysNewsArticle article)
     {
+        resolveCategoryId(article);
         int rows = newsArticleMapper.insertNewsArticle(article);
         clearCache();
         return rows;
@@ -99,6 +107,7 @@ public class SysNewsArticleServiceImpl implements ISysNewsArticleService
     @Override
     public int updateNewsArticle(SysNewsArticle article)
     {
+        resolveCategoryId(article);
         int rows = newsArticleMapper.updateNewsArticle(article);
         clearCache();
         return rows;
@@ -123,7 +132,10 @@ public class SysNewsArticleServiceImpl implements ISysNewsArticleService
     @Override
     public void clearCache()
     {
-        Collection<String> keys = redisCache.keys("news:*");
+        // Ensure home aggregated payload is evicted immediately after banner/ad edits.
+        redisCache.deleteObject(HOME_MIX_CACHE_KEY);
+
+        Collection<String> keys = redisCache.keys(CACHE_PREFIX + "*");
         if (keys != null && !keys.isEmpty())
         {
             redisCache.deleteObject(keys);
@@ -136,5 +148,28 @@ public class SysNewsArticleServiceImpl implements ISysNewsArticleService
         String categoryCode = article != null && StringUtils.isNotBlank(article.getCategoryCode()) ? article.getCategoryCode().trim() : "";
         String status = article != null && StringUtils.isNotBlank(article.getStatus()) ? article.getStatus().trim() : "";
         return CACHE_LIST_PREFIX + categoryCode + ':' + status + ':' + articleTitle;
+    }
+
+    private void resolveCategoryId(SysNewsArticle article)
+    {
+        if (article == null)
+        {
+            return;
+        }
+        if (article.getCategoryId() != null && article.getCategoryId() > 0)
+        {
+            return;
+        }
+        if (StringUtils.isBlank(article.getCategoryCode()))
+        {
+            throw new ServiceException("分类不能为空");
+        }
+        String categoryCode = article.getCategoryCode().trim();
+        SysNewsCategory category = newsCategoryMapper.selectNewsCategoryByCode(categoryCode);
+        if (category == null || category.getCategoryId() == null)
+        {
+            throw new ServiceException("分类不存在: " + categoryCode);
+        }
+        article.setCategoryId(category.getCategoryId());
     }
 }

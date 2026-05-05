@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="88px">
       <el-form-item label="分类编码" prop="categoryCode">
@@ -6,6 +6,13 @@
       </el-form-item>
       <el-form-item label="分类名称" prop="categoryName">
         <el-input v-model="queryParams.categoryName" placeholder="请输入分类名称" clearable @keyup.enter.native="handleQuery" />
+      </el-form-item>
+      <el-form-item label="分类类型" prop="categoryType">
+        <el-select v-model="queryParams.categoryType" placeholder="请选择分类类型" clearable style="width: 160px">
+          <el-option label="新闻分类" value="NEWS" />
+          <el-option label="首页Banner" value="APP_HOME_BANNER" />
+          <el-option label="首页广告" value="APP_HOME_AD" />
+        </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="queryParams.status" placeholder="分类状态" clearable style="width: 140px">
@@ -36,6 +43,13 @@
       <el-table-column label="ID" align="center" prop="categoryId" width="90" />
       <el-table-column label="分类编码" align="center" prop="categoryCode" />
       <el-table-column label="分类名称" align="center" prop="categoryName" />
+      <el-table-column label="分类类型" align="center" prop="categoryType" width="120">
+        <template slot-scope="scope">
+          <el-tag size="mini" :type="scope.row.categoryType === 'NEWS' ? 'primary' : (scope.row.categoryType === 'APP_HOME_BANNER' ? 'success' : 'warning')">
+            {{ scope.row.categoryType === 'NEWS' ? '新闻分类' : (scope.row.categoryType === 'APP_HOME_BANNER' ? '首页Banner' : '首页广告') }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="排序" align="center" prop="sortOrder" width="90" />
       <el-table-column label="状态" align="center" prop="status" width="100">
         <template slot-scope="scope">
@@ -60,6 +74,13 @@
         </el-form-item>
         <el-form-item label="分类名称" prop="categoryName">
           <el-input v-model="form.categoryName" placeholder="请输入分类名称" />
+        </el-form-item>
+        <el-form-item label="分类类型" prop="categoryType">
+          <el-select v-model="form.categoryType" placeholder="请选择分类类型" style="width: 100%">
+            <el-option label="新闻分类" value="NEWS" />
+            <el-option label="首页Banner" value="APP_HOME_BANNER" />
+            <el-option label="首页广告" value="APP_HOME_AD" />
+          </el-select>
         </el-form-item>
         <el-form-item label="排序" prop="sortOrder">
           <el-input-number v-model="form.sortOrder" :min="0" :controls="false" />
@@ -103,12 +124,14 @@ export default {
         pageSize: 10,
         categoryCode: undefined,
         categoryName: undefined,
+        categoryType: undefined,
         status: undefined
       },
       form: {},
       rules: {
         categoryCode: [{ required: true, message: '请输入分类编码', trigger: 'blur' }],
         categoryName: [{ required: true, message: '请输入分类名称', trigger: 'blur' }],
+        categoryType: [{ required: true, message: '请选择分类类型', trigger: 'change' }],
         status: [{ required: true, message: '请选择状态', trigger: 'change' }]
       }
     }
@@ -134,6 +157,7 @@ export default {
         categoryId: undefined,
         categoryCode: undefined,
         categoryName: undefined,
+        categoryType: 'NEWS',
         sortOrder: 0,
         status: '0',
         remark: undefined

@@ -33,6 +33,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
   late Future<InvestProductItem> _future;
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _payPwdController = TextEditingController();
+  final TextEditingController _joinGroupNoController = TextEditingController();
   int _purchaseShares = 1;
   bool _submitting = false;
 
@@ -46,6 +47,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
   void dispose() {
     _amountController.dispose();
     _payPwdController.dispose();
+    _joinGroupNoController.dispose();
     super.dispose();
   }
 
@@ -89,6 +91,13 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
               if (widget.groupMode) ...<Widget>[
                 const SizedBox(height: 10),
                 _buildGroupCard(),
+                const SizedBox(height: 10),
+                _buildInputCard(
+                  '参团团号',
+                  '留空默认发起新团，输入团号则参团',
+                  _joinGroupNoController,
+                  false,
+                ),
               ],
               const SizedBox(height: 10),
               _buildInputCard(
@@ -424,6 +433,8 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     setState(() => _submitting = true);
     try {
       final String reqNo = _buildClientReqNo(item.productId, amount);
+      final String joinGroupNo = _joinGroupNoController.text.trim();
+      final bool submitGroupMode = widget.groupMode || joinGroupNo.isNotEmpty;
       await InvestOrderApi.submit(
         productId: item.productId,
         amount: amount,
@@ -433,10 +444,11 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         signatureData: result.signatureBase64,
         contractText: preview.contractText,
         clientReqNo: reqNo,
-        groupMode: widget.groupMode,
+        groupMode: submitGroupMode,
+        joinGroupNo: joinGroupNo,
       );
       if (!mounted) return;
-      _toast('签约并提交成功');
+      _toast('签约并提交成功', success: true);
       Navigator.pop(context);
     } catch (e) {
       _toast(e.toString().replaceFirst('Exception: ', ''));
@@ -447,9 +459,14 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     }
   }
 
-  void _toast(String msg) {
+  void _toast(String msg, {bool success = false}) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: success ? const Color(0xFF38FFB3) : const Color(0xFFFFA500),
+      ),
+    );
   }
 
   String _fmt(double value) {
@@ -896,7 +913,12 @@ class _ContractSignDialogState extends State<_ContractSignDialog> {
 
   void _submit() {
     if (_signatureBase64.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('请先完成签名')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('请先完成签名'),
+          backgroundColor: Color(0xFFFFA500),
+        ),
+      );
       return;
     }
     Navigator.pop(

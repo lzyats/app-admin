@@ -61,15 +61,13 @@
             </el-table-column>
             <el-table-column label="操作" min-width="280">
               <template slot-scope="scope">
-                <el-select
+                <el-switch
                   v-if="scope.row.valueType === 'bool' || scope.row.valueType === 'switch'"
                   v-model="scope.row.currentValue"
                   size="mini"
-                  style="width: 160px;"
-                >
-                  <el-option label="开启" :value="true" />
-                  <el-option label="关闭" :value="false" />
-                </el-select>
+                  active-text="开启"
+                  inactive-text="关闭"
+                />
                 <image-upload
                   v-else-if="scope.row.valueType === 'image'"
                   v-model="scope.row.currentValue"

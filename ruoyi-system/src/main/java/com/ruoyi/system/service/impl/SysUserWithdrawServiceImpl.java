@@ -292,7 +292,7 @@ public class SysUserWithdrawServiceImpl implements ISysUserWithdrawService
         log.setWalletId(wallet.getWalletId());
         log.setCurrencyType(currencyType);
         log.setAmount(-amount);
-        log.setType("frozen");
+        log.setType("提现冻结");
         log.setStatus("pending");
         log.setBalanceBefore(availableBefore);
         log.setBalanceAfter(wallet.getAvailableBalance());

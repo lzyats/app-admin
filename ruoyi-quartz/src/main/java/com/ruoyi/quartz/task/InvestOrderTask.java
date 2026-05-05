@@ -12,6 +12,7 @@ public class InvestOrderTask
 
     public void settleIncome()
     {
+        investOrderService.processExpiredGroups();
         investOrderService.settleDuePlans();
     }
 }

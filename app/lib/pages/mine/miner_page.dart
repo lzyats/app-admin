@@ -19,6 +19,18 @@ class _MinerPageState extends State<MinerPage> {
   bool _loading = true;
   bool _autoRedirectedToClaim = false;
 
+  Future<T?> _pushMinerRoute<T extends Object?>(
+    String routeName, {
+    Map<String, dynamic>? extraArgs,
+  }) {
+    final Map<String, dynamic> args = <String, dynamic>{
+      'showBottomNav': true,
+      'showBottomNavIndex': 2,
+      ...?extraArgs,
+    };
+    return Navigator.pushNamed<T>(context, routeName, arguments: args);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -41,7 +53,7 @@ class _MinerPageState extends State<MinerPage> {
         _autoRedirectedToClaim = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
           if (!mounted) return;
-          await Navigator.pushNamed(context, AppRouter.minerClaim);
+          await _pushMinerRoute(AppRouter.minerClaim);
           if (!mounted) return;
           await _load();
         });
@@ -177,21 +189,35 @@ class _MinerPageState extends State<MinerPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(isZh ? '我的节点' : 'My Node'),
-        backgroundColor: const Color(0xFF070A1E),
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: <Color>[Color(0xFF05071B), Color(0xFF020311)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: <Color>[Color(0xFF0A1220), Color(0xFF0D1B2A), Color(0xFF14233A)],
           ),
         ),
-        child: RefreshIndicator(
-          onRefresh: _load,
-          child: ListView(
-            padding: const EdgeInsets.all(16),
-            children: <Widget>[
+        child: Stack(
+          children: <Widget>[
+            Positioned(
+              top: -110,
+              right: -80,
+              child: _blurBall(size: 240, color: const Color(0x5539E6FF)),
+            ),
+            Positioned(
+              bottom: -120,
+              left: -80,
+              child: _blurBall(size: 300, color: const Color(0x5538FFB3)),
+            ),
+            RefreshIndicator(
+              onRefresh: _load,
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: <Widget>[
               _buildTopStats(i18n, wag, rate),
               const SizedBox(height: 14),
               _buildMinerCard(
@@ -215,8 +241,9 @@ class _MinerPageState extends State<MinerPage> {
                     child: _buildQuickAction(
                       label: isZh ? '矿机明细' : 'Reward Logs',
                       icon: Icons.storage_outlined,
+                      iconColor: const Color(0xFF39E6FF),
                       onTap: () {
-                        Navigator.pushNamed(context, AppRouter.minerRewardLogs);
+                        _pushMinerRoute(AppRouter.minerRewardLogs);
                       },
                     ),
                   ),
@@ -225,8 +252,9 @@ class _MinerPageState extends State<MinerPage> {
                     child: _buildQuickAction(
                       label: isZh ? '兑换明细' : 'Exchange Logs',
                       icon: Icons.swap_horiz,
+                      iconColor: const Color(0xFF38FFB3),
                       onTap: () {
-                        Navigator.pushNamed(context, AppRouter.minerExchangeLogs);
+                        _pushMinerRoute(AppRouter.minerExchangeLogs);
                       },
                     ),
                   ),
@@ -238,10 +266,9 @@ class _MinerPageState extends State<MinerPage> {
                   Expanded(
                     child: _buildBottomButton(
                       label: isZh ? '更换节点' : 'Change Node',
-                      colors: const <Color>[Color(0xFF2BB673), Color(0xFF1D9B6B)],
+                      colors: const <Color>[Color(0xFF38FFB3), Color(0xFF1ED58D)],
                       onTap: () async {
-                        await Navigator.pushNamed(
-                            context, AppRouter.minerClaim);
+                        await _pushMinerRoute(AppRouter.minerClaim);
                         await _load();
                       },
                     ),
@@ -252,11 +279,14 @@ class _MinerPageState extends State<MinerPage> {
                       label: isZh
                           ? 'WAG转换$targetCurrency'
                           : 'WAG to $targetCurrency',
-                      colors: const <Color>[Color(0xFF355CFF), Color(0xFF1E3BFF)],
+                      colors: const <Color>[Color(0xFF39E6FF), Color(0xFF1CBDE6)],
                       onTap: () async {
                         if (!hasMiner) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(isZh ? '请先领取矿机' : 'Please claim a miner first')),
+                            SnackBar(
+                              content: Text(isZh ? '请先领取矿机' : 'Please claim a miner first'),
+                              backgroundColor: const Color(0xFFFFA500),
+                            ),
                           );
                           return;
                         }
@@ -265,7 +295,10 @@ class _MinerPageState extends State<MinerPage> {
                               ? (isZh ? '未满24小时，收益为待领取，暂不可兑换' : 'Not reached 24h yet. Earnings are pending and not exchangeable.')
                               : (isZh ? '暂无可兑换WAG' : 'No WAG available');
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(hint)),
+                            SnackBar(
+                              content: Text(hint),
+                              backgroundColor: const Color(0xFFFFA500),
+                            ),
                           );
                           return;
                         }
@@ -285,8 +318,10 @@ class _MinerPageState extends State<MinerPage> {
                     ),
                   ),
                 ),
-            ],
-          ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -296,11 +331,7 @@ class _MinerPageState extends State<MinerPage> {
     final bool isZh = i18n.locale.languageCode == 'zh';
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF101533),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x332A78FF)),
-      ),
+      decoration: _panelDecoration(),
       child: Row(
         children: <Widget>[
           Expanded(
@@ -309,7 +340,7 @@ class _MinerPageState extends State<MinerPage> {
               value: '${wag.toStringAsFixed(2)} WAG',
             ),
           ),
-          Container(width: 1, height: 42, color: const Color(0x331B2A55)),
+          Container(width: 1, height: 42, color: const Color(0x334CE3FF)),
           Expanded(
             child: _statBlock(
               title: isZh ? 'WAG兑换率' : 'WAG Rate',
@@ -333,14 +364,14 @@ class _MinerPageState extends State<MinerPage> {
       children: <Widget>[
         Text(
           title,
-          style: const TextStyle(color: Color(0xFF6C7BA5), fontSize: 12),
+          style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
         ),
         const SizedBox(height: 6),
         Text(
           value,
           style: const TextStyle(
-            color: Colors.white,
-            fontSize: 22,
+            color: Color(0xFFE9F3FF),
+            fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -366,11 +397,7 @@ class _MinerPageState extends State<MinerPage> {
         coverImage.isEmpty ? null : ApiClient.instance.resolveImageUrl(coverImage);
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0D1230),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0x332A78FF)),
-      ),
+      decoration: _panelDecoration(radius: 18),
       child: Column(
         children: <Widget>[
           Row(
@@ -379,7 +406,7 @@ class _MinerPageState extends State<MinerPage> {
                 child: Text(
                   minerName.isEmpty ? (isZh ? '未领取节点' : 'No Node') : minerName,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: Color(0xFFE9F3FF),
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -388,14 +415,22 @@ class _MinerPageState extends State<MinerPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF2A78FF).withOpacity(0.25),
+                  color: waitingCollect
+                      ? const Color(0xFFFFA500).withOpacity(0.20)
+                      : const Color(0xFF38FFB3).withOpacity(0.20),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFF2A78FF)),
+                  border: Border.all(
+                    color: waitingCollect
+                        ? const Color(0xFFFFA500)
+                        : const Color(0xFF38FFB3),
+                  ),
                 ),
                 child: Text(
                   statusText,
-                  style: const TextStyle(
-                    color: Color(0xFF9CCBFF),
+                  style: TextStyle(
+                    color: waitingCollect
+                        ? const Color(0xFFFFD07D)
+                        : const Color(0xFF9FFFD8),
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -429,7 +464,7 @@ class _MinerPageState extends State<MinerPage> {
               cycleWag > 0
                   ? '${isZh ? '待领取收益' : 'Pending'}: ${producedWag.toStringAsFixed(4)} / ${cycleWag.toStringAsFixed(4)} WAG'
                   : '${isZh ? '待领取收益' : 'Pending'}: ${producedWag.toStringAsFixed(4)} WAG',
-              style: const TextStyle(color: Color(0xFF6C7BA5), fontSize: 12),
+              style: const TextStyle(color: Color(0xFF9DB1C9), fontSize: 12),
             ),
           ],
           if (waitingCollect) ...<Widget>[
@@ -475,7 +510,7 @@ class _MinerPageState extends State<MinerPage> {
         child: Container(
           width: size,
           height: size,
-          color: const Color(0xFF0A0E26),
+          color: const Color(0x33101C30),
           child: imageUrl == null
               ? _minerSquarePlaceholder(size)
               : Image.network(
@@ -496,7 +531,7 @@ class _MinerPageState extends State<MinerPage> {
       height: size,
       width: size,
       child: const Center(
-        child: Icon(Icons.memory, color: Color(0xFF2A78FF), size: 52),
+        child: Icon(Icons.memory, color: Color(0xFF39E6FF), size: 52),
       ),
     );
   }
@@ -504,6 +539,7 @@ class _MinerPageState extends State<MinerPage> {
   Widget _buildQuickAction({
     required String label,
     required IconData icon,
+    required Color iconColor,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -511,17 +547,19 @@ class _MinerPageState extends State<MinerPage> {
       borderRadius: BorderRadius.circular(14),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(
-          color: const Color(0xFF101533),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: const Color(0x332A78FF)),
-        ),
+        decoration: _panelDecoration(),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            Icon(icon, color: const Color(0xFF9DB1C9)),
+            _buildGlowCircleIcon(icon, iconColor),
             const SizedBox(width: 10),
-            Text(label, style: const TextStyle(color: Color(0xFF9DB1C9))),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFF9DB1C9),
+                fontSize: 12,
+              ),
+            ),
           ],
         ),
       ),
@@ -542,6 +580,13 @@ class _MinerPageState extends State<MinerPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(14),
             gradient: LinearGradient(colors: colors),
+            boxShadow: const <BoxShadow>[
+              BoxShadow(
+                color: Color(0x3324C6FF),
+                blurRadius: 12,
+                offset: Offset(0, 5),
+              ),
+            ],
           ),
           child: Center(
             child: Text(
@@ -554,6 +599,70 @@ class _MinerPageState extends State<MinerPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildGlowCircleIcon(IconData icon, Color iconColor) {
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: <Color>[
+            iconColor.withOpacity(0.35),
+            iconColor.withOpacity(0.10),
+          ],
+        ),
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: iconColor.withOpacity(0.25),
+            blurRadius: 10,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Icon(icon, size: 18, color: iconColor),
+    );
+  }
+
+  BoxDecoration _panelDecoration({
+    List<Color> colors = const <Color>[Color(0xCC101C30), Color(0xCC0E1A2D)],
+    double radius = 14,
+  }) {
+    return BoxDecoration(
+      borderRadius: BorderRadius.circular(radius),
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: colors,
+      ),
+      border: Border.all(color: const Color(0x334CE3FF)),
+      boxShadow: const <BoxShadow>[
+        BoxShadow(
+          color: Color(0x66000000),
+          blurRadius: 22,
+          offset: Offset(0, 8),
+        ),
+      ],
+    );
+  }
+
+  Widget _blurBall({required double size, required Color color}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: <BoxShadow>[
+          BoxShadow(
+            color: color,
+            blurRadius: size * 0.55,
+            spreadRadius: size * 0.08,
+          ),
+        ],
       ),
     );
   }
