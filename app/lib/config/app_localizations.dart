@@ -56,7 +56,10 @@ class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> 
     print('Loading translation file: $path');
     // 确保使用UTF-8编码加载文件
     final ByteData data = await rootBundle.load(path);
-    final String raw = utf8.decode(data.buffer.asUint8List());
+    String raw = utf8.decode(data.buffer.asUint8List());
+    if (raw.isNotEmpty && raw.codeUnitAt(0) == 0xFEFF) {
+      raw = raw.substring(1);
+    }
     print('Loaded translation file, length: ${raw.length}');
     final Map<String, dynamic> decoded = json.decode(raw) as Map<String, dynamic>;
     print('Decoded translation data, keys: ${decoded.keys.length}');

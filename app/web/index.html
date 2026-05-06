@@ -19,8 +19,132 @@
 
   <title>众创共赢</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #0a1220;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #app-shell {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 0 auto;
+    }
+
+    #app-container {
+      width: 390px;
+      height: 844px;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+      background: #0a1220;
+      position: relative;
+      transform-origin: center center;
+    }
+  </style>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+  <div id="app-shell">
+    <div id="app-container"></div>
+  </div>
+  <script>
+    (function () {
+      var APP_WIDTH = 390;
+      var APP_HEIGHT = 844;
+      var serviceWorkerVersion = null;
+
+      function applyContainerScale() {
+        var container = document.getElementById("app-container");
+        if (!container) {
+          return;
+        }
+        var scale = Math.min(
+          window.innerWidth / APP_WIDTH,
+          window.innerHeight / APP_HEIGHT
+        );
+        if (!isFinite(scale) || scale <= 0) {
+          scale = 1;
+        }
+        scale = Math.min(scale, 1);
+        container.style.transform = "scale(" + scale + ")";
+      }
+
+      function startFlutterWithHostElement() {
+        var host = document.getElementById("app-container");
+        if (!host || !window._flutter || !window._flutter.loader) {
+          return;
+        }
+
+        if (typeof window._flutter.loader.loadEntrypoint === "function") {
+          window._flutter.loader
+            .loadEntrypoint({
+              serviceWorker: {
+                serviceWorkerVersion: serviceWorkerVersion,
+              },
+            })
+            .then(function (engineInitializer) {
+              return engineInitializer.initializeEngine({
+                hostElement: host
+              });
+            })
+            .then(function (appRunner) {
+              return appRunner.runApp();
+            });
+          return;
+        }
+
+        if (typeof window._flutter.loader.load === "function") {
+          window._flutter.loader.load({
+            serviceWorker: {
+              serviceWorkerVersion: serviceWorkerVersion,
+            },
+            onEntrypointLoaded: function (engineInitializer) {
+              engineInitializer
+                .initializeEngine({
+                  hostElement: host
+                })
+                .then(function (appRunner) {
+                  return appRunner.runApp();
+                });
+            },
+          });
+        }
+      }
+
+      function loadFlutterJsAndRun() {
+        if (window._flutter && window._flutter.loader) {
+          startFlutterWithHostElement();
+          return;
+        }
+        var script = document.createElement("script");
+        script.src = "flutter.js";
+        script.async = true;
+        script.onload = startFlutterWithHostElement;
+        document.body.appendChild(script);
+      }
+
+      document.addEventListener("DOMContentLoaded", function () {
+        applyContainerScale();
+        loadFlutterJsAndRun();
+      });
+
+      window.addEventListener("resize", function () {
+        applyContainerScale();
+      });
+    })();
+  </script>
 </body>
 </html>

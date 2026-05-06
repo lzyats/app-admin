@@ -77,6 +77,7 @@ class InvestOrderApi {
     required String contractText,
     required String clientReqNo,
     required bool groupMode,
+    int? userCouponId,
     String? joinGroupNo,
   }) async {
     return ApiClient.instance.post(
@@ -91,6 +92,7 @@ class InvestOrderApi {
         'signatureData': signatureData,
         'contractText': contractText,
         'clientReqNo': clientReqNo,
+        'userCouponId': userCouponId,
         'groupMode': groupMode ? 1 : 0,
         'groupNo': (joinGroupNo ?? '').trim(),
       },
@@ -114,6 +116,16 @@ class InvestOrderApi {
     );
     final Map<String, dynamic> map = _extractMap(response.data, response.raw);
     return InvestIncomeData.fromJson(map);
+  }
+
+  static Future<InvestOrderDetailData> fetchOrderDetail(int orderId) async {
+    final ApiResponse<dynamic> response = await ApiClient.instance.get(
+      RuoYiEndpoints.appInvestOrderDetail,
+      encrypt: true,
+      query: <String, dynamic>{'orderId': orderId},
+    );
+    final Map<String, dynamic> map = _extractMap(response.data, response.raw);
+    return InvestOrderDetailData.fromJson(map);
   }
 
   static Future<List<InvestWalletLogItem>> fetchWalletInvestLogs() async {
@@ -206,6 +218,12 @@ class InvestOrderListItem {
     required this.productName,
     required this.currency,
     required this.investAmount,
+    required this.couponId,
+    required this.userCouponId,
+    required this.couponName,
+    required this.couponType,
+    required this.couponDiscountAmount,
+    required this.payAmount,
     required this.effectiveRate,
     required this.expectedIncome,
     required this.cycleDays,
@@ -226,6 +244,12 @@ class InvestOrderListItem {
   final String productName;
   final String currency;
   final double investAmount;
+  final int couponId;
+  final int userCouponId;
+  final String couponName;
+  final String couponType;
+  final double couponDiscountAmount;
+  final double payAmount;
   final double effectiveRate;
   final double expectedIncome;
   final int cycleDays;
@@ -247,6 +271,12 @@ class InvestOrderListItem {
       productName: '${json['productName'] ?? ''}',
       currency: '${json['currency'] ?? 'CNY'}'.toUpperCase(),
       investAmount: _toDouble(json['investAmount']),
+      couponId: _toInt(json['couponId']),
+      userCouponId: _toInt(json['userCouponId']),
+      couponName: '${json['couponName'] ?? ''}',
+      couponType: '${json['couponType'] ?? ''}',
+      couponDiscountAmount: _toDouble(json['couponDiscountAmount']),
+      payAmount: _toDouble(json['payAmount']),
       effectiveRate: _toDouble(json['effectiveRate']),
       expectedIncome: _toDouble(json['expectedIncome']),
       cycleDays: _toInt(json['cycleDays']),
@@ -332,6 +362,12 @@ class InvestIncomeLogItem {
     required this.orderNo,
     required this.productName,
     required this.currency,
+    required this.couponId,
+    required this.userCouponId,
+    required this.couponName,
+    required this.couponType,
+    required this.couponDiscountAmount,
+    required this.payAmount,
     required this.planType,
     required this.planAmount,
     required this.status,
@@ -343,6 +379,12 @@ class InvestIncomeLogItem {
   final String orderNo;
   final String productName;
   final String currency;
+  final int couponId;
+  final int userCouponId;
+  final String couponName;
+  final String couponType;
+  final double couponDiscountAmount;
+  final double payAmount;
   final String planType;
   final double planAmount;
   final String status;
@@ -355,11 +397,86 @@ class InvestIncomeLogItem {
       orderNo: '${json['orderNo'] ?? ''}',
       productName: '${json['productName'] ?? ''}',
       currency: '${json['currency'] ?? 'CNY'}'.toUpperCase(),
+      couponId: _toInt(json['couponId']),
+      userCouponId: _toInt(json['userCouponId']),
+      couponName: '${json['couponName'] ?? ''}',
+      couponType: '${json['couponType'] ?? ''}',
+      couponDiscountAmount: _toDouble(json['couponDiscountAmount']),
+      payAmount: _toDouble(json['payAmount']),
       planType: '${json['planType'] ?? ''}',
       planAmount: _toDouble(json['planAmount']),
       status: '${json['status'] ?? '0'}',
       planTime: _toDateTime(json['planTime']),
       execTime: _toDateTime(json['execTime']),
+    );
+  }
+}
+
+class InvestOrderDetailData {
+  const InvestOrderDetailData({
+    required this.order,
+    required this.plans,
+    required this.hasCoupon,
+  });
+
+  final InvestOrderListItem order;
+  final List<InvestOrderPlanItem> plans;
+  final bool hasCoupon;
+
+  factory InvestOrderDetailData.fromJson(Map<String, dynamic> json) {
+    final Map<String, dynamic> orderMap = _toMap(json['order']);
+    final List<dynamic> planRows = _toList(json['plans']);
+    return InvestOrderDetailData(
+      order: InvestOrderListItem.fromJson(orderMap),
+      plans: planRows
+          .whereType<Map>()
+          .map((dynamic item) => InvestOrderPlanItem.fromJson(Map<String, dynamic>.from(item as Map)))
+          .toList(),
+      hasCoupon: _toBool(json['hasCoupon']) || _hasCoupon(orderMap),
+    );
+  }
+}
+
+class InvestOrderPlanItem {
+  const InvestOrderPlanItem({
+    required this.planId,
+    required this.orderId,
+    required this.userId,
+    required this.planType,
+    required this.stageNo,
+    required this.planTime,
+    required this.planRate,
+    required this.planAmount,
+    required this.status,
+    required this.execTime,
+    required this.remark,
+  });
+
+  final int planId;
+  final int orderId;
+  final int userId;
+  final String planType;
+  final int stageNo;
+  final DateTime? planTime;
+  final double planRate;
+  final double planAmount;
+  final String status;
+  final DateTime? execTime;
+  final String remark;
+
+  factory InvestOrderPlanItem.fromJson(Map<String, dynamic> json) {
+    return InvestOrderPlanItem(
+      planId: _toInt(json['planId']),
+      orderId: _toInt(json['orderId']),
+      userId: _toInt(json['userId']),
+      planType: '${json['planType'] ?? ''}',
+      stageNo: _toInt(json['stageNo']),
+      planTime: _toDateTime(json['planTime']),
+      planRate: _toDouble(json['planRate']),
+      planAmount: _toDouble(json['planAmount']),
+      status: '${json['status'] ?? ''}',
+      execTime: _toDateTime(json['execTime']),
+      remark: '${json['remark'] ?? ''}',
     );
   }
 }
@@ -434,6 +551,23 @@ List<dynamic> _toList(dynamic value) {
     return value;
   }
   return <dynamic>[];
+}
+
+Map<String, dynamic> _toMap(dynamic value) {
+  if (value is Map<String, dynamic>) {
+    return value;
+  }
+  if (value is Map) {
+    return Map<String, dynamic>.from(value);
+  }
+  return <String, dynamic>{};
+}
+
+bool _hasCoupon(Map<String, dynamic> json) {
+  return _toInt(json['userCouponId']) > 0 ||
+      _toDouble(json['couponDiscountAmount']) > 0 ||
+      '${json['couponName'] ?? ''}'.trim().isNotEmpty ||
+      (_toDouble(json['payAmount']) > 0 && (_toDouble(json['payAmount']) - _toDouble(json['investAmount'])).abs() > 0.000001);
 }
 
 Map<String, dynamic> _extractMap(dynamic data, Map<String, dynamic> raw) {

@@ -7,12 +7,14 @@
     <insert id="insertInvestOrder">
         insert into sys_invest_order
         (order_no, client_req_no, user_id, user_name, product_id, product_name, currency, group_mode, invest_amount,
-         single_rate, group_rate, effective_rate, cycle_days, invest_shares, expected_income, contract_no,
+         single_rate, group_rate, effective_rate, cycle_days, invest_shares, expected_income, user_level_snapshot,
+         coupon_id, user_coupon_id, coupon_name, coupon_type, coupon_discount_amount, pay_amount, contract_no,
          group_id, group_no, group_status, group_deadline_time,
          status, create_by, create_time, remark)
         values
         (#{orderNo}, #{clientReqNo}, #{userId}, #{userName}, #{productId}, #{productName}, #{currency}, #{groupMode}, #{investAmount},
-         #{singleRate}, #{groupRate}, #{effectiveRate}, #{cycleDays}, #{investShares}, #{expectedIncome}, #{contractNo},
+         #{singleRate}, #{groupRate}, #{effectiveRate}, #{cycleDays}, #{investShares}, #{expectedIncome}, #{userLevelSnapshot},
+         #{couponId}, #{userCouponId}, #{couponName}, #{couponType}, #{couponDiscountAmount}, #{payAmount}, #{contractNo},
          #{groupId}, #{groupNo}, #{groupStatus}, #{groupDeadlineTime},
          '0', #{createBy}, now(), #{remark})
     </insert>
@@ -169,6 +171,12 @@
         select order_no as orderNo,
                contract_no as contractNo,
                create_time as createTime,
+               coupon_id as couponId,
+               user_coupon_id as userCouponId,
+               coupon_name as couponName,
+               coupon_type as couponType,
+               coupon_discount_amount as couponDiscountAmount,
+               pay_amount as payAmount,
                group_id as groupId,
                group_no as groupNo,
                ifnull(group_status, '9') as groupStatus,
@@ -210,6 +218,12 @@
                effective_rate as effectiveRate,
                expected_income as expectedIncome,
                cycle_days as cycleDays,
+               coupon_id as couponId,
+               user_coupon_id as userCouponId,
+               coupon_name as couponName,
+               coupon_type as couponType,
+               coupon_discount_amount as couponDiscountAmount,
+               pay_amount as payAmount,
                status,
                create_time as createTime,
                date_add(create_time, interval ifnull(cycle_days, 0) day) as endTime
@@ -238,6 +252,12 @@
                o.order_no as orderNo,
                o.product_name as productName,
                o.currency,
+               o.coupon_id as couponId,
+               o.user_coupon_id as userCouponId,
+               o.coupon_name as couponName,
+               o.coupon_type as couponType,
+               o.coupon_discount_amount as couponDiscountAmount,
+               o.pay_amount as payAmount,
                p.plan_type as planType,
                p.plan_amount as planAmount,
                p.status,
@@ -298,6 +318,12 @@
                effective_rate as effectiveRate,
                expected_income as expectedIncome,
                cycle_days as cycleDays,
+               coupon_id as couponId,
+               user_coupon_id as userCouponId,
+               coupon_name as couponName,
+               coupon_type as couponType,
+               coupon_discount_amount as couponDiscountAmount,
+               pay_amount as payAmount,
                status,
                create_time as createTime,
                date_add(create_time, interval ifnull(cycle_days, 0) day) as endTime,
@@ -334,6 +360,12 @@
                effective_rate as effectiveRate,
                expected_income as expectedIncome,
                cycle_days as cycleDays,
+               coupon_id as couponId,
+               user_coupon_id as userCouponId,
+               coupon_name as couponName,
+               coupon_type as couponType,
+               coupon_discount_amount as couponDiscountAmount,
+               pay_amount as payAmount,
                status,
                create_time as createTime,
                update_time as updateTime,
@@ -358,6 +390,39 @@
         from sys_invest_order_plan
         where order_id = #{orderId}
         order by stage_no asc, plan_id asc
+    </select>
+
+    <select id="selectInvestOrderById" resultType="map">
+        select order_id as orderId,
+               order_no as orderNo,
+               user_id as userId,
+               user_name as userName,
+               product_id as productId,
+               product_name as productName,
+               currency,
+               invest_amount as investAmount,
+               coupon_id as couponId,
+               user_coupon_id as userCouponId,
+               coupon_name as couponName,
+               coupon_type as couponType,
+               coupon_discount_amount as couponDiscountAmount,
+               pay_amount as payAmount,
+               effective_rate as effectiveRate,
+               expected_income as expectedIncome,
+               cycle_days as cycleDays,
+               status,
+               create_time as createTime,
+               update_time as updateTime,
+               end_time as endTime,
+               group_mode as groupMode,
+               group_id as groupId,
+               group_no as groupNo,
+               ifnull(group_status, '9') as groupStatus,
+               group_deadline_time as groupDeadlineTime,
+               remark
+        from sys_invest_order
+        where order_id = #{orderId}
+        limit 1
     </select>
 
     <select id="selectInvestOrderByIdForUpdate" resultType="map">

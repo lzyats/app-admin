@@ -49,7 +49,7 @@ public class AppWithdrawController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(SysUserWithdraw withdraw)
     {
-        startPage();
+        startPage(false);
         withdraw.setUserId(getUserId());
         List<SysUserWithdraw> list = withdrawService.selectWithdrawList(withdraw);
         return getDataTable(list);

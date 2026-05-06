@@ -1,0 +1,16 @@
+[Unit]
+Description=app-admin
+After=network.target coturn.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/www/wwwroot/app-admin
+ExecStart=/www/server/java/jdk-17.0.8/bin/java -jar ruoyi-admin.jar
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
+#/etc/systemd/system/app-admin.service

@@ -22,4 +22,8 @@ public interface SysLevelTrialTemplateMapper
                         @Param("userName") String userName, @Param("grantType") String grantType,
                         @Param("validDays") Integer validDays, @Param("operator") String operator,
                         @Param("remark") String remark);
+
+    int countUserTrialByTrialAndUser(@Param("trialId") Long trialId, @Param("userId") Long userId);
+
+    int increaseReceivedCount(@Param("trialId") Long trialId, @Param("amount") Integer amount);
 }

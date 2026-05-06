@@ -10,6 +10,8 @@
         <result property="trialLevel" column="trial_level"/>
         <result property="bonusRate" column="bonus_rate"/>
         <result property="validDays" column="valid_days"/>
+        <result property="validStartTime" column="valid_start_time"/>
+        <result property="validEndTime" column="valid_end_time"/>
         <result property="totalCount" column="total_count"/>
         <result property="receivedCount" column="received_count"/>
         <result property="status" column="status"/>
@@ -21,7 +23,7 @@
     </resultMap>
 
     <sql id="selectLevelTrialTemplateVo">
-        select trial_id, trial_name, trial_level, bonus_rate, valid_days, total_count, received_count,
+        select trial_id, trial_name, trial_level, bonus_rate, valid_days, valid_start_time, valid_end_time, total_count, received_count,
                status, create_by, create_time, update_by, update_time, remark
         from sys_level_trial_template
     </sql>
@@ -42,8 +44,8 @@
     </select>
 
     <insert id="insertLevelTrialTemplate" parameterType="SysLevelTrialTemplate" useGeneratedKeys="true" keyProperty="trialId">
-        insert into sys_level_trial_template(trial_name, trial_level, bonus_rate, valid_days, total_count, received_count, status, create_by, create_time, remark)
-        values (#{trialName}, #{trialLevel}, #{bonusRate}, #{validDays}, #{totalCount}, #{receivedCount}, #{status}, #{createBy}, now(), #{remark})
+        insert into sys_level_trial_template(trial_name, trial_level, bonus_rate, valid_days, valid_start_time, valid_end_time, total_count, received_count, status, create_by, create_time, remark)
+        values (#{trialName}, #{trialLevel}, #{bonusRate}, #{validDays}, #{validStartTime}, #{validEndTime}, #{totalCount}, #{receivedCount}, #{status}, #{createBy}, now(), #{remark})
     </insert>
 
     <update id="updateLevelTrialTemplate" parameterType="SysLevelTrialTemplate">
@@ -53,6 +55,8 @@
             <if test="trialLevel != null">trial_level = #{trialLevel},</if>
             <if test="bonusRate != null">bonus_rate = #{bonusRate},</if>
             <if test="validDays != null">valid_days = #{validDays},</if>
+            <if test="validStartTime != null">valid_start_time = #{validStartTime},</if>
+            <if test="validEndTime != null">valid_end_time = #{validEndTime},</if>
             <if test="totalCount != null">total_count = #{totalCount},</if>
             <if test="receivedCount != null">received_count = #{receivedCount},</if>
             <if test="status != null and status != ''">status = #{status},</if>
@@ -75,7 +79,21 @@
     </delete>
 
     <insert id="insertUserTrial">
-        insert into sys_level_trial_user(trial_id, user_id, user_name, grant_type, status, start_time, end_time, create_by, create_time, remark)
-        values (#{trialId}, #{userId}, #{userName}, #{grantType}, '1', now(), date_add(now(), interval #{validDays} day), #{operator}, now(), #{remark})
+        insert into sys_level_trial_user(trial_id, user_id, user_name, grant_type, original_level, current_level, status, start_time, end_time, create_by, create_time, remark)
+        values (#{trialId}, #{userId}, #{userName}, #{grantType}, null, null, '0', null, null, #{operator}, now(), #{remark})
     </insert>
+
+    <select id="countUserTrialByTrialAndUser" resultType="int">
+        select count(1)
+        from sys_level_trial_user
+        where trial_id = #{trialId}
+          and user_id = #{userId}
+    </select>
+
+    <update id="increaseReceivedCount">
+        update sys_level_trial_template
+        set received_count = ifnull(received_count, 0) + ifnull(#{amount}, 0),
+            update_time = now()
+        where trial_id = #{trialId}
+    </update>
 </mapper>

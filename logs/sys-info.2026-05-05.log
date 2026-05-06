@@ -1,0 +1,258 @@
+23:36:36.566 [restartedMain] INFO  c.r.RuoYiApplication - [logStarting,54] - Starting RuoYiApplication using Java 17.0.19 with PID 27088 (E:\Go\go-api\ruoyi-admin\target\classes started by Administrator in E:\Go\go-api)
+23:36:36.566 [restartedMain] INFO  c.r.RuoYiApplication - [logStartupProfileInfo,658] - The following 1 profile is active: "druid"
+23:36:37.347 [restartedMain] INFO  o.e.j.server.Server - [doStart,601] - jetty-12.1.6; built: 2026-01-27T18:53:19.182Z; git: 88ca559572b1c8858b3c5684bb0293fa64e5e90f; jvm 17.0.19+9-LTS-183
+23:36:37.702 [restartedMain] INFO  o.e.j.s.DefaultSessionIdManager - [doStart,319] - Session workerName=node0
+23:36:37.704 [restartedMain] INFO  o.e.j.s.h.ContextHandler - [doStart,913] - Started osbjs.JettyEmbeddedWebAppContext@21ecf0d6{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.10900497441976652399/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@51915278{STARTED}}
+23:36:37.705 [restartedMain] INFO  o.e.j.e.s.ServletContextHandler - [doStart,1066] - Started osbjs.JettyEmbeddedWebAppContext@21ecf0d6{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.10900497441976652399/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@51915278{STARTED}}
+23:36:37.705 [restartedMain] INFO  o.e.j.server.Server - [doStart,658] - Started oejs.Server@70965bae{STARTING}[12.1.6,sto=0] @357ms
+23:36:38.001 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-3} inited
+23:36:38.162 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-4} inited
+23:36:40.041 [restartedMain] INFO  o.q.c.SchedulerSignalerImpl - [<init>,62] - Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+23:36:40.042 [restartedMain] INFO  o.q.c.QuartzScheduler - [<init>,224] - Quartz Scheduler v2.5.2 created.
+23:36:40.042 [restartedMain] INFO  o.q.c.QuartzScheduler - [initialize,289] - Scheduler meta-data: Quartz Scheduler (v2.5.2) 'RuoyiScheduler' with instanceId 'WIN-20260214PTB1777995400040'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+
+23:36:40.043 [restartedMain] INFO  o.q.c.QuartzScheduler - [setJobFactory,2250] - JobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@3d6f5b8c
+23:36:40.087 [restartedMain] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:36:41.128 [restartedMain] INFO  o.e.j.s.h.C.application - [log,2887] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+23:36:41.138 [restartedMain] INFO  o.e.j.s.AbstractConnector - [doStart,329] - Started oejs.ServerConnector@45d8db6f{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:36:41.142 [restartedMain] INFO  c.r.RuoYiApplication - [logStarted,60] - Started RuoYiApplication in 4.61 seconds (process running for 76.417)
+23:36:42.146 [Quartz Scheduler [RuoyiScheduler]] INFO  o.q.c.QuartzScheduler - [start,541] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995400040 started.
+23:36:42.510 [Thread-109] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995400040 paused.
+23:36:42.512 [Thread-109] INFO  o.e.j.s.AbstractConnector - [doStop,387] - Stopped oejs.ServerConnector@45d8db6f{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:36:42.517 [Thread-109] INFO  o.q.c.QuartzScheduler - [shutdown,656] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995400040 shutting down.
+23:36:42.517 [Thread-109] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995400040 paused.
+23:36:42.518 [Thread-109] INFO  o.q.c.QuartzScheduler - [shutdown,728] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995400040 shutdown complete.
+23:36:42.518 [Thread-109] INFO  sys-user - [shutdownAsyncManager,31] - ====关闭后台任务任务线程池====
+23:36:42.524 [Thread-109] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-4} closing ...
+23:36:42.525 [Thread-109] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-4} closed
+23:36:42.525 [Thread-109] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-3} closing ...
+23:36:42.527 [Thread-109] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-3} closed
+23:36:42.529 [Thread-109] INFO  o.e.j.server.Server - [doStop,698] - Stopped oejs.Server@70965bae{STOPPING}[12.1.6,sto=0]
+23:36:42.532 [Thread-109] INFO  o.e.j.s.h.C.application - [log,2887] - Destroying Spring FrameworkServlet 'dispatcherServlet'
+23:36:42.532 [Thread-109] INFO  o.e.j.e.s.ServletContextHandler - [doStop,1128] - Stopped osbjs.JettyEmbeddedWebAppContext@21ecf0d6{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.10900497441976652399/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@51915278{STOPPED}}
+23:36:42.640 [restartedMain] INFO  c.r.RuoYiApplication - [logStarting,54] - Starting RuoYiApplication using Java 17.0.19 with PID 27088 (E:\Go\go-api\ruoyi-admin\target\classes started by Administrator in E:\Go\go-api)
+23:36:42.640 [restartedMain] INFO  c.r.RuoYiApplication - [logStartupProfileInfo,658] - The following 1 profile is active: "druid"
+23:36:43.726 [restartedMain] INFO  o.e.j.server.Server - [doStart,601] - jetty-12.1.6; built: 2026-01-27T18:53:19.182Z; git: 88ca559572b1c8858b3c5684bb0293fa64e5e90f; jvm 17.0.19+9-LTS-183
+23:36:44.160 [restartedMain] INFO  o.e.j.s.DefaultSessionIdManager - [doStart,319] - Session workerName=node0
+23:36:44.161 [restartedMain] INFO  o.e.j.s.h.ContextHandler - [doStart,913] - Started osbjs.JettyEmbeddedWebAppContext@1129ec78{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.982787097819697786/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@5843c400{STARTED}}
+23:36:44.161 [restartedMain] INFO  o.e.j.e.s.ServletContextHandler - [doStart,1066] - Started osbjs.JettyEmbeddedWebAppContext@1129ec78{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.982787097819697786/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@5843c400{STARTED}}
+23:36:44.161 [restartedMain] INFO  o.e.j.server.Server - [doStart,658] - Started oejs.Server@77208c4{STARTING}[12.1.6,sto=0] @434ms
+23:36:44.392 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-5} inited
+23:36:44.549 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-6} inited
+23:36:46.090 [restartedMain] INFO  o.q.c.SchedulerSignalerImpl - [<init>,62] - Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+23:36:46.090 [restartedMain] INFO  o.q.c.QuartzScheduler - [<init>,224] - Quartz Scheduler v2.5.2 created.
+23:36:46.090 [restartedMain] INFO  o.q.c.QuartzScheduler - [initialize,289] - Scheduler meta-data: Quartz Scheduler (v2.5.2) 'RuoyiScheduler' with instanceId 'WIN-20260214PTB1777995406089'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+
+23:36:46.090 [restartedMain] INFO  o.q.c.QuartzScheduler - [setJobFactory,2250] - JobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@398643e1
+23:36:46.119 [restartedMain] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:36:46.949 [restartedMain] INFO  o.e.j.s.h.C.application - [log,2887] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+23:36:46.960 [restartedMain] INFO  o.e.j.s.AbstractConnector - [doStart,329] - Started oejs.ServerConnector@41ef18b5{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:36:46.962 [restartedMain] INFO  c.r.RuoYiApplication - [logStarted,60] - Started RuoYiApplication in 4.356 seconds (process running for 82.238)
+23:36:46.965 [SpringApplicationShutdownHook] INFO  o.e.j.s.AbstractConnector - [doStop,387] - Stopped oejs.ServerConnector@41ef18b5{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:36:46.968 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [shutdown,656] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995406089 shutting down.
+23:36:46.968 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995406089 paused.
+23:36:46.968 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [shutdown,728] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995406089 shutdown complete.
+23:36:46.968 [SpringApplicationShutdownHook] INFO  sys-user - [shutdownAsyncManager,31] - ====关闭后台任务任务线程池====
+23:36:46.973 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-6} closing ...
+23:36:46.975 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-6} closed
+23:36:46.975 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-5} closing ...
+23:36:46.976 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-5} closed
+23:36:46.979 [SpringApplicationShutdownHook] INFO  o.e.j.server.Server - [doStop,698] - Stopped oejs.Server@77208c4{STOPPING}[12.1.6,sto=0]
+23:36:46.980 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.C.application - [log,2887] - Destroying Spring FrameworkServlet 'dispatcherServlet'
+23:36:46.983 [SpringApplicationShutdownHook] INFO  o.e.j.e.s.ServletContextHandler - [doStop,1128] - Stopped osbjs.JettyEmbeddedWebAppContext@1129ec78{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.982787097819697786/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@5843c400{STOPPED}}
+23:36:57.360 [background-preinit] INFO  o.h.v.i.util.Version - [<clinit>,18] - HV000001: Hibernate Validator 9.0.1.Final
+23:36:57.422 [restartedMain] INFO  c.r.RuoYiApplication - [logStarting,54] - Starting RuoYiApplication using Java 17.0.19 with PID 21744 (E:\Go\go-api\ruoyi-admin\target\classes started by Administrator in E:\Go\go-api)
+23:36:57.424 [restartedMain] INFO  c.r.RuoYiApplication - [logStartupProfileInfo,658] - The following 1 profile is active: "druid"
+23:37:00.101 [restartedMain] INFO  o.e.j.server.Server - [doStart,601] - jetty-12.1.6; built: 2026-01-27T18:53:19.182Z; git: 88ca559572b1c8858b3c5684bb0293fa64e5e90f; jvm 17.0.19+9-LTS-183
+23:37:00.971 [restartedMain] INFO  o.e.j.s.DefaultSessionIdManager - [doStart,319] - Session workerName=node0
+23:37:00.980 [restartedMain] INFO  o.e.j.s.h.ContextHandler - [doStart,913] - Started osbjs.JettyEmbeddedWebAppContext@745fca9e{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.9940115321593275334/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@60bb53f4{STARTED}}
+23:37:00.981 [restartedMain] INFO  o.e.j.e.s.ServletContextHandler - [doStart,1066] - Started osbjs.JettyEmbeddedWebAppContext@745fca9e{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.9940115321593275334/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@60bb53f4{STARTED}}
+23:37:00.981 [restartedMain] INFO  o.e.j.server.Server - [doStart,658] - Started oejs.Server@3d9d60c0{STARTING}[12.1.6,sto=0] @881ms
+23:37:01.539 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-1} inited
+23:37:01.709 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-2} inited
+23:37:04.966 [restartedMain] INFO  o.q.c.SchedulerSignalerImpl - [<init>,62] - Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+23:37:04.966 [restartedMain] INFO  o.q.c.QuartzScheduler - [<init>,224] - Quartz Scheduler v2.5.2 created.
+23:37:04.971 [restartedMain] INFO  o.q.c.QuartzScheduler - [initialize,289] - Scheduler meta-data: Quartz Scheduler (v2.5.2) 'RuoyiScheduler' with instanceId 'WIN-20260214PTB1777995424957'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+
+23:37:04.973 [restartedMain] INFO  o.q.c.QuartzScheduler - [setJobFactory,2250] - JobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@7ef1181
+23:37:05.023 [restartedMain] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:37:06.980 [restartedMain] INFO  o.e.j.s.h.C.application - [log,2887] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+23:37:07.001 [restartedMain] INFO  o.e.j.s.AbstractConnector - [doStart,329] - Started oejs.ServerConnector@37319585{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:37:07.012 [restartedMain] INFO  c.r.RuoYiApplication - [logStarted,60] - Started RuoYiApplication in 9.962 seconds (process running for 10.928)
+23:37:08.021 [Quartz Scheduler [RuoyiScheduler]] INFO  o.q.c.QuartzScheduler - [start,541] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995424957 started.
+23:38:03.961 [Thread-1] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995424957 paused.
+23:38:03.966 [Thread-1] INFO  o.e.j.s.AbstractConnector - [doStop,387] - Stopped oejs.ServerConnector@37319585{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:38:03.983 [Thread-1] INFO  o.q.c.QuartzScheduler - [shutdown,656] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995424957 shutting down.
+23:38:03.983 [Thread-1] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995424957 paused.
+23:38:03.984 [Thread-1] INFO  o.q.c.QuartzScheduler - [shutdown,728] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995424957 shutdown complete.
+23:38:03.985 [Thread-1] INFO  sys-user - [shutdownAsyncManager,31] - ====关闭后台任务任务线程池====
+23:38:03.994 [Thread-1] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-2} closing ...
+23:38:04.002 [Thread-1] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-2} closed
+23:38:04.002 [Thread-1] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-1} closing ...
+23:38:04.007 [Thread-1] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-1} closed
+23:38:04.016 [Thread-1] INFO  o.e.j.server.Server - [doStop,698] - Stopped oejs.Server@3d9d60c0{STOPPING}[12.1.6,sto=0]
+23:38:04.022 [Thread-1] INFO  o.e.j.s.h.C.application - [log,2887] - Destroying Spring FrameworkServlet 'dispatcherServlet'
+23:38:04.024 [Thread-1] INFO  o.e.j.e.s.ServletContextHandler - [doStop,1128] - Stopped osbjs.JettyEmbeddedWebAppContext@745fca9e{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.9940115321593275334/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@60bb53f4{STOPPED}}
+23:45:16.264 [background-preinit] INFO  o.h.v.i.util.Version - [<clinit>,18] - HV000001: Hibernate Validator 9.0.1.Final
+23:45:16.404 [restartedMain] INFO  c.r.RuoYiApplication - [logStarting,54] - Starting RuoYiApplication using Java 17.0.19 with PID 35072 (E:\Go\go-api\ruoyi-admin\target\classes started by Administrator in E:\Go\go-api)
+23:45:16.408 [restartedMain] INFO  c.r.RuoYiApplication - [logStartupProfileInfo,658] - The following 1 profile is active: "druid"
+23:45:21.637 [restartedMain] INFO  o.e.j.server.Server - [doStart,601] - jetty-12.1.6; built: 2026-01-27T18:53:19.182Z; git: 88ca559572b1c8858b3c5684bb0293fa64e5e90f; jvm 17.0.19+9-LTS-183
+23:45:22.628 [restartedMain] INFO  o.e.j.s.DefaultSessionIdManager - [doStart,319] - Session workerName=node0
+23:45:22.641 [restartedMain] INFO  o.e.j.s.h.ContextHandler - [doStart,913] - Started osbjs.JettyEmbeddedWebAppContext@21007d11{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.8912831731004835953/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@3ed07523{STARTED}}
+23:45:22.642 [restartedMain] INFO  o.e.j.e.s.ServletContextHandler - [doStart,1066] - Started osbjs.JettyEmbeddedWebAppContext@21007d11{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.8912831731004835953/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@3ed07523{STARTED}}
+23:45:22.643 [restartedMain] INFO  o.e.j.server.Server - [doStart,658] - Started oejs.Server@4042376d{STARTING}[12.1.6,sto=0] @1007ms
+23:45:23.351 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-1} inited
+23:45:23.564 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-2} inited
+23:45:27.411 [restartedMain] INFO  o.q.c.SchedulerSignalerImpl - [<init>,62] - Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+23:45:27.411 [restartedMain] INFO  o.q.c.QuartzScheduler - [<init>,224] - Quartz Scheduler v2.5.2 created.
+23:45:27.419 [restartedMain] INFO  o.q.c.QuartzScheduler - [initialize,289] - Scheduler meta-data: Quartz Scheduler (v2.5.2) 'RuoyiScheduler' with instanceId 'WIN-20260214PTB1777995927397'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+
+23:45:27.422 [restartedMain] INFO  o.q.c.QuartzScheduler - [setJobFactory,2250] - JobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@79a2b34e
+23:45:27.518 [restartedMain] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:45:29.826 [restartedMain] INFO  o.e.j.s.h.C.application - [log,2887] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+23:45:29.852 [restartedMain] INFO  o.e.j.s.AbstractConnector - [doStart,329] - Started oejs.ServerConnector@70785312{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:45:29.867 [restartedMain] INFO  c.r.RuoYiApplication - [logStarted,60] - Started RuoYiApplication in 14.44 seconds (process running for 17.162)
+23:45:30.880 [Quartz Scheduler [RuoyiScheduler]] INFO  o.q.c.QuartzScheduler - [start,541] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995927397 started.
+23:50:00.030 [RuoyiScheduler_Worker-1] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:00.046 [RuoyiScheduler_Worker-2] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:01.018 [RuoyiScheduler_Worker-3] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:02.029 [RuoyiScheduler_Worker-4] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:03.020 [RuoyiScheduler_Worker-5] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:04.027 [RuoyiScheduler_Worker-6] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:05.020 [RuoyiScheduler_Worker-7] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:06.024 [RuoyiScheduler_Worker-8] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:07.021 [RuoyiScheduler_Worker-9] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:08.027 [RuoyiScheduler_Worker-10] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:09.022 [RuoyiScheduler_Worker-11] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:10.024 [RuoyiScheduler_Worker-12] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:11.023 [RuoyiScheduler_Worker-13] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:12.024 [RuoyiScheduler_Worker-14] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:13.020 [RuoyiScheduler_Worker-15] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:14.024 [RuoyiScheduler_Worker-16] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:15.016 [RuoyiScheduler_Worker-17] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:16.017 [RuoyiScheduler_Worker-18] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:17.030 [RuoyiScheduler_Worker-19] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:18.020 [RuoyiScheduler_Worker-20] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:19.016 [RuoyiScheduler_Worker-1] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:20.017 [RuoyiScheduler_Worker-2] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:21.030 [RuoyiScheduler_Worker-3] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:22.016 [RuoyiScheduler_Worker-4] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:23.021 [RuoyiScheduler_Worker-5] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:24.021 [RuoyiScheduler_Worker-6] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:25.019 [RuoyiScheduler_Worker-7] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:26.015 [RuoyiScheduler_Worker-8] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:27.031 [RuoyiScheduler_Worker-9] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:28.027 [RuoyiScheduler_Worker-10] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:29.035 [RuoyiScheduler_Worker-11] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:30.021 [RuoyiScheduler_Worker-12] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:31.022 [RuoyiScheduler_Worker-13] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:32.024 [RuoyiScheduler_Worker-14] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:33.019 [RuoyiScheduler_Worker-15] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:34.020 [RuoyiScheduler_Worker-16] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:35.017 [RuoyiScheduler_Worker-17] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:36.021 [RuoyiScheduler_Worker-18] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:37.015 [RuoyiScheduler_Worker-19] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:38.024 [RuoyiScheduler_Worker-20] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:39.018 [RuoyiScheduler_Worker-1] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:40.021 [RuoyiScheduler_Worker-2] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:41.026 [RuoyiScheduler_Worker-3] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:42.016 [RuoyiScheduler_Worker-4] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:43.020 [RuoyiScheduler_Worker-5] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:44.021 [RuoyiScheduler_Worker-6] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:45.018 [RuoyiScheduler_Worker-7] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:46.015 [RuoyiScheduler_Worker-8] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:47.021 [RuoyiScheduler_Worker-9] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:48.019 [RuoyiScheduler_Worker-10] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:49.016 [RuoyiScheduler_Worker-11] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:50.020 [RuoyiScheduler_Worker-12] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:51.013 [RuoyiScheduler_Worker-13] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:52.016 [RuoyiScheduler_Worker-14] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:53.020 [RuoyiScheduler_Worker-15] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:54.024 [RuoyiScheduler_Worker-16] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:55.018 [RuoyiScheduler_Worker-17] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:56.014 [RuoyiScheduler_Worker-18] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:57.014 [RuoyiScheduler_Worker-19] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:58.016 [RuoyiScheduler_Worker-20] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:50:59.018 [RuoyiScheduler_Worker-1] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:11.037 [qtp709309791-65] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:11.039 [qtp709309791-65] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:15.509 [qtp709309791-91] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:15.510 [qtp709309791-91] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:15.762 [qtp709309791-70] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:29.929 [qtp709309791-77] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:29.929 [qtp709309791-77] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:46.078 [qtp709309791-79] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:46.079 [qtp709309791-79] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:46.082 [qtp709309791-79] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:46.489 [qtp709309791-73] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:51:46.490 [qtp709309791-73] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:52:17.959 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995927397 paused.
+23:52:17.966 [SpringApplicationShutdownHook] INFO  o.e.j.s.AbstractConnector - [doStop,387] - Stopped oejs.ServerConnector@70785312{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:52:17.992 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [shutdown,656] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995927397 shutting down.
+23:52:17.992 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [standby,576] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995927397 paused.
+23:52:17.992 [SpringApplicationShutdownHook] INFO  o.q.c.QuartzScheduler - [shutdown,728] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777995927397 shutdown complete.
+23:52:17.993 [SpringApplicationShutdownHook] INFO  sys-user - [shutdownAsyncManager,31] - ====关闭后台任务任务线程池====
+23:52:18.006 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-2} closing ...
+23:52:18.012 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-2} closed
+23:52:18.012 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2083] - {dataSource-1} closing ...
+23:52:18.015 [SpringApplicationShutdownHook] INFO  c.a.d.p.DruidDataSource - [close,2156] - {dataSource-1} closed
+23:52:18.028 [SpringApplicationShutdownHook] INFO  o.e.j.server.Server - [doStop,698] - Stopped oejs.Server@4042376d{STOPPING}[12.1.6,sto=0]
+23:52:18.034 [SpringApplicationShutdownHook] INFO  o.e.j.s.h.C.application - [log,2887] - Destroying Spring FrameworkServlet 'dispatcherServlet'
+23:52:18.036 [SpringApplicationShutdownHook] INFO  o.e.j.e.s.ServletContextHandler - [doStop,1128] - Stopped osbjs.JettyEmbeddedWebAppContext@21007d11{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.8912831731004835953/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@3ed07523{STOPPED}}
+23:52:21.538 [background-preinit] INFO  o.h.v.i.util.Version - [<clinit>,18] - HV000001: Hibernate Validator 9.0.1.Final
+23:52:21.602 [restartedMain] INFO  c.r.RuoYiApplication - [logStarting,54] - Starting RuoYiApplication using Java 17.0.19 with PID 31776 (E:\Go\go-api\ruoyi-admin\target\classes started by Administrator in E:\Go\go-api)
+23:52:21.604 [restartedMain] INFO  c.r.RuoYiApplication - [logStartupProfileInfo,658] - The following 1 profile is active: "druid"
+23:52:25.056 [restartedMain] INFO  o.e.j.server.Server - [doStart,601] - jetty-12.1.6; built: 2026-01-27T18:53:19.182Z; git: 88ca559572b1c8858b3c5684bb0293fa64e5e90f; jvm 17.0.19+9-LTS-183
+23:52:26.311 [restartedMain] INFO  o.e.j.s.DefaultSessionIdManager - [doStart,319] - Session workerName=node0
+23:52:26.321 [restartedMain] INFO  o.e.j.s.h.ContextHandler - [doStart,913] - Started osbjs.JettyEmbeddedWebAppContext@41c04f4f{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.8822882717696880389/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@136b3e4a{STARTED}}
+23:52:26.321 [restartedMain] INFO  o.e.j.e.s.ServletContextHandler - [doStart,1066] - Started osbjs.JettyEmbeddedWebAppContext@41c04f4f{application,/,b=[file:/C:/Users/Administrator/AppData/Local/Temp/jetty-docbase.8080.8822882717696880389/, jar:file:///D:/repository/org/webjars/swagger-ui/5.32.0/swagger-ui-5.32.0.jar!/META-INF/resources/],a=AVAILABLE,h=oeje11s.SessionHandler@136b3e4a{STARTED}}
+23:52:26.323 [restartedMain] INFO  o.e.j.server.Server - [doStart,658] - Started oejs.Server@72bc1290{STARTING}[12.1.6,sto=0] @1268ms
+23:52:27.045 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-1} inited
+23:52:27.264 [restartedMain] INFO  c.a.d.p.DruidDataSource - [init,865] - {dataSource-2} inited
+23:52:32.362 [restartedMain] INFO  o.q.c.SchedulerSignalerImpl - [<init>,62] - Initialized Scheduler Signaller of type: class org.quartz.core.SchedulerSignalerImpl
+23:52:32.362 [restartedMain] INFO  o.q.c.QuartzScheduler - [<init>,224] - Quartz Scheduler v2.5.2 created.
+23:52:32.369 [restartedMain] INFO  o.q.c.QuartzScheduler - [initialize,289] - Scheduler meta-data: Quartz Scheduler (v2.5.2) 'RuoyiScheduler' with instanceId 'WIN-20260214PTB1777996352350'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 20 threads.
+  Using job-store 'org.springframework.scheduling.quartz.LocalDataSourceJobStore' - which supports persistence. and is clustered.
+
+23:52:32.371 [restartedMain] INFO  o.q.c.QuartzScheduler - [setJobFactory,2250] - JobFactory set to: org.springframework.scheduling.quartz.AdaptableJobFactory@5d1bd4d2
+23:52:32.471 [restartedMain] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:52:35.126 [restartedMain] INFO  o.e.j.s.h.C.application - [log,2887] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+23:52:35.175 [restartedMain] INFO  o.e.j.s.AbstractConnector - [doStart,329] - Started oejs.ServerConnector@38423717{HTTP/1.1, (http/1.1)}{0.0.0.0:8080}
+23:52:35.190 [restartedMain] INFO  c.r.RuoYiApplication - [logStarted,60] - Started RuoYiApplication in 14.085 seconds (process running for 15.487)
+23:52:36.196 [Quartz Scheduler [RuoyiScheduler]] INFO  o.q.c.QuartzScheduler - [start,541] - Scheduler RuoyiScheduler_$_WIN-20260214PTB1777996352350 started.
+23:53:10.880 [qtp1818457213-46] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:53:10.883 [qtp1818457213-46] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:53:36.070 [qtp1818457213-48] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:53:36.079 [qtp1818457213-48] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:53:36.084 [qtp1818457213-48] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:53:36.515 [qtp1818457213-69] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源
+23:53:36.515 [qtp1818457213-69] INFO  c.r.f.d.DynamicDataSourceContextHolder - [setDataSourceType,26] - 切换到QUARTZ数据源

@@ -591,6 +591,11 @@ public class SysMinerAppServiceImpl implements ISysMinerAppService
 
     private void resetRunForNextCycle(SysUserMinerRun run, Date now)
     {
+        if (!canUserContinueMiner(run.getUserId(), run.getMinerId()))
+        {
+            stopMinerRun(run, now);
+            return;
+        }
         SysMiner miner = minerMapper.selectMinerById(run.getMinerId());
         run.setRewardMode(normalizeRewardMode(readString("app.miner.rewardMode", "AUTO")));
         run.setRunStatus("0");
@@ -601,6 +606,49 @@ public class SysMinerAppServiceImpl implements ISysMinerAppService
         run.setProducedWag(0D);
         run.setCreditedFlag("0");
         run.setVersion(run.getVersion() == null ? 0 : run.getVersion() + 1);
+    }
+
+    private boolean canUserContinueMiner(Long userId, Long minerId)
+    {
+        if (userId == null || userId <= 0L || minerId == null || minerId <= 0L)
+        {
+            return false;
+        }
+        SysUser user = sysUserMapper.selectUserBaseById(userId);
+        SysMiner miner = minerMapper.selectMinerById(minerId);
+        if (user == null || miner == null || !"0".equals(StringUtils.trim(miner.getStatus())))
+        {
+            return false;
+        }
+        int userLevel = user.getLevel() != null ? user.getLevel()
+                : (user.getUserLevel() != null ? user.getUserLevel() : 0);
+        int minLevel = miner.getMinUserLevel() == null ? 0 : Math.max(0, miner.getMinUserLevel());
+        int maxLevel = miner.getMaxUserLevel() == null ? 999 : miner.getMaxUserLevel();
+        if (maxLevel <= 0)
+        {
+            maxLevel = 999;
+        }
+        return userLevel >= minLevel && userLevel <= maxLevel;
+    }
+
+    private void stopMinerRun(SysUserMinerRun run, Date now)
+    {
+        if (run == null)
+        {
+            return;
+        }
+        run.setRunStatus("2");
+        run.setLastCalcTime(now);
+        run.setCollectTime(now);
+        run.setVersion(run.getVersion() == null ? 0 : run.getVersion() + 1);
+
+        SysUserMiner userMiner = userMinerMapper.selectUserMinerById(run.getUserMinerId());
+        if (userMiner != null && userMiner.getUserMinerId() != null)
+        {
+            userMiner.setIsCurrent("0");
+            userMiner.setInactiveTime(now);
+            userMinerMapper.updateUserMiner(userMiner);
+        }
     }
 
     private Map<String, Object> buildMinerMap(SysUserMiner miner)

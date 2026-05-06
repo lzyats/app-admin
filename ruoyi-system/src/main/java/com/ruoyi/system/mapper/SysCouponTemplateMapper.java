@@ -23,5 +23,18 @@ public interface SysCouponTemplateMapper
                          @Param("validDays") Integer validDays, @Param("operator") String operator,
                          @Param("remark") String remark);
 
+    java.util.Map<String, Object> selectUserCouponForInvestUse(@Param("userCouponId") Long userCouponId,
+                                                               @Param("userId") Long userId);
+
+    int updateUserCouponUsed(@Param("userCouponId") Long userCouponId,
+                             @Param("usedProductId") Long usedProductId,
+                             @Param("usedOrderId") Long usedOrderId,
+                             @Param("operator") String operator,
+                             @Param("remark") String remark);
+
     List<Long> selectUserIdsByLevel(@Param("level") Integer level);
+
+    int countUserCouponByCouponAndUser(@Param("couponId") Long couponId, @Param("userId") Long userId);
+
+    int increaseReceivedCount(@Param("couponId") Long couponId, @Param("amount") Integer amount);
 }

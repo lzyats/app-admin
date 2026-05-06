@@ -6,20 +6,20 @@ spring:
         druid:
             # 主库数据源
             master:
-                url: jdbc:mysql://localhost:3306/myapp?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-                username: root
-                password: 123456
+                url: jdbc:mysql://localhost:3306/myapp?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+                username: myapp
+                password: c970c128226f99ff
             # 从库数据源
             slave:
                 # 从数据源开关/默认关闭
                 enabled: false
-                url: jdbc:mysql://localhost:3306/corn?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-                username: root
-                password: 123456
+                url: jdbc:mysql://localhost:3306/corn?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+                username: myapp
+                password: c970c128226f99ff
             quartz:
-                url: jdbc:mysql://localhost:3306/corn?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8
-                username: root
-                password: 123456
+                url: jdbc:mysql://localhost:3306/corn?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=GMT%2B8&allowPublicKeyRetrieval=true
+                username: myapp
+                password: c970c128226f99ff
             # 初始连接数
             initialSize: 5
             # 最小连接池数量

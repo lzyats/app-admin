@@ -12,9 +12,6 @@ class RuoYiEndpoints {
   static const String appConfigOptions = '/app/config/options';
   static const String getInfo = '/getInfo';
   static const String getRouters = '/getRouters';
-  static const String user = '/system/user';
-  static const String profile = '/system/user/profile';
-  static const String dictType = '/system/dict/data/type/';
 
   static const String upload = '/common/upload';
   static const String uploadPresigned = '/common/upload/presigned';
@@ -53,6 +50,11 @@ class RuoYiEndpoints {
   static const String bankCardDelete = '/app/bankCard/delete';
 
   static const String appUserWallets = '/app/user/wallets';
+  static const String appCardPackageCoupons = '/app/cardPackage/coupons';
+  static const String appCardPackageTrials = '/app/cardPackage/trials';
+  static const String appCardPackageTrialUse = '/app/cardPackage/trials/use';
+  static const String appCardPackageTrialStart = '/app/cardPackage/trials/start';
+  static const String appCardPackageTrialEnd = '/app/cardPackage/trials/end';
   static const String appPointAccount = '/app/point/account';
   static const String appPointLogList = '/app/point/log/list';
   static const String appYebaoMy = '/app/yebao/my';
@@ -91,6 +93,7 @@ class RuoYiEndpoints {
   static const String appInvestOrderSubmit = '/app/invest/order/submit';
   static const String appInvestOrderList = '/app/invest/order/list';
   static const String appInvestOrderIncomes = '/app/invest/order/incomes';
+  static const String appInvestOrderDetail = '/app/invest/order/detail';
   static const String appUserWalletInvestLogs = '/app/user/wallet/log/investList';
   static const String appUserWalletLogList = '/app/user/wallet/log/list';
 

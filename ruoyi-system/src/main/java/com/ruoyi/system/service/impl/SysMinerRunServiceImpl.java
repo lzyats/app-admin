@@ -12,11 +12,13 @@ import com.ruoyi.common.exception.ServiceException;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.system.domain.SysMiner;
 import com.ruoyi.system.domain.SysMinerRewardLog;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.system.domain.SysUserMiner;
 import com.ruoyi.system.domain.SysUserMinerRun;
 import com.ruoyi.system.domain.SysUserWagWallet;
 import com.ruoyi.system.mapper.SysMinerMapper;
 import com.ruoyi.system.mapper.SysMinerRewardLogMapper;
+import com.ruoyi.system.mapper.SysUserMapper;
 import com.ruoyi.system.mapper.SysUserMinerMapper;
 import com.ruoyi.system.mapper.SysUserMinerRunMapper;
 import com.ruoyi.system.mapper.SysUserWagWalletMapper;
@@ -38,6 +40,9 @@ public class SysMinerRunServiceImpl implements ISysMinerRunService
 
     @Autowired
     private SysUserMinerMapper userMinerMapper;
+
+    @Autowired
+    private SysUserMapper userMapper;
 
     @Autowired
     private SysUserMinerRunMapper runMapper;
@@ -171,6 +176,11 @@ public class SysMinerRunServiceImpl implements ISysMinerRunService
             now = new Date();
         }
         SysMiner miner = minerMapper.selectMinerById(run.getMinerId());
+        if (!canUserContinueMiner(run.getUserId(), run.getMinerId(), miner))
+        {
+            stopRun(run, now);
+            return;
+        }
         run.setRewardMode(normalizeRewardMode(readString("app.miner.rewardMode", "AUTO")));
         run.setRunStatus("0");
         run.setStartTime(now);
@@ -181,6 +191,52 @@ public class SysMinerRunServiceImpl implements ISysMinerRunService
         run.setCreditedFlag("0");
         run.setCollectTime(null);
         run.setVersion(run.getVersion() == null ? 0 : run.getVersion() + 1);
+    }
+
+    private boolean canUserContinueMiner(Long userId, Long minerId, SysMiner miner)
+    {
+        if (userId == null || userId <= 0L || minerId == null || minerId <= 0L || miner == null)
+        {
+            return false;
+        }
+        if (!"0".equals(StringUtils.trim(miner.getStatus())))
+        {
+            return false;
+        }
+        SysUser user = userMapper.selectUserBaseById(userId);
+        if (user == null)
+        {
+            return false;
+        }
+        int userLevel = user.getLevel() != null ? user.getLevel()
+                : (user.getUserLevel() != null ? user.getUserLevel() : 0);
+        int minLevel = miner.getMinUserLevel() == null ? 0 : Math.max(0, miner.getMinUserLevel());
+        int maxLevel = miner.getMaxUserLevel() == null ? 999 : miner.getMaxUserLevel();
+        if (maxLevel <= 0)
+        {
+            maxLevel = 999;
+        }
+        return userLevel >= minLevel && userLevel <= maxLevel;
+    }
+
+    private void stopRun(SysUserMinerRun run, Date now)
+    {
+        if (run == null)
+        {
+            return;
+        }
+        run.setRunStatus("2");
+        run.setLastCalcTime(now);
+        run.setCollectTime(now);
+        run.setVersion(run.getVersion() == null ? 0 : run.getVersion() + 1);
+
+        SysUserMiner userMiner = userMinerMapper.selectUserMinerById(run.getUserMinerId());
+        if (userMiner != null && userMiner.getUserMinerId() != null)
+        {
+            userMiner.setIsCurrent("0");
+            userMiner.setInactiveTime(now);
+            userMinerMapper.updateUserMiner(userMiner);
+        }
     }
 
     private void creditWag(Long userId, double wagAmount)

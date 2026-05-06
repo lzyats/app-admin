@@ -1,20 +1,51 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_html/flutter_html.dart';
 
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/api_client.dart';
 import 'package:myapp/request/news_api.dart';
+import 'package:myapp/widgets/app_image_cache.dart';
 import 'package:myapp/widgets/app_network_image.dart';
 
-class NewsDetailPage extends StatelessWidget {
+class NewsDetailPage extends StatefulWidget {
   const NewsDetailPage({super.key, required this.article});
 
   final NewsArticle? article;
 
   @override
+  State<NewsDetailPage> createState() => _NewsDetailPageState();
+}
+
+class _NewsDetailPageState extends State<NewsDetailPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final String? coverUrl = (widget.article ?? const NewsArticle(
+        articleId: 0,
+        categoryId: 0,
+        categoryCode: '',
+        categoryName: '',
+        articleTitle: '',
+        summary: '',
+        coverImage: '',
+        articleContent: '',
+        sortOrder: 0,
+        topFlag: '0',
+        status: '0',
+      )).resolvedCoverUrl();
+      if (coverUrl != null && coverUrl.isNotEmpty) {
+        unawaited(AppImageCache.instance.prefetch(coverUrl));
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final AppLocalizations i18n = AppLocalizations.of(context);
-    final NewsArticle data = article ??
+    final NewsArticle data = widget.article ??
         const NewsArticle(
           articleId: 0,
           categoryId: 0,
@@ -120,10 +151,10 @@ class NewsDetailPage extends StatelessWidget {
                 child: _buildContent(content),
               ),
             ],
+            ),
           ),
         ),
-      ),
-    );
+      );
   }
 
   Widget _buildContent(String content) {

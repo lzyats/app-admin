@@ -181,6 +181,11 @@ public class AppInvestProductController extends BaseController
         map.put("singleRate", product.getSingleRate());
         map.put("groupRate", product.getGroupRate());
         map.put("cycleDays", product.getCycleDays());
+        map.put("interestMode", StringUtils.upperCase(StringUtils.defaultIfBlank(product.getInterestMode(), "MATURITY")));
+        map.put("principalMode", StringUtils.upperCase(StringUtils.defaultIfBlank(product.getPrincipalMode(), "MATURITY")));
+        map.put("interestStageCount", product.getInterestStageCount());
+        map.put("principalStageCount", product.getPrincipalStageCount());
+        map.put("stageConfigJson", product.getStageConfigJson());
         map.put("investMode", StringUtils.defaultIfBlank(product.getInvestMode(), "SHARE"));
         map.put("minInvestAmount", product.getMinInvestAmount());
         map.put("maxInvestAmount", product.getMaxInvestAmount());

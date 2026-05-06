@@ -43,7 +43,7 @@ public class SysLevelTrialTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:add')")
-    @Log(title = "等级体验券模板", businessType = BusinessType.INSERT)
+    @Log(title = "等级体验卡模板", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody SysLevelTrialTemplate template)
     {
@@ -52,7 +52,7 @@ public class SysLevelTrialTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:edit')")
-    @Log(title = "等级体验券模板", businessType = BusinessType.UPDATE)
+    @Log(title = "等级体验卡模板", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody SysLevelTrialTemplate template)
     {
@@ -61,7 +61,7 @@ public class SysLevelTrialTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:remove')")
-    @Log(title = "等级体验券模板", businessType = BusinessType.DELETE)
+    @Log(title = "等级体验卡模板", businessType = BusinessType.DELETE)
     @DeleteMapping("/{trialIds}")
     public AjaxResult remove(@PathVariable Long[] trialIds)
     {
@@ -69,13 +69,17 @@ public class SysLevelTrialTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:grant')")
-    @Log(title = "等级体验券发放", businessType = BusinessType.UPDATE)
+    @Log(title = "等级体验卡发放", businessType = BusinessType.UPDATE)
     @PostMapping("/grant")
     public AjaxResult grant(@RequestBody TrialGrantBody body)
     {
         int rows = trialTemplateService.grantTrialToUsers(body.getTrialId(), body.getUserIds(),
             body.getGrantType(), getUsername(), body.getRemark());
-        return success("已发放" + rows + "张");
+        if (rows <= 0)
+        {
+            return AjaxResult.error("未成功发放，请检查目标用户");
+        }
+        return success("已发放 " + rows + " 张");
     }
 
     public static class TrialGrantBody

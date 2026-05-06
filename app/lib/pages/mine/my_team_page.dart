@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/request/my_team_api.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/widgets/app_image_cache.dart';
 import 'package:myapp/widgets/app_network_image.dart';
 
 class MyTeamPage extends StatefulWidget {
@@ -44,7 +47,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
       _error = null;
     });
     try {
-      final AuthUserProfile profile = await AuthApi.getInfo(forceRefresh: forceRefresh);
+      final AuthUserProfile profile = await AuthApi.getInfo();
       final MyTeamStats data = await MyTeamApi.getMyStats(forceRefresh: forceRefresh);
       if (!mounted) return;
       setState(() {
@@ -52,6 +55,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
         _stats = data;
         _loading = false;
       });
+      unawaited(_warmAvatarCache(profile.resolvedAvatarUrl));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -59,6 +63,14 @@ class _MyTeamPageState extends State<MyTeamPage> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _warmAvatarCache(String? avatarUrl) async {
+    final String url = (avatarUrl ?? '').trim();
+    if (url.isEmpty) {
+      return;
+    }
+    await AppImageCache.instance.prefetch(url);
   }
 
   @override

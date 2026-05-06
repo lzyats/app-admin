@@ -39,6 +39,7 @@ com\ruoyi\framework\aspectj\LogAspect.class
 com\ruoyi\framework\config\I18nConfig.class
 com\ruoyi\framework\config\FastJson2JsonRedisSerializer.class
 com\ruoyi\framework\web\domain\server\SysFile.class
+com\ruoyi\framework\aspectj\GoogleVerifyAspect.class
 com\ruoyi\framework\manager\AsyncManager.class
 com\ruoyi\framework\web\service\SysPasswordService.class
 com\ruoyi\framework\interceptor\impl\SameUrlDataInterceptor.class

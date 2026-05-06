@@ -24,7 +24,7 @@ class _VipGuidePageState extends State<VipGuidePage> {
   @override
   void initState() {
     super.initState();
-    _load(refresh: true);
+    _load(refresh: false);
   }
 
   Future<void> _load({bool refresh = false}) async {
@@ -35,7 +35,7 @@ class _VipGuidePageState extends State<VipGuidePage> {
     try {
       final AuthUserProfile? cached = await AuthTool.getUserProfile();
       final AuthUserProfile profile =
-          refresh ? await AuthApi.getInfo() : (cached ?? await AuthApi.getInfo());
+          cached ?? await AuthApi.getInfo(forceRefresh: refresh);
       if (refresh || cached == null) {
         await AuthTool.saveUserProfile(profile);
       }

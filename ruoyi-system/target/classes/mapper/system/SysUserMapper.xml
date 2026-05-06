@@ -119,6 +119,15 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		<if test="userName != null and userName != ''">
 			AND u.user_name like concat('%', #{userName}, '%')
 		</if>
+		<if test="nickName != null and nickName != ''">
+			AND u.nick_name like concat('%', #{nickName}, '%')
+		</if>
+		<if test="realName != null and realName != ''">
+			AND u.real_name like concat('%', #{realName}, '%')
+		</if>
+		<if test="level != null">
+			AND u.level = #{level}
+		</if>
 		<if test="status != null and status != ''">
 			AND u.status = #{status}
 		</if>
@@ -350,7 +359,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 
     <update id="updateUserLevelValue">
         update sys_user
-        set level = #{level},
+        set user_level = #{level},
+            level = #{level},
             update_time = sysdate()
         where user_id = #{userId}
     </update>

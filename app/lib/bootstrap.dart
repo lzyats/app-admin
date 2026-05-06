@@ -4,8 +4,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'package:myapp/app.dart';
-import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/tools/app_bootstrap_tool.dart';
+import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/tools/auth_tool.dart';
 import 'package:myapp/tools/local_proxy_manager.dart';
 import 'package:myapp/tools/notification_tool.dart';

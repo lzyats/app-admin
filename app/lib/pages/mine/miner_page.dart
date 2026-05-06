@@ -6,6 +6,8 @@ import 'package:myapp/request/miner_api.dart';
 import 'package:myapp/request/api_client.dart';
 import 'package:myapp/request/api_exception.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/widgets/app_network_image.dart';
+import 'package:myapp/widgets/app_network_image.dart';
 
 class MinerPage extends StatefulWidget {
   const MinerPage({super.key});
@@ -41,14 +43,22 @@ class _MinerPageState extends State<MinerPage> {
     setState(() {
       _loading = true;
     });
+    final Map<String, dynamic> cached = await MinerApi.getCachedOverview();
+    if (mounted && cached.isNotEmpty) {
+      setState(() {
+        _overview = cached;
+        _loading = false;
+      });
+    }
     try {
       final Map<String, dynamic> data = await MinerApi.fetchOverview();
       if (!mounted) return;
       setState(() {
         _overview = data;
+        _loading = false;
       });
       final bool hasCurrentMiner =
-          (_overview['currentMiner'] as Map?)?.isNotEmpty == true;
+          (data['currentMiner'] as Map?)?.isNotEmpty == true;
       if (!hasCurrentMiner && !_autoRedirectedToClaim) {
         _autoRedirectedToClaim = true;
         WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -513,8 +523,8 @@ class _MinerPageState extends State<MinerPage> {
           color: const Color(0x33101C30),
           child: imageUrl == null
               ? _minerSquarePlaceholder(size)
-              : Image.network(
-                  imageUrl,
+              : AppNetworkImage(
+                  src: imageUrl,
                   width: size,
                   height: size,
                   fit: BoxFit.cover,

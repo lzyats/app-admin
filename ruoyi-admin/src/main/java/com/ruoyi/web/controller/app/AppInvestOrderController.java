@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.core.controller.BaseController;
@@ -36,6 +37,7 @@ import com.ruoyi.system.domain.SysInvestProduct;
 import com.ruoyi.system.mapper.SysAppInvestOrderMapper;
 import com.ruoyi.system.mapper.SysInvestProductMapper;
 import com.ruoyi.system.mapper.SysUserMapper;
+import com.ruoyi.system.service.ISysCouponUseService;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysTeamStatService;
 import com.ruoyi.system.service.ISysUserService;
@@ -85,6 +87,9 @@ public class AppInvestOrderController extends BaseController
 
     @Autowired
     private ISysTeamStatService teamStatService;
+
+    @Autowired
+    private ISysCouponUseService couponUseService;
 
     @PostMapping("/contract/preview")
     public AjaxResult previewContract(@RequestBody Map<String, Object> body)
@@ -175,6 +180,34 @@ public class AppInvestOrderController extends BaseController
         return AjaxResult.success(data);
     }
 
+    @GetMapping("/detail")
+    public AjaxResult detail(@RequestParam("orderId") Long orderId)
+    {
+        if (orderId == null || orderId <= 0L)
+        {
+            throw new ServiceException("订单ID不能为空");
+        }
+        Long userId = getLoginUser().getUserId();
+        Map<String, Object> order = appInvestOrderMapper.selectInvestOrderById(orderId);
+        if (order == null || order.isEmpty())
+        {
+            throw new ServiceException("订单不存在");
+        }
+        Long ownerId = parseLong(order.get("userId"), 0L);
+        if (ownerId == null || !ownerId.equals(userId))
+        {
+            throw new ServiceException("无权查看该订单");
+        }
+        List<Map<String, Object>> plans = appInvestOrderMapper.selectOrderPlansByOrderId(orderId);
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        data.put("order", order);
+        data.put("plans", plans);
+        data.put("hasCoupon", parseLong(order.get("userCouponId"), 0L) > 0L
+            || parseDecimal(order.get("couponDiscountAmount"), BigDecimal.ZERO).compareTo(BigDecimal.ZERO) > 0
+            || StringUtils.isNotBlank(safeText(order.get("couponName"))));
+        return AjaxResult.success(data);
+    }
+
     @PostMapping("/submit")
     @Transactional(rollbackFor = Exception.class)
     public AjaxResult submit(@RequestBody Map<String, Object> body)
@@ -218,10 +251,16 @@ public class AppInvestOrderController extends BaseController
         {
             throw new ServiceException("用户不存在");
         }
+        Integer userLevelSnapshot = resolveUserLevel(user);
 
         boolean agreed = parseBoolean(payload.get("agreed"));
         String signatureData = StringUtils.trim((String) payload.get("signatureData"));
         String payPwd = StringUtils.trim((String) payload.get("payPwd"));
+        Long userCouponId = parseLong(payload.get("userCouponId"), 0L);
+        if (userCouponId != null && userCouponId.longValue() <= 0L)
+        {
+            userCouponId = null;
+        }
         Long productId = parseLong(payload.get("productId"), 0L);
         Map<String, Object> latestSigned = null;
         if (productId != null && productId > 0L)
@@ -357,17 +396,20 @@ public class AppInvestOrderController extends BaseController
         }
 
         String currency = normalizeWalletCurrency(product.getCurrency());
+        Map<String, Object> couponPreview = couponUseService.previewInvestCoupon(userId, product, userCouponId, orderPrincipalAmount);
+        BigDecimal couponDiscountAmount = parseDecimal(couponPreview.get("discountAmount"), BigDecimal.ZERO).setScale(2, RoundingMode.DOWN);
+        BigDecimal payAmount = parseDecimal(couponPreview.get("payAmount"), orderPrincipalAmount).setScale(2, RoundingMode.DOWN);
         SysUserWallet wallet = walletService.selectWalletByUserIdAndCurrencyTypeForUpdate(userId, currency);
         if (wallet == null)
         {
             throw new ServiceException(currency + "钱包不存在");
         }
         BigDecimal balanceBefore = parseDecimal(wallet.getAvailableBalance(), BigDecimal.ZERO).setScale(2, RoundingMode.DOWN);
-        if (balanceBefore.compareTo(orderPrincipalAmount) < 0)
+        if (balanceBefore.compareTo(payAmount) < 0)
         {
             throw new ServiceException("余额不足");
         }
-        BigDecimal balanceAfter = balanceBefore.subtract(orderPrincipalAmount).setScale(2, RoundingMode.DOWN);
+        BigDecimal balanceAfter = balanceBefore.subtract(payAmount).setScale(2, RoundingMode.DOWN);
         BigDecimal totalInvestAfter = parseDecimal(wallet.getTotalInvest(), BigDecimal.ZERO).add(orderPrincipalAmount).setScale(2, RoundingMode.DOWN);
         wallet.setAvailableBalance(balanceAfter.doubleValue());
         wallet.setTotalInvest(totalInvestAfter.doubleValue());
@@ -483,6 +525,13 @@ public class AppInvestOrderController extends BaseController
             cycleDays,
             investShares,
             expectedIncome,
+            userLevelSnapshot,
+            parseLong(couponPreview.get("couponId"), 0L),
+            parseLong(couponPreview.get("userCouponId"), 0L),
+            safeText(couponPreview.get("couponName")),
+            safeText(couponPreview.get("couponType")),
+            couponDiscountAmount,
+            payAmount,
             contractNo,
             groupId,
             groupNo,
@@ -523,7 +572,11 @@ public class AppInvestOrderController extends BaseController
         Long orderId = appInvestOrderMapper.selectInvestOrderIdByOrderNo(orderNo);
         if (orderId != null && orderId > 0)
         {
-            writeOrderPlans(orderId, userId, product, orderPrincipalAmount, effectiveRate, expectedIncome);
+            writeOrderPlans(orderId, userId, product, orderPrincipalAmount, payAmount, effectiveRate, expectedIncome);
+            if (userCouponId != null)
+            {
+                couponUseService.markInvestCouponUsed(userCouponId, productId, orderId, userName, "APP在线签约认购优惠券核销");
+            }
         }
 
         if (realGroupMode && groupId != null && groupId > 0L)
@@ -543,14 +596,17 @@ public class AppInvestOrderController extends BaseController
         log.setUserId(userId);
         log.setWalletId(wallet.getWalletId());
         log.setCurrencyType(currency);
-        log.setAmount(orderPrincipalAmount.doubleValue());
+        log.setAmount(payAmount.doubleValue());
         log.setType("invest");
         log.setStatus("success");
         log.setBalanceBefore(balanceBefore.doubleValue());
         log.setBalanceAfter(balanceAfter.doubleValue());
         log.setOrderNo(orderNo);
         log.setOperatorName(userName);
-        log.setRemark("APP在线签约认购");
+        String couponName = safeText(couponPreview.get("couponName"));
+        log.setRemark(StringUtils.isBlank(couponName)
+            ? "APP在线签约认购"
+            : "APP在线签约认购，优惠券：" + couponName);
         log.setCreateTime(new Date());
         walletLogService.insertLog(log);
 
@@ -566,6 +622,12 @@ public class AppInvestOrderController extends BaseController
         data.put("contractNo", contractNo);
         data.put("signed", true);
         data.put("signedAt", new Date());
+        data.put("couponId", couponPreview.get("couponId"));
+        data.put("userCouponId", couponPreview.get("userCouponId"));
+        data.put("couponName", safeText(couponPreview.get("couponName")));
+        data.put("couponType", safeText(couponPreview.get("couponType")));
+        data.put("couponDiscountAmount", couponDiscountAmount);
+        data.put("payAmount", payAmount);
         data.put("groupMode", realGroupMode || groupMode);
         data.put("groupId", groupId);
         data.put("groupNo", groupNo);
@@ -587,6 +649,19 @@ public class AppInvestOrderController extends BaseController
         {
             stringRedisTemplate.delete(lockKey);
         }
+    }
+
+    private Integer resolveUserLevel(SysUser user)
+    {
+        if (user == null)
+        {
+            return null;
+        }
+        if (user.getUserLevel() != null)
+        {
+            return user.getUserLevel();
+        }
+        return user.getLevel();
     }
 
     @SuppressWarnings("unchecked")
@@ -742,7 +817,7 @@ public class AppInvestOrderController extends BaseController
     }
 
     private void writeOrderPlans(Long orderId, Long userId, SysInvestProduct product,
-        BigDecimal investAmount, BigDecimal effectiveRate, BigDecimal expectedIncome)
+        BigDecimal investAmount, BigDecimal repayPrincipalAmount, BigDecimal effectiveRate, BigDecimal expectedIncome)
     {
         String interestMode = StringUtils.upperCase(StringUtils.defaultIfBlank(product.getInterestMode(), "MATURITY"));
         String principalMode = StringUtils.upperCase(StringUtils.defaultIfBlank(product.getPrincipalMode(), "MATURITY"));
@@ -775,12 +850,12 @@ public class AppInvestOrderController extends BaseController
 
         if ("STAGED".equals(principalMode))
         {
-            writeStagedPlans(orderId, userId, product, investAmount, BigDecimal.ZERO, baseTime, 1, "PRINCIPAL", stageConfig);
+            writeStagedPlans(orderId, userId, product, repayPrincipalAmount, BigDecimal.ZERO, baseTime, 1, "PRINCIPAL", stageConfig);
         }
         else
         {
             appInvestOrderMapper.insertOrderPlan(orderId, product.getProductId(), userId, "PRINCIPAL", 1,
-                plusDays(baseTime, cycleDays), BigDecimal.ZERO, investAmount.max(BigDecimal.ZERO), "到期返本计划");
+                plusDays(baseTime, cycleDays), BigDecimal.ZERO, repayPrincipalAmount.max(BigDecimal.ZERO), "到期返本计划");
         }
     }
 
@@ -968,6 +1043,20 @@ public class AppInvestOrderController extends BaseController
         return "total";
     }
 
+    private String safeText(Object value)
+    {
+        if (value == null)
+        {
+            return "";
+        }
+        String text = String.valueOf(value).trim();
+        if ("null".equalsIgnoreCase(text))
+        {
+            return "";
+        }
+        return text;
+    }
+
     @SuppressWarnings("unchecked")
     private AjaxResult toCachedSuccess(String cachedJson)
     {
@@ -988,6 +1077,12 @@ public class AppInvestOrderController extends BaseController
         Map<String, Object> data = new HashMap<String, Object>();
         data.put("orderNo", existingOrder.get("orderNo"));
         data.put("contractNo", existingOrder.get("contractNo"));
+        data.put("couponId", existingOrder.get("couponId"));
+        data.put("userCouponId", existingOrder.get("userCouponId"));
+        data.put("couponName", existingOrder.get("couponName"));
+        data.put("couponType", existingOrder.get("couponType"));
+        data.put("couponDiscountAmount", existingOrder.get("couponDiscountAmount"));
+        data.put("payAmount", existingOrder.get("payAmount"));
         data.put("signed", true);
         data.put("signedAt", existingOrder.get("createTime"));
         data.put("groupId", existingOrder.get("groupId"));

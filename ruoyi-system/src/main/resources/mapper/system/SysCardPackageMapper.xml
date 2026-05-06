@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysCardPackageMapper">
+
+    <select id="selectMyCouponCards" resultType="map">
+        select cu.user_coupon_id as userCouponId,
+               cu.coupon_id      as cardId,
+               ct.coupon_name    as cardName,
+               ct.coupon_type    as cardType,
+               ct.scope_type     as scopeType,
+               ct.product_ids_json as productIdsJson,
+               ct.min_amount     as minAmount,
+               ct.discount_amount as discountAmount,
+               ct.bonus_principal as bonusPrincipal,
+               ct.bonus_rate     as bonusRate,
+               ct.experience_principal as experiencePrincipal,
+               ct.min_experience_units as minExperienceUnits,
+               ct.max_experience_units as maxExperienceUnits,
+               cu.grant_type     as grantType,
+               cu.status         as userStatus,
+               cu.start_time     as startTime,
+               cu.end_time       as endTime,
+               cu.create_time    as createTime,
+               cu.remark         as remark
+        from sys_coupon_user cu
+                 left join sys_coupon_template ct on ct.coupon_id = cu.coupon_id
+        where cu.user_id = #{userId}
+        order by cu.create_time desc
+    </select>
+
+    <select id="selectMyTrialCards" resultType="map">
+        select tu.user_trial_id   as userTrialId,
+               tu.trial_id        as cardId,
+               tt.trial_name      as cardName,
+               tt.trial_level     as trialLevel,
+               tt.bonus_rate      as bonusRate,
+               tt.valid_days      as validDays,
+               tt.valid_start_time as templateStartTime,
+               tt.valid_end_time  as templateEndTime,
+               tu.original_level  as originalLevel,
+               tu.current_level   as currentLevel,
+               tu.grant_type      as grantType,
+               case
+                   when tu.status = '1' and tu.end_time is not null and tu.end_time &lt;= now() then '2'
+                   when tu.status = '0' and tt.valid_start_time is not null and tt.valid_start_time &gt; now() then '0'
+                   when tu.status = '0' and tt.valid_end_time is not null and tt.valid_end_time &lt;= now() then '2'
+                   else tu.status
+               end as userStatus,
+                case when tu.status = '1' and tu.start_time is not null and tu.end_time is not null and tu.end_time &gt; now() then 1 else 0 end as isUsing,
+               case
+                    when tu.status = '1' and tu.end_time is not null and tu.end_time &gt; now() then timestampdiff(second, now(), tu.end_time)
+                  when tu.status = '1' and tu.end_time is not null and tu.end_time &lt;= now() then 0
+                   else 0
+               end as remainingSeconds,
+               case
+                   when tu.status = '0' and (tt.valid_start_time is null or tt.valid_start_time &lt;= now())
+                         and (tt.valid_end_time is null or tt.valid_end_time &gt; now()) then 1
+                   else 0
+               end as canStart,
+               tu.start_time      as startTime,
+               tu.end_time        as endTime,
+               tu.create_time     as createTime,
+               tu.remark          as remark
+        from sys_level_trial_user tu
+                 left join sys_level_trial_template tt on tt.trial_id = tu.trial_id
+        where tu.user_id = #{userId}
+        order by case when tu.status = '1' then 0 else 1 end, tu.create_time desc
+    </select>
+
+    <select id="selectTrialCardByIdForUpdate" resultType="map">
+        select *
+        from sys_level_trial_user
+        where user_trial_id = #{userTrialId}
+        limit 1
+        for update
+    </select>
+
+    <select id="selectActiveTrialCardByUserIdForUpdate" resultType="map">
+        select *
+        from sys_level_trial_user
+        where user_id = #{userId}
+          and status = '1'
+        order by end_time desc, user_trial_id desc
+        limit 1
+        for update
+    </select>
+
+    <select id="selectActiveTrialCardsByUserIdForUpdate" resultType="map">
+        select *
+        from sys_level_trial_user
+        where user_id = #{userId}
+          and status = '1'
+          and end_time is not null
+          and end_time &gt; now()
+          <if test="excludeUserTrialId != null">
+              and user_trial_id != #{excludeUserTrialId}
+          </if>
+        order by end_time desc, user_trial_id desc
+        for update
+    </select>
+
+    <select id="selectExpiredTrialCards" resultType="map">
+        select tu.user_trial_id as userTrialId,
+               tu.user_id as userId,
+               tu.trial_id as trialId,
+               tu.original_level as originalLevel,
+               tu.current_level as currentLevel,
+               tu.status as status,
+               tu.start_time as startTime,
+               tu.end_time as endTime
+        from sys_level_trial_user tu
+        where tu.status = '1'
+          and tu.end_time is not null
+          and tu.end_time &lt;= #{now}
+        order by tu.end_time asc, tu.user_trial_id asc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <select id="selectExpiredUnstartedTrialCards" resultType="map">
+        select tu.user_trial_id as userTrialId,
+               tu.user_id as userId,
+               tu.trial_id as trialId,
+               tu.status as status,
+               tt.valid_end_time as templateEndTime
+        from sys_level_trial_user tu
+                 left join sys_level_trial_template tt on tt.trial_id = tu.trial_id
+        where tu.status = '0'
+          and tt.valid_end_time is not null
+          and tt.valid_end_time &lt;= #{now}
+        order by tt.valid_end_time asc, tu.user_trial_id asc
+        <if test="limit != null">
+            limit #{limit}
+        </if>
+    </select>
+
+    <update id="updateTrialCardUse">
+        update sys_level_trial_user
+        set original_level = #{originalLevel},
+            current_level = #{currentLevel},
+            status = '1',
+            start_time = #{startTime},
+            end_time = #{endTime},
+            update_by = #{updateBy},
+            update_time = now(),
+            remark = case
+                         when #{remark} is null or #{remark} = '' then remark
+                         else #{remark}
+                end
+        where user_trial_id = #{userTrialId}
+    </update>
+
+    <update id="updateTrialCardExpired">
+        update sys_level_trial_user
+        set status = '2',
+            update_by = #{updateBy},
+            update_time = now(),
+            remark = case
+                         when #{remark} is null or #{remark} = '' then remark
+                         else #{remark}
+                end
+        where user_trial_id = #{userTrialId}
+    </update>
+</mapper>

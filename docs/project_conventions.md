@@ -18,7 +18,7 @@
 - 项目类型：投资理财后台系统
 - 后端框架：RuoYi-Vue
 - 后端语言：Java / SpringBoot
-- 数据库：MySQL 8.0
+- 数据库：MySQL 8.4.8
 - 管理端：Vue2 / ElementUI
 - 移动端：Flutter
 - 架构形态：单体架构，后台管理系统 + 移动端应用

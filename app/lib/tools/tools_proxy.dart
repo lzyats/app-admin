@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:myapp/config/app_config.dart';
 import 'package:myapp/tools/runtime_proxy.dart';
 
 typedef UpstreamResolver = Future<Uri> Function();
@@ -48,7 +49,7 @@ class ToolsProxy {
     // ignore: avoid_print
     print('[LocalProxy] <= ${req.method} ${req.uri}');
 
-    final upstreamBase = await upstreamResolver();
+    final upstreamBase = _normalizeUpstreamBase(await upstreamResolver());
 
     final upstreamUrl = upstreamBase.replace(
       path: _joinPath(upstreamBase.path, req.uri.path),
@@ -124,6 +125,23 @@ class ToolsProxy {
     final left = a.endsWith('/') ? a.substring(0, a.length - 1) : a;
     final right = b.startsWith('/') ? b : '/$b';
     return left + right;
+  }
+
+  static Uri _normalizeUpstreamBase(Uri uri) {
+    final String basePath = AppConfig.requestBasePath.trim();
+    if (basePath.isEmpty) {
+      return uri;
+    }
+
+    final String normalizedBasePath = basePath.startsWith('/') ? basePath : '/$basePath';
+    final String currentPath = uri.path == '/' ? '' : uri.path.replaceAll(RegExp(r'/+$'), '');
+    if (currentPath.endsWith(normalizedBasePath)) {
+      return uri;
+    }
+
+    final String combinedPath = '$currentPath$normalizedBasePath';
+    final String safePath = combinedPath.startsWith('/') ? combinedPath : '/$combinedPath';
+    return uri.replace(path: safePath);
   }
 
   Future<void> stop() async {

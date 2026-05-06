@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ruoyi.common.annotation.Log;
 import com.ruoyi.common.core.controller.BaseController;
 import com.ruoyi.common.core.domain.AjaxResult;
+import com.ruoyi.common.core.domain.entity.SysUser;
 import com.ruoyi.common.core.page.TableDataInfo;
 import com.ruoyi.common.enums.BusinessType;
+import com.ruoyi.system.domain.SysCouponGrantRequest;
 import com.ruoyi.system.domain.SysCouponTemplate;
 import com.ruoyi.system.service.ISysCouponTemplateService;
 
@@ -35,6 +37,15 @@ public class SysCouponTemplateController extends BaseController
         return getDataTable(list);
     }
 
+    @PreAuthorize("@ss.hasPermi('system:invest:grant')")
+    @GetMapping("/audience/list")
+    public TableDataInfo audienceList(SysCouponGrantRequest request)
+    {
+        startPage();
+        List<SysUser> list = couponTemplateService.selectCouponAudienceList(request);
+        return getDataTable(list);
+    }
+
     @PreAuthorize("@ss.hasPermi('system:invest:list')")
     @GetMapping("/{couponId}")
     public AjaxResult getInfo(@PathVariable Long couponId)
@@ -43,7 +54,7 @@ public class SysCouponTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:add')")
-    @Log(title = "优惠券模板", businessType = BusinessType.INSERT)
+    @Log(title = "优惠券模板管理", businessType = BusinessType.INSERT)
     @PostMapping
     public AjaxResult add(@RequestBody SysCouponTemplate template)
     {
@@ -52,7 +63,7 @@ public class SysCouponTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:edit')")
-    @Log(title = "优惠券模板", businessType = BusinessType.UPDATE)
+    @Log(title = "优惠券模板管理", businessType = BusinessType.UPDATE)
     @PutMapping
     public AjaxResult edit(@RequestBody SysCouponTemplate template)
     {
@@ -61,7 +72,7 @@ public class SysCouponTemplateController extends BaseController
     }
 
     @PreAuthorize("@ss.hasPermi('system:invest:remove')")
-    @Log(title = "优惠券模板", businessType = BusinessType.DELETE)
+    @Log(title = "优惠券模板管理", businessType = BusinessType.DELETE)
     @DeleteMapping("/{couponIds}")
     public AjaxResult remove(@PathVariable Long[] couponIds)
     {
@@ -71,69 +82,13 @@ public class SysCouponTemplateController extends BaseController
     @PreAuthorize("@ss.hasPermi('system:invest:grant')")
     @Log(title = "优惠券发放", businessType = BusinessType.UPDATE)
     @PostMapping("/grant")
-    public AjaxResult grant(@RequestBody CouponGrantBody body)
+    public AjaxResult grant(@RequestBody SysCouponGrantRequest request)
     {
-        int rows = couponTemplateService.grantCouponToUsers(body.getCouponId(), body.getUserIds(), body.getLevel(),
-            body.getGrantType(), getUsername(), body.getRemark());
-        return success("已发放" + rows + "张");
-    }
-
-    public static class CouponGrantBody
-    {
-        private Long couponId;
-        private List<Long> userIds;
-        private Integer level;
-        private String grantType;
-        private String remark;
-
-        public Long getCouponId()
+        if (request.getCouponId() == null || request.getCouponId() <= 0L)
         {
-            return couponId;
+            return AjaxResult.error("模板ID不能为空");
         }
-
-        public void setCouponId(Long couponId)
-        {
-            this.couponId = couponId;
-        }
-
-        public List<Long> getUserIds()
-        {
-            return userIds;
-        }
-
-        public void setUserIds(List<Long> userIds)
-        {
-            this.userIds = userIds;
-        }
-
-        public Integer getLevel()
-        {
-            return level;
-        }
-
-        public void setLevel(Integer level)
-        {
-            this.level = level;
-        }
-
-        public String getGrantType()
-        {
-            return grantType;
-        }
-
-        public void setGrantType(String grantType)
-        {
-            this.grantType = grantType;
-        }
-
-        public String getRemark()
-        {
-            return remark;
-        }
-
-        public void setRemark(String remark)
-        {
-            this.remark = remark;
-        }
+        int rows = couponTemplateService.grantCouponToUsers(request.getCouponId(), request, getUsername());
+        return success("已发放 " + rows + " 张");
     }
 }

@@ -1,6 +1,8 @@
 package com.ruoyi.system.domain;
 
 import java.math.BigDecimal;
+import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.core.domain.BaseEntity;
 
 public class SysLevelTrialTemplate extends BaseEntity
@@ -12,6 +14,10 @@ public class SysLevelTrialTemplate extends BaseEntity
     private Integer trialLevel;
     private BigDecimal bonusRate;
     private Integer validDays;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date validStartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private Date validEndTime;
     private Integer totalCount;
     private Integer receivedCount;
     private String status;
@@ -64,6 +70,26 @@ public class SysLevelTrialTemplate extends BaseEntity
     public void setValidDays(Integer validDays)
     {
         this.validDays = validDays;
+    }
+
+    public Date getValidStartTime()
+    {
+        return validStartTime;
+    }
+
+    public void setValidStartTime(Date validStartTime)
+    {
+        this.validStartTime = validStartTime;
+    }
+
+    public Date getValidEndTime()
+    {
+        return validEndTime;
+    }
+
+    public void setValidEndTime(Date validEndTime)
+    {
+        this.validEndTime = validEndTime;
     }
 
     public Integer getTotalCount()

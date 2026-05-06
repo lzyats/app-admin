@@ -61,13 +61,6 @@ public class ApiDecryptFilter extends OncePerRequestFilter
             return;
         }
 
-        long contentLength = request.getContentLengthLong();
-        if (contentLength <= 0L)
-        {
-            filterChain.doFilter(request, response);
-            return;
-        }
-
         String body = HttpHelper.getBodyString(request);
         if (StringUtils.isEmpty(body))
         {

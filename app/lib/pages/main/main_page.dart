@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -9,6 +11,7 @@ import 'package:myapp/pages/mine/miner_page.dart';
 import 'package:myapp/pages/product/invest_product_list_page.dart';
 import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/tools/auth_tool.dart';
+import 'package:myapp/widgets/app_image_cache.dart';
 import 'package:myapp/widgets/app_network_image.dart';
 
 class MainPage extends StatefulWidget {
@@ -195,6 +198,7 @@ class _MineTabState extends State<_MineTab> {
             _loading = false;
           });
         }
+        unawaited(_warmAvatarCache(cachedUser.resolvedAvatarUrl));
         _checkSecurityQuestionSet();
       }
 
@@ -206,6 +210,7 @@ class _MineTabState extends State<_MineTab> {
           _loading = false;
         });
       }
+      unawaited(_warmAvatarCache(userInfo.resolvedAvatarUrl));
       _checkSecurityQuestionSet();
     } catch (e) {
       debugPrint('Failed to load mine user info: $e');
@@ -215,6 +220,14 @@ class _MineTabState extends State<_MineTab> {
         });
       }
     }
+  }
+
+  Future<void> _warmAvatarCache(String? avatarUrl) async {
+    final String url = (avatarUrl ?? '').trim();
+    if (url.isEmpty) {
+      return;
+    }
+    await AppImageCache.instance.prefetch(url);
   }
 
   Future<void> _checkSecurityQuestionSet() async {
@@ -540,7 +553,9 @@ class _MineTabState extends State<_MineTab> {
                               _MineShortcutItem(
                                 icon: Icons.groups_outlined,
                                 iconColor: const Color(0xFF39E6FF),
-                                label: i18n.t('mineCoupon'),
+                                label: i18n.locale.languageCode == 'zh'
+                                    ? '我的拼团'
+                                    : 'My Group',
                                 onTap: () {
                                   _pushMineRoute(AppRouter.myGroup);
                                 },
@@ -556,9 +571,17 @@ class _MineTabState extends State<_MineTab> {
                               _MineShortcutItem(
                                 icon: Icons.workspace_premium_outlined,
                                 iconColor: const Color(0xFFE2FF59),
-                                label: i18n.t('mineLevelExperienceCoupon'),
-                                onTap: () => _showComingSoonSnackBar(
-                                    context, i18n.t('mineFeatureComingSoon')),
+                                label: i18n.locale.languageCode == 'zh'
+                                    ? '卡包'
+                                    : 'Card Package',
+                                onTap: () {
+                                  _pushMineRoute(
+                                    AppRouter.cardPackage,
+                                    extraArgs: <String, dynamic>{
+                                      'initialSection': 'trial',
+                                    },
+                                  );
+                                },
                               ),
                             ],
                           ),

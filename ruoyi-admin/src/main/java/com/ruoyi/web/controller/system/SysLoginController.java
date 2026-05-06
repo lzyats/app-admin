@@ -28,7 +28,6 @@ import com.ruoyi.framework.security.crypto.ApiCryptoService;
 import com.ruoyi.framework.web.service.SysLoginService;
 import com.ruoyi.system.service.ISysConfigService;
 import com.ruoyi.system.service.ISysMenuService;
-import com.ruoyi.system.service.ISysTeamLevelService;
 import com.ruoyi.system.service.ISysUserService;
 import com.ruoyi.system.domain.vo.RouterVo;
 import tools.jackson.databind.ObjectMapper;
@@ -52,9 +51,6 @@ public class SysLoginController {
 
     @Autowired
     private ISysUserService userService;
-
-    @Autowired
-    private ISysTeamLevelService teamLevelService;
 
     @Autowired
     private RedisCache redisCache;
@@ -93,10 +89,6 @@ public class SysLoginController {
         Long userId = resolveUserId(loginUser, loginUserInfo);
         SysUser user = null;
         if (userId != null) {
-            if (appClient)
-            {
-                teamLevelService.checkAndUpgradeUserTeamLevel(userId);
-            }
             user = appClient
                     ? userService.selectUserBaseById(userId)
                     : userService.selectUserById(userId);

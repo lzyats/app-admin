@@ -11,6 +11,7 @@ E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\service\impl\SysJobServ
 E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\service\ISysJobLogService.java
 E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\service\ISysJobService.java
 E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\task\InvestOrderTask.java
+E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\task\LevelTrialTask.java
 E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\task\MinerTask.java
 E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\task\RyTask.java
 E:\Go\go-api\ruoyi-quartz\src\main\java\com\ruoyi\quartz\task\TeamStatTask.java

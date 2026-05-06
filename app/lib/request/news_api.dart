@@ -93,6 +93,7 @@ class HomeNotice {
     required this.noticeTitle,
     required this.noticeType,
     required this.noticeContent,
+    required this.createTime,
     required this.status,
   });
 
@@ -100,6 +101,7 @@ class HomeNotice {
   final String noticeTitle;
   final String noticeType;
   final String noticeContent;
+  final String createTime;
   final String status;
 
   factory HomeNotice.fromJson(Map<String, dynamic> json) {
@@ -108,6 +110,7 @@ class HomeNotice {
       noticeTitle: (json['noticeTitle'] ?? json['notice_title'] ?? '').toString(),
       noticeType: (json['noticeType'] ?? json['notice_type'] ?? '').toString(),
       noticeContent: (json['noticeContent'] ?? json['notice_content'] ?? '').toString(),
+      createTime: (json['createTime'] ?? json['create_time'] ?? '').toString(),
       status: (json['status'] ?? '').toString(),
     );
   }

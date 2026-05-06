@@ -23,6 +23,13 @@ public interface SysAppInvestOrderMapper
         @Param("cycleDays") Integer cycleDays,
         @Param("investShares") Long investShares,
         @Param("expectedIncome") java.math.BigDecimal expectedIncome,
+        @Param("userLevelSnapshot") Integer userLevelSnapshot,
+        @Param("couponId") Long couponId,
+        @Param("userCouponId") Long userCouponId,
+        @Param("couponName") String couponName,
+        @Param("couponType") String couponType,
+        @Param("couponDiscountAmount") java.math.BigDecimal couponDiscountAmount,
+        @Param("payAmount") java.math.BigDecimal payAmount,
         @Param("contractNo") String contractNo,
         @Param("groupId") Long groupId,
         @Param("groupNo") String groupNo,
@@ -140,6 +147,8 @@ public interface SysAppInvestOrderMapper
     Map<String, Object> selectAdminInvestOrderById(@Param("orderId") Long orderId);
 
     List<Map<String, Object>> selectOrderPlansByOrderId(@Param("orderId") Long orderId);
+
+    Map<String, Object> selectInvestOrderById(@Param("orderId") Long orderId);
 
     Map<String, Object> selectInvestOrderByIdForUpdate(@Param("orderId") Long orderId);
 

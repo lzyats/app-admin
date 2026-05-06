@@ -561,7 +561,7 @@ public class SysInvestOrderServiceImpl implements ISysInvestOrderService
         BigDecimal creditPrincipal = pendingPrincipal.compareTo(BigDecimal.ZERO) > 0 ? pendingPrincipal : BigDecimal.ZERO;
         BigDecimal creditInterest = pendingInterest.compareTo(BigDecimal.ZERO) > 0 ? pendingInterest : BigDecimal.ZERO;
         BigDecimal creditRedPacket = computeProductRedPacket(order);
-        BigDecimal creditLevelBonus = computeLevelBonus(orderPrincipal, userId);
+        BigDecimal creditLevelBonus = computeLevelBonus(orderPrincipal, order);
         BigDecimal creditTeamBonus = creditTeamBonusToDirectParent(orderPrincipal, userId, currency, orderNo, operatorName);
 
         BigDecimal totalCredit = creditPrincipal.add(creditInterest).add(creditRedPacket).add(creditLevelBonus);
@@ -684,13 +684,16 @@ public class SysInvestOrderServiceImpl implements ISysInvestOrderService
         return units.multiply(redPacketPerUnit).setScale(2, RoundingMode.DOWN);
     }
 
-    private BigDecimal computeLevelBonus(BigDecimal orderPrincipal, Long userId)
+    private BigDecimal computeLevelBonus(BigDecimal orderPrincipal, Map<String, Object> order)
     {
-        if (orderPrincipal == null || orderPrincipal.compareTo(BigDecimal.ZERO) <= 0 || userId == null || userId <= 0L)
+        if (orderPrincipal == null || orderPrincipal.compareTo(BigDecimal.ZERO) <= 0 || order == null || order.isEmpty())
         {
             return BigDecimal.ZERO.setScale(2, RoundingMode.DOWN);
         }
-        BigDecimal bonusPercent = resolveUserInvestBonusPercent(userId);
+        Integer snapshotLevel = parseInt(order.get("user_level_snapshot"), null);
+        BigDecimal bonusPercent = snapshotLevel != null && snapshotLevel > 0
+                ? resolveUserInvestBonusPercent(snapshotLevel)
+                : resolveUserInvestBonusPercent(parseLong(order.get("user_id"), 0L));
         if (bonusPercent.compareTo(BigDecimal.ZERO) <= 0)
         {
             return BigDecimal.ZERO.setScale(2, RoundingMode.DOWN);
@@ -752,12 +755,17 @@ public class SysInvestOrderServiceImpl implements ISysInvestOrderService
             return BigDecimal.ZERO.setScale(2, RoundingMode.DOWN);
         }
         SysUser user = userMapper.selectUserBaseById(userId);
-        if (user == null || user.getLevel() == null)
+        return resolveUserInvestBonusPercent(resolveUserLevel(user));
+    }
+
+    private BigDecimal resolveUserInvestBonusPercent(Integer userLevel)
+    {
+        if (userLevel == null || userLevel <= 0)
         {
             return BigDecimal.ZERO.setScale(2, RoundingMode.DOWN);
         }
         SysUserLevel query = new SysUserLevel();
-        query.setLevel(user.getLevel());
+        query.setLevel(userLevel);
         query.setStatus("0");
         List<SysUserLevel> list = userLevelMapper.selectUserLevelList(query);
         if (list == null || list.isEmpty())
@@ -770,6 +778,21 @@ public class SysInvestOrderServiceImpl implements ISysInvestOrderService
             return BigDecimal.ZERO.setScale(2, RoundingMode.DOWN);
         }
         return bonus.setScale(2, RoundingMode.DOWN);
+    }
+
+    private int resolveUserLevel(SysUser user)
+    {
+        if (user == null)
+        {
+            return 0;
+        }
+        Integer level = user.getLevel();
+        if (level != null && level > 0)
+        {
+            return level;
+        }
+        Integer userLevel = user.getUserLevel();
+        return userLevel == null ? 0 : userLevel;
     }
 
     private BigDecimal resolveTeamLeaderBonusRate(Long userId)

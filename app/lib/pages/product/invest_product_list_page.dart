@@ -430,18 +430,13 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
 
   List<Widget> _buildTagBadges(InvestProductItem item) {
     final List<String> badges = <String>[];
-    badges.add(i18n.t('productInterestDaily'));
+    badges.add(_buildYieldModeText(item));
     if (item.riskTag.isNotEmpty) {
       badges.add(item.riskTag);
     }
     badges.add('${item.cycleDays}${i18n.t('signDayUnit')}');
     return badges.take(3).map((String text) {
-      final String lower = text.toLowerCase();
-      final Color bg = (text.contains('风险') || lower.contains('risk'))
-          ? const Color(0xFFFF3B30)
-          : (text.endsWith('天') || lower.endsWith('days'))
-              ? const Color(0xFF1F7A66)
-              : const Color(0xFF1B4C7A);
+      final Color bg = _resolveBadgeColor(text);
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
@@ -455,6 +450,37 @@ class _InvestProductListPageState extends State<InvestProductListPage> {
         ),
       );
     }).toList();
+  }
+
+  String _buildYieldModeText(InvestProductItem item) {
+    switch (item.interestMode.trim().toUpperCase()) {
+      case 'DAILY':
+        return '每日返息';
+      case 'STAGED':
+        return '分段返息';
+      default:
+        return '到期返息';
+    }
+  }
+
+  Color _resolveBadgeColor(String text) {
+    final String lower = text.toLowerCase();
+    if (text == '每日返息') {
+      return const Color(0xFF1B4C7A);
+    }
+    if (text == '分段返息') {
+      return const Color(0xFFB35B1E);
+    }
+    if (text == '到期返息') {
+      return const Color(0xFF1F7A66);
+    }
+    if (text.contains('风险') || text.contains('椋庨櫓') || lower.contains('risk')) {
+      return const Color(0xFFFF3B30);
+    }
+    if (text.endsWith('天') || lower.endsWith('days')) {
+      return const Color(0xFF1F7A66);
+    }
+    return const Color(0xFF1B4C7A);
   }
 
   Widget _buildCurrencyBadge(String currency, Color accentColor) {

@@ -1,4 +1,4 @@
-import request from '@/utils/request'
+﻿import request from '@/utils/request'
 
 export function listCouponTemplate(query) {
   return request({
@@ -35,6 +35,14 @@ export function delCouponTemplate(couponId) {
   return request({
     url: '/system/invest/coupon/' + couponId,
     method: 'delete'
+  })
+}
+
+export function listCouponAudience(query) {
+  return request({
+    url: '/system/invest/coupon/audience/list',
+    method: 'get',
+    params: query
   })
 }
 

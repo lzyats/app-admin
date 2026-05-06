@@ -239,24 +239,24 @@ class SoftwareSettingsPage extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            ListTile(
-              title: Text(i18n.t('zhCN'), style: const TextStyle(color: Color(0xFFE9F3FF))),
-              onTap: () {
-                Navigator.pop(context);
-                if (onLocaleChanged != null) {
-                  onLocaleChanged!(const Locale('zh', 'CN'));
-                }
-              },
-            ),
-            ListTile(
-              title: Text(i18n.t('enUS'), style: const TextStyle(color: Color(0xFFE9F3FF))),
-              onTap: () {
-                Navigator.pop(context);
-                if (onLocaleChanged != null) {
-                  onLocaleChanged!(const Locale('en', 'US'));
-                }
-              },
-            ),
+              ListTile(
+                title: Text(i18n.t('zhCN'), style: const TextStyle(color: Color(0xFFE9F3FF))),
+                onTap: () {
+                  if (onLocaleChanged != null) {
+                    onLocaleChanged!(const Locale('zh', 'CN'));
+                  }
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text(i18n.t('enUS'), style: const TextStyle(color: Color(0xFFE9F3FF))),
+                onTap: () {
+                  if (onLocaleChanged != null) {
+                    onLocaleChanged!(const Locale('en', 'US'));
+                  }
+                  Navigator.pop(context);
+                },
+              ),
           ],
         ),
         actions: <Widget>[

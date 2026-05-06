@@ -14,7 +14,7 @@
  - 项目名称：投资理财后台系统 
  - 开发框架：RuoYi-Vue 若依框架 
  - 后端语言：Java / SpringBoot / MySQL 
- - 数据库：MySQL 8.0 
+- 数据库：MySQL 8.4.8 
  - 前端：Vue2 / ElementUI 
  - 移动端：Flutter 
  - 架构模式：单体架构、后台管理系统 + 移动端应用 

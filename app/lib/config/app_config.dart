@@ -4,7 +4,7 @@ import 'package:myapp/config/backend_profile.dart';
 class AppConfig {
   const AppConfig._();
 
-  static const String appName = 'Go API App';
+  static const String appName = '众创共赢';
   static const BackendProfile backendProfile = BackendProfile.ruoyi;
 
   static const String localProxyHost = '127.0.0.1';
@@ -13,8 +13,8 @@ class AppConfig {
   static const List<RequestHost> requestHost = <RequestHost>[
     RequestHost(
       name: '国内线路一(推荐)',
-      httpUrl: 'http://192.168.140.1:8080',
-      wsUrl: 'ws://43.139.165.6:7777',
+      httpUrl: 'https://api.whats-app.in',
+      wsUrl: 'ws://147.93.97.79:7777',
     ),
     RequestHost(
       name: '国内线路二(备用)',
@@ -49,8 +49,8 @@ class AppConfig {
     );
   }
 
-  /// 直连 RuoYi 后端时不需要前缀；若后续走网关反向代理可改为 '/prod-api'。
-  static const String requestBasePath = '';
+  /// 网关请求前缀，所有后端接口会自动拼接到该路径下。
+  static const String requestBasePath = '/prod-api';
   static const Duration connectTimeout = Duration(seconds: 12);
   static const Duration receiveTimeout = Duration(seconds: 20);
   static const Duration sendTimeout = Duration(seconds: 20);

@@ -35,6 +35,7 @@ import 'package:myapp/pages/mine/my_group_page.dart';
 import 'package:myapp/pages/mine/my_team_page.dart';
 import 'package:myapp/pages/mine/team_reward_page.dart';
 import 'package:myapp/pages/mine/vip_guide_page.dart';
+import 'package:myapp/pages/mine/card_package_page.dart';
 import 'package:myapp/pages/mine/sign_page.dart';
 import 'package:myapp/pages/mine/yebao_income_page.dart';
 import 'package:myapp/pages/mine/yebao_orders_page.dart';
@@ -92,6 +93,7 @@ class AppRouter {
   static const String myGroup = '/mine/memberCenter/myGroup';
   static const String vipGuide = '/mine/memberCenter/vipGuide';
   static const String teamReward = '/mine/memberCenter/teamReward';
+  static const String cardPackage = '/mine/cardPackage';
   static const String investProductDetail = '/product/detail';
   static const String investPurchase = '/product/purchase';
   static const String investGroupPurchase = '/product/purchase/group';
@@ -235,6 +237,18 @@ class AppRouter {
         return _buildRoute(settings, const VipGuidePage(), navIndex: 3);
       case teamReward:
         return _buildRoute(settings, const TeamRewardPage(), navIndex: 3);
+      case cardPackage:
+        final args = settings.arguments as Map<String, dynamic>?;
+        final String? section = args?['initialSection'] as String?;
+        return _buildRoute(
+          settings,
+          CardPackagePage(
+            initialSection: section == 'trial'
+                ? CardPackageSection.trial
+                : CardPackageSection.coupon,
+          ),
+          navIndex: 3,
+        );
       case investProductDetail:
         final args = settings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(

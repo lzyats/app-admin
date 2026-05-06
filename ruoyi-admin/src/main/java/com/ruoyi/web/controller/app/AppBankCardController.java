@@ -41,7 +41,7 @@ public class AppBankCardController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(SysUserBankCard bankCard)
     {
-        startPage();
+        startPage(false);
         bankCard.setUserId(getUserId());
         List<SysUserBankCard> list = bankCardService.selectBankCardList(bankCard);
         return getDataTable(list);

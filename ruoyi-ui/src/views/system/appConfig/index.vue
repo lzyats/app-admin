@@ -110,7 +110,8 @@
                   v-else-if="scope.row.valueType === 'number'"
                   v-model="scope.row.currentValue"
                   :min="0"
-                  :precision="2"
+                  :precision="scope.row.numberPrecision"
+                  :step="scope.row.numberStep"
                   :controls="false"
                   size="mini"
                   style="width: 140px;"
@@ -286,6 +287,8 @@ export default {
         defaultValue: configValueText,
         configValueType: this.normalizeConfigValueType(record.configValueType),
         valueType,
+        numberPrecision: this.inferNumberPrecision(configKey, configValueText),
+        numberStep: this.inferNumberStep(configKey, configValueText),
         selectOptions: this.buildSelectOptions(record.remark, configKey),
         currentValue: this.parseValue(configValueText, valueType, configValueText, configKey),
         remark: String(record.remark ?? ''),
@@ -380,6 +383,33 @@ export default {
         return Number.isNaN(num) ? defaultValue : num
       }
       return String(raw)
+    },
+    inferNumberPrecision(configKey, raw) {
+      const key = String(configKey || '').toLowerCase()
+      const text = String(raw || '').trim()
+      const decimalPlaces = this.getDecimalPlaces(text)
+      if (key === 'app.miner.wagtoUsdRate'.toLowerCase()) {
+        return Math.max(decimalPlaces, 6)
+      }
+      if (/rate|ratio|percent|quota|fee|commission/.test(key)) {
+        return Math.max(decimalPlaces, 4)
+      }
+      if (decimalPlaces > 0) {
+        return decimalPlaces
+      }
+      return 2
+    },
+    inferNumberStep(configKey, raw) {
+      const precision = this.inferNumberPrecision(configKey, raw)
+      return Number((1 / Math.pow(10, precision)).toFixed(precision))
+    },
+    getDecimalPlaces(raw) {
+      const text = String(raw || '').trim()
+      const match = text.match(/^-?\d+(?:\.(\d+))?$/)
+      if (!match) {
+        return 0
+      }
+      return match[1] ? match[1].length : 0
     },
     buildConfigValue(option) {
       if (option.item === 'investCurrencyMode') {

@@ -33,7 +33,7 @@ public class AppPointController extends BaseController {
 
     @GetMapping("/log/list")
     public TableDataInfo logList(SysUserPointLog pointLog) {
-        startPage();
+        startPage(false);
         pointLog.setUserId(getUserId());
         List<SysUserPointLog> list = pointLogService.selectPointLogList(pointLog);
         return getDataTable(list);

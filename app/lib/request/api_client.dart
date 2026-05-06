@@ -104,11 +104,18 @@ class ApiClient {
 
   String _buildUpstreamBaseUrl(String hostUrl) {
     final Uri uri = Uri.parse(hostUrl);
-    final bool hasCustomPath = uri.path.isNotEmpty && uri.path != '/';
-    if (hasCustomPath) {
+    final String basePath = AppConfig.requestBasePath.trim();
+    if (basePath.isEmpty) {
       return hostUrl;
     }
-    return '$hostUrl${AppConfig.requestBasePath}';
+    final String normalizedBasePath = basePath.startsWith('/') ? basePath : '/$basePath';
+    final String currentPath = uri.path == '/' ? '' : uri.path.replaceAll(RegExp(r'/+$'), '');
+    if (currentPath.endsWith(normalizedBasePath)) {
+      return hostUrl;
+    }
+    final String combinedPath = '$currentPath$normalizedBasePath';
+    final String safePath = combinedPath.startsWith('/') ? combinedPath : '/$combinedPath';
+    return uri.replace(path: safePath).toString();
   }
 
   Future<void> refreshBaseUrl() async {
@@ -140,9 +147,10 @@ class ApiClient {
   }
 
   void setDirectBaseUrl(String baseUrl) {
-    if (_dio.options.baseUrl != baseUrl) {
-      _dio.options.baseUrl = baseUrl;
-      debugPrint('API baseUrl forced direct: $baseUrl');
+    final String normalized = _buildUpstreamBaseUrl(baseUrl);
+    if (_dio.options.baseUrl != normalized) {
+      _dio.options.baseUrl = normalized;
+      debugPrint('API baseUrl forced direct: $normalized');
     }
   }
 

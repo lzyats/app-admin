@@ -1,9 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:myapp/config/app_images.dart';
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/pages/main/main_page.dart';
 import 'package:myapp/request/app_config_api.dart';
 import 'package:myapp/request/api_client.dart';
+import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/request/invest_product_api.dart';
 import 'package:myapp/routers/app_router.dart';
 import 'package:myapp/tools/app_bootstrap_tool.dart';
@@ -238,6 +241,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             spacing: 8,
             runSpacing: 8,
             children: <Widget>[
+              _yieldModeText(item),
               if (item.riskTag.isNotEmpty) _chip(item.riskTag),
               _chip(i18n.t('homeMinInvestLabel').replaceAll('{amount}', _fmt(item.minInvestAmount))),
             ],
@@ -351,6 +355,30 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       child: Text(
         text,
         style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 13, fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget  _yieldModeText(InvestProductItem item) {
+    final String mode = item.interestMode.trim().toUpperCase();
+    final String text;
+    switch (mode) {
+      case 'DAILY':
+        text = '每日返息';
+        break;
+      case 'STAGED':
+        text = '分段返息';
+        break;
+      default:
+        text = '到期返息';
+        break;
+    }
+    return Text(
+      text,
+      style: const TextStyle(
+        color: Color(0xFFE9F3FF),
+        fontSize: 13,
+        fontWeight: FontWeight.w700,
       ),
     );
   }
@@ -476,6 +504,8 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
             style: TextStyle(color: Colors.white, fontSize: 38 / 2, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 14),
+          _buildYieldCalcCard(item, principal, income),
+          const SizedBox(height: 12),
           _ruleTimeline(),
           const SizedBox(height: 12),
           ...tradeRules.map((String ruleText) {
@@ -497,6 +527,309 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
         ],
       ),
     );
+  }
+
+  Widget _buildYieldCalcCard(InvestProductItem item, double principal, double income) {
+    final List<_YieldStageNode> stages = _parseStageConfig(item.stageConfigJson);
+    final String interestSummary = _describeYieldMode(
+      label: '返息',
+      mode: item.interestMode,
+      stageCount: item.interestStageCount,
+    );
+    final String principalSummary = _describeYieldMode(
+      label: '返本',
+      mode: item.principalMode,
+      stageCount: item.principalStageCount,
+    );
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0x14FFFFFF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x224CE3FF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            '收益计算说明',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 10),
+          _buildModeInfoRow('返息方式', interestSummary),
+          const SizedBox(height: 6),
+          _buildModeInfoRow('返本方式', principalSummary),
+          const SizedBox(height: 6),
+          _buildYieldInfoRow('周期天数', '${item.cycleDays}天'),
+          const SizedBox(height: 6),
+          _buildYieldInfoRow('收益参考', _buildYieldFormulaText(item, principal, income)),
+          const SizedBox(height: 10),
+          Text(
+            '分段配置',
+            style: const TextStyle(
+              color: Color(0xFF39E6FF),
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          if (stages.isEmpty)
+            const Text(
+              '当前产品未配置分段 JSON，收益将按上面的方式字段计算。',
+              style: TextStyle(color: Color(0xFF8D99C7), fontSize: 14, height: 1.5),
+            )
+          else ...<Widget>[
+            Text(
+              'JSON 会按 stageNo 排序；type=INTEREST 时作用于返息，type=PRINCIPAL 时作用于返本，type 为空时视为通用配置。',
+              style: const TextStyle(color: Color(0xFF8D99C7), fontSize: 13, height: 1.5),
+            ),
+            const SizedBox(height: 10),
+            ..._buildStageSections(stages),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildYieldInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SizedBox(
+          width: 82,
+          child: Text(
+            label,
+            style: const TextStyle(color: Color(0xFF707EAF), fontSize: 13),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(color: Color(0xFFE8F1FF), fontSize: 14, height: 1.4),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildModeInfoRow(String label, String value) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SizedBox(
+          width: 82,
+          child: Text(
+            label,
+            style: const TextStyle(color: Color(0xFF707EAF), fontSize: 13),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(color: Color(0xFFE9F3FF), fontSize: 14, fontWeight: FontWeight.w600, height: 1.4),
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _buildYieldFormulaText(InvestProductItem item, double principal, double income) {
+    final String rateText = _displayRateText(item);
+    final String rateLabel = _displayRateLabel(item);
+    return '参考公式：${_fmt(principal)} × $rateLabel $rateText × ${item.cycleDays}天 ≈ ${_fmt(income)}';
+  }
+
+  String _describeYieldMode({
+    required String label,
+    required String mode,
+    required int stageCount,
+  }) {
+    final String normalized = mode.trim().toUpperCase();
+    if (normalized == 'DAILY') {
+      return '$label按每日返息/返本计算';
+    }
+    if (normalized == 'STAGED') {
+      if (stageCount > 0) {
+        return '$label按分段返息/返本计算（$stageCount 段）';
+      }
+      return '$label按分段返息/返本计算';
+    }
+    return '$label按到期返息/返本计算';
+  }
+
+  List<Widget> _buildStageSections(List<_YieldStageNode> stages) {
+    final Map<String, List<_YieldStageNode>> grouped = <String, List<_YieldStageNode>>{};
+    for (final _YieldStageNode stage in stages) {
+      grouped.putIfAbsent(stage.typeKey, () => <_YieldStageNode>[]).add(stage);
+    }
+    final List<String> order = <String>['GENERAL', 'INTEREST', 'PRINCIPAL'];
+    final List<Widget> widgets = <Widget>[];
+    for (final String key in order) {
+      final List<_YieldStageNode>? items = grouped[key];
+      if (items == null || items.isEmpty) {
+        continue;
+      }
+      items.sort((a, b) => a.stageNo.compareTo(b.stageNo));
+      widgets.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: Text(
+            _stageGroupLabel(key),
+            style: const TextStyle(color: Color(0xFFB2C2F0), fontSize: 13, fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+      for (final _YieldStageNode stage in items) {
+        widgets.add(_buildStageItem(stage));
+        widgets.add(const SizedBox(height: 8));
+      }
+      if (widgets.isNotEmpty) {
+        widgets.removeLast();
+        widgets.add(const SizedBox(height: 10));
+      }
+    }
+    if (widgets.isNotEmpty) {
+      widgets.removeLast();
+    }
+    return widgets;
+  }
+
+  String _stageGroupLabel(String key) {
+    switch (key) {
+      case 'INTEREST':
+        return '返息分段';
+      case 'PRINCIPAL':
+        return '返本分段';
+      default:
+        return '通用分段';
+    }
+  }
+
+  Widget _buildStageItem(_YieldStageNode stage) {
+    final String stageLabel = stage.typeKey == 'GENERAL'
+        ? '第${stage.stageNo}段'
+        : '${_stageGroupLabel(stage.typeKey)} 第${stage.stageNo}段';
+    final List<String> details = <String>[
+      if (stage.day > 0) '第${stage.day}天',
+      if (stage.ratio > 0) '${_formatPercent(stage.ratio)}%',
+      if (stage.remark.isNotEmpty) stage.remark,
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0x141F3E66),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0x224CE3FF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Text(
+            stageLabel,
+            style: const TextStyle(color: Color(0xFFE8F1FF), fontSize: 14, fontWeight: FontWeight.w700),
+          ),
+          if (details.isNotEmpty) ...<Widget>[
+            const SizedBox(height: 6),
+            Text(
+              details.join('  |  '),
+              style: const TextStyle(color: Color(0xFF8D99C7), fontSize: 13, height: 1.4),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  String _formatPercent(double value) {
+    final double percent = value > 1 ? value : value * 100;
+    if (percent % 1 == 0) {
+      return percent.toStringAsFixed(0);
+    }
+    return percent.toStringAsFixed(2).replaceFirst(RegExp(r'\.?0+$'), '');
+  }
+
+  List<_YieldStageNode> _parseStageConfig(String raw) {
+    String content = raw.trim();
+    if (content.isEmpty) {
+      return const <_YieldStageNode>[];
+    }
+    try {
+      dynamic decoded = jsonDecode(content);
+      if (decoded is String) {
+        final String nested = decoded.trim();
+        if (nested.isEmpty) {
+          return const <_YieldStageNode>[];
+        }
+        decoded = jsonDecode(nested);
+      }
+      if (decoded is Map && decoded['data'] != null) {
+        decoded = decoded['data'];
+      }
+      if (decoded is Map && decoded['rows'] != null) {
+        decoded = decoded['rows'];
+      }
+      if (decoded is! List) {
+        return const <_YieldStageNode>[];
+      }
+      final List<_YieldStageNode> nodes = <_YieldStageNode>[];
+      for (final dynamic entry in decoded) {
+        if (entry is! Map) {
+          continue;
+        }
+        final Map<String, dynamic> map = Map<String, dynamic>.from(entry as Map);
+        nodes.add(
+          _YieldStageNode(
+            typeKey: _normalizeStageType(_safeString(map['type'] ?? map['planType'])),
+            stageNo: _safeInt(map['stageNo']),
+            day: _safeInt(map['day']) > 0 ? _safeInt(map['day']) : _safeInt(map['dayOffset']),
+            ratio: _safeDouble(map['ratio']) > 0
+                ? _safeDouble(map['ratio'])
+                : (_safeDouble(map['percent']) > 0 ? _safeDouble(map['percent']) : _safeDouble(map['rate'])),
+            remark: _safeString(map['remark']),
+          ),
+        );
+      }
+      nodes.sort((a, b) {
+        final int typeCompare = _stageTypeSortIndex(a.typeKey).compareTo(_stageTypeSortIndex(b.typeKey));
+        if (typeCompare != 0) {
+          return typeCompare;
+        }
+        return a.stageNo.compareTo(b.stageNo);
+      });
+      return nodes;
+    } catch (_) {
+      return const <_YieldStageNode>[];
+    }
+  }
+
+  String _normalizeStageType(String raw) {
+    final String value = raw.trim().toUpperCase();
+    if (value == 'INTEREST' || value == 'PRINCIPAL') {
+      return value;
+    }
+    return 'GENERAL';
+  }
+
+  int _stageTypeSortIndex(String typeKey) {
+    switch (typeKey) {
+      case 'GENERAL':
+        return 0;
+      case 'INTEREST':
+        return 1;
+      case 'PRINCIPAL':
+        return 2;
+      default:
+        return 3;
+    }
   }
 
   Widget _ruleTimeline() {
@@ -545,8 +878,8 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     return SizedBox(
       height: 56,
       child: ElevatedButton(
-        onPressed: () {
-          final String? reason = _resolveOrderBlockedReason(item);
+        onPressed: () async {
+          final String? reason = await _resolveOrderBlockedReason(item);
           if (reason != null && reason.isNotEmpty) {
             _showToast(reason);
             return;
@@ -708,7 +1041,7 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
     );
   }
 
-  String? _resolveOrderBlockedReason(InvestProductItem item) {
+  Future<String?> _resolveOrderBlockedReason(InvestProductItem item) async {
     if (!item.canOrder) {
       return item.orderDisabledReason.isEmpty ? i18n.t('productOrderDisabled') : item.orderDisabledReason;
     }
@@ -732,6 +1065,20 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       return item.limitTimes == 1
           ? i18n.t('productNoRepurchase')
           : i18n.t('productLimitReached').replaceAll('{times}', '${item.limitTimes}');
+    }
+    if (item.limitLevel > 0) {
+      try {
+        final AuthUserProfile profile = await AuthApi.getInfo();
+        final int userLevel = (profile.userLevel ?? 0) > 0 ? (profile.userLevel ?? 0) : (profile.level ?? 0);
+        if (userLevel < item.limitLevel) {
+          return i18n
+              .t('productLevelNotEnough')
+              .replaceAll('{required}', 'VIP.${item.limitLevel}')
+              .replaceAll('{current}', 'VIP.$userLevel');
+        }
+      } catch (_) {
+        return i18n.t('productLevelCheckFailed');
+      }
     }
     return null;
   }
@@ -790,6 +1137,38 @@ class _InvestProductDetailPageState extends State<InvestProductDetailPage> {
       ),
     );
   }
+}
+
+class _YieldStageNode {
+  const _YieldStageNode({
+    required this.typeKey,
+    required this.stageNo,
+    required this.day,
+    required this.ratio,
+    required this.remark,
+  });
+
+  final String typeKey;
+  final int stageNo;
+  final int day;
+  final double ratio;
+  final String remark;
+}
+
+String _safeString(dynamic value) => (value ?? '').toString().trim();
+
+int _safeInt(dynamic value) {
+  if (value is int) {
+    return value;
+  }
+  return int.tryParse('${value ?? 0}') ?? 0;
+}
+
+double _safeDouble(dynamic value) {
+  if (value is num) {
+    return value.toDouble();
+  }
+  return double.tryParse('${value ?? 0}') ?? 0;
 }
 
 const TextStyle _labelStyle = TextStyle(color: Color(0xFF707EAF), fontSize: 16);

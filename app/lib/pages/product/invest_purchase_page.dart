@@ -7,6 +7,7 @@ import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/request/api_client.dart';
 import 'package:myapp/request/app_config_api.dart';
+import 'package:myapp/request/card_package_api.dart';
 import 'package:myapp/request/invest_order_api.dart';
 import 'package:myapp/request/invest_product_api.dart';
 import 'package:myapp/request/withdraw_api.dart';
@@ -36,6 +37,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
   final TextEditingController _payPwdController = TextEditingController();
   final TextEditingController _joinGroupNoController = TextEditingController();
   int _purchaseShares = 1;
+  CardPackageItem? _selectedCoupon;
   bool _submitting = false;
   AppLocalizations get i18n => AppLocalizations.of(context)!;
 
@@ -108,11 +110,16 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
                 _amountController,
                 false,
                 readOnly: item.investMode != 'AMOUNT',
+                onChanged: item.investMode == 'AMOUNT' ? (String value) => _handleAmountChanged(item, value) : null,
               ),
               if (item.investMode != 'AMOUNT') ...<Widget>[
                 const SizedBox(height: 10),
                 _buildSharesCard(item),
               ],
+              const SizedBox(height: 10),
+              _buildCouponCard(item),
+              const SizedBox(height: 10),
+              _buildPaymentSummary(item),
               const SizedBox(height: 10),
               _buildInputCard(i18n.t('payPassword'), i18n.t('payPasswordRequired'), _payPwdController, true),
               const SizedBox(height: 10),
@@ -225,6 +232,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     TextEditingController controller,
     bool obscure, {
     bool readOnly = false,
+    ValueChanged<String>? onChanged,
   }) {
     return Container(
       height: 70,
@@ -247,6 +255,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
               keyboardType: obscure ? TextInputType.none : const TextInputType.numberWithOptions(decimal: true),
               readOnly: obscure || readOnly,
               onTap: obscure ? () => _openPayPasswordKeyboard(controller) : null,
+              onChanged: onChanged,
               enableSuggestions: !obscure,
               autocorrect: !obscure,
               style: const TextStyle(color: Color(0xFFDFE8FF), fontSize: 34 / 2),
@@ -339,6 +348,130 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
     );
   }
 
+  Widget _buildCouponCard(InvestProductItem item) {
+    final double amount = _currentOrderAmount(item);
+    final CardPackageItem? coupon = _selectedCoupon;
+    final bool couponEnabled = item.couponEnabled;
+    final bool couponValid = coupon == null ? false : _isCouponSelectable(coupon, item, amount);
+    final bool hasSelection = coupon != null;
+    final double discount = couponValid ? _couponDiscountAmount(coupon!, amount) : 0;
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF111747),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  '优惠券核销',
+                  style: const TextStyle(color: Colors.white, fontSize: 35 / 2, fontWeight: FontWeight.w600),
+                ),
+              ),
+              if (couponEnabled)
+                TextButton(
+                  onPressed: () => _openCouponPicker(item),
+                  child: Text(
+                    hasSelection ? '重新选择' : '选择优惠券',
+                    style: const TextStyle(color: Color(0xFF39E6FF), fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              if (!couponEnabled)
+                const Text(
+                  '当前产品不支持优惠券',
+                  style: TextStyle(color: Color(0xFF7B88B6), fontSize: 12),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (!hasSelection)
+            const Text(
+              '未选择优惠券',
+              style: TextStyle(color: Color(0xFF8A97C4), fontSize: 13),
+            )
+          else ...<Widget>[
+            Text(
+              '${_couponDisplayName(coupon!)} · ${_couponTypeLabel(coupon.cardType)}',
+              style: const TextStyle(color: Color(0xFFE5EEFF), fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '满${_fmt(_couponMinAmount(coupon))}减${_fmt(_couponDiscountAmount(coupon, amount))}',
+              style: TextStyle(
+                color: couponValid ? const Color(0xFF8A97C4) : const Color(0xFFFF8A80),
+                fontSize: 12,
+              ),
+            ),
+            if (!couponValid) ...<Widget>[
+              const SizedBox(height: 4),
+              const Text(
+                '当前优惠券不满足使用条件',
+                style: TextStyle(color: Color(0xFFFF8A80), fontSize: 12),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentSummary(InvestProductItem item) {
+    final double amount = _currentOrderAmount(item);
+    final CardPackageItem? coupon = _selectedCoupon;
+    final bool couponValid = coupon != null && _isCouponSelectable(coupon, item, amount);
+    final double discount = couponValid ? _couponDiscountAmount(coupon!, amount) : 0;
+    final double payAmount = (amount - discount).clamp(0, double.infinity);
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF0E143C),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFF24356C)),
+      ),
+      padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          const Text(
+            '支付预览',
+            style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 8),
+          _summaryRow('投资本金', _fmt(amount)),
+          _summaryRow('优惠抵扣', '-${_fmt(discount)}', valueColor: const Color(0xFFFF8A80)),
+          _summaryRow('实际支付', _fmt(payAmount), valueColor: const Color(0xFF38FFB3), bold: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _summaryRow(String title, String value, {Color valueColor = const Color(0xFFDFE8FF), bool bold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Row(
+        children: <Widget>[
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(color: Color(0xFF8A97C4), fontSize: 13),
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: valueColor,
+              fontSize: 14,
+              fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTips(InvestProductItem item) {
     return Text(
       i18n
@@ -349,6 +482,285 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
       textAlign: TextAlign.center,
       style: const TextStyle(color: Color(0xFF7B88B6), fontSize: 32 / 2),
     );
+  }
+
+  Future<void> _openCouponPicker(InvestProductItem item) async {
+    if (!item.couponEnabled) {
+      _toast('当前产品暂不支持优惠券');
+      return;
+    }
+    final double amount = _currentOrderAmount(item);
+    List<CardPackageItem> coupons;
+    try {
+      coupons = await CardPackageApi.fetchCoupons();
+    } catch (_) {
+      _toast('优惠券加载失败，请稍后重试');
+      return;
+    }
+    final List<CardPackageItem> usableCoupons = coupons.where((CardPackageItem coupon) => _isCouponSelectable(coupon, item, amount)).toList();
+    if (!mounted) {
+      return;
+    }
+    final CardPackageItem? selected = await showModalBottomSheet<CardPackageItem?>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: const Color(0xFF0B1033),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+      ),
+      builder: (BuildContext dialogContext) {
+        CardPackageItem? tempSelected = _selectedCoupon;
+        return StatefulBuilder(
+          builder: (BuildContext context, void Function(VoidCallback) setSheetState) {
+            return SafeArea(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  left: 14,
+                  right: 14,
+                  top: 12,
+                  bottom: 12 + MediaQuery.of(context).viewInsets.bottom,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Row(
+                      children: <Widget>[
+                        const Expanded(
+                          child: Text(
+                            '选择优惠券',
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          icon: const Icon(Icons.close, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    if (usableCoupons.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 24),
+                        child: Text(
+                          '没有可用于本次购买的优惠券',
+                          style: TextStyle(color: Color(0xFF8A97C4), fontSize: 14),
+                        ),
+                      )
+                    else
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 420),
+                        child: ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: usableCoupons.length + 1,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (BuildContext context, int index) {
+                            if (index == 0) {
+                              final bool noneSelected = tempSelected == null;
+                              return _couponSelectTile(
+                                title: '不使用优惠券',
+                                subtitle: '保持原价支付',
+                                selected: noneSelected,
+                                onTap: () {
+                                  setSheetState(() => tempSelected = null);
+                                },
+                              );
+                            }
+                            final CardPackageItem coupon = usableCoupons[index - 1];
+                            final bool selected = tempSelected?.userCouponId == coupon.userCouponId;
+                            return _couponSelectTile(
+                              title: '${_couponDisplayName(coupon)} · ${_couponTypeLabel(coupon.cardType)}',
+                              subtitle: '满${_fmt(_couponMinAmount(coupon))}减${_fmt(_couponDiscountAmount(coupon, amount))}',
+                              selected: selected,
+                              onTap: () {
+                                setSheetState(() => tempSelected = coupon);
+                              },
+                            );
+                          },
+                        ),
+                      ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(dialogContext, tempSelected),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1B3CF4),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                        ),
+                        child: const Text(
+                          '确定',
+                          style: TextStyle(color: Color(0xFF35DAFF), fontSize: 16, fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _selectedCoupon = selected;
+    });
+  }
+
+  Widget _couponSelectTile({
+    required String title,
+    required String subtitle,
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFF19225A) : const Color(0xFF111747),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: selected ? const Color(0xFF39E6FF) : const Color(0xFF24356C)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                if (selected)
+                  const Icon(Icons.check_circle, color: Color(0xFF39E6FF), size: 20),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: const TextStyle(color: Color(0xFF8A97C4), fontSize: 12, height: 1.4),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  double _currentOrderAmount(InvestProductItem item) {
+    final bool shareMode = item.investMode != 'AMOUNT';
+    if (shareMode) {
+      return _calcShareModeAmount(item, _purchaseShares);
+    }
+    return double.tryParse(_amountController.text.trim()) ?? 0;
+  }
+
+  void _handleAmountChanged(InvestProductItem item, String value) {
+    if (_selectedCoupon == null) {
+      return;
+    }
+    final double amount = _currentOrderAmount(item);
+    if (!_isCouponSelectable(_selectedCoupon!, item, amount)) {
+      setState(() {
+        _selectedCoupon = null;
+      });
+    }
+  }
+
+  bool _isCouponSelectable(CardPackageItem coupon, InvestProductItem item, double amount) {
+    if (!item.couponEnabled) {
+      return false;
+    }
+    if (coupon.userStatus.trim() != '0') {
+      return false;
+    }
+    final String type = coupon.cardType.trim().toUpperCase();
+    if (type != 'CASH' && type != 'FULL_REDUCTION') {
+      return false;
+    }
+    final DateTime now = DateTime.now();
+    if (coupon.startTime != null && now.isBefore(coupon.startTime!)) {
+      return false;
+    }
+    if (coupon.endTime != null && !now.isBefore(coupon.endTime!)) {
+      return false;
+    }
+    if (!_couponMatchesProduct(coupon, item.productId)) {
+      return false;
+    }
+    final double minAmount = _couponMinAmount(coupon);
+    if (minAmount > 0 && amount < minAmount) {
+      return false;
+    }
+    final double discount = _couponDiscountAmount(coupon, amount);
+    return discount > 0 && amount >= discount;
+  }
+
+  bool _couponMatchesProduct(CardPackageItem coupon, int productId) {
+    final String scope = (coupon.scopeType ?? '').trim().toUpperCase();
+    if (scope.isEmpty || scope == 'GLOBAL') {
+      return true;
+    }
+    final String raw = (coupon.productIdsJson ?? '').trim();
+    if (raw.isEmpty) {
+      return false;
+    }
+    try {
+      final dynamic data = jsonDecode(raw);
+      if (data is List) {
+        for (final dynamic item in data) {
+          if ('${item ?? ''}'.trim() == '$productId') {
+            return true;
+          }
+        }
+      }
+    } catch (_) {
+      return false;
+    }
+    return false;
+  }
+
+  double _couponMinAmount(CardPackageItem coupon) {
+    return coupon.minAmount ?? 0;
+  }
+
+  double _couponDiscountAmount(CardPackageItem coupon, double amount) {
+    final double discount = coupon.discountAmount ?? 0;
+    if (discount <= 0 || amount <= 0) {
+      return 0;
+    }
+    return discount > amount ? amount : discount;
+  }
+
+  String _couponDisplayName(CardPackageItem coupon) {
+    final String name = coupon.cardName.trim();
+    if (name.isNotEmpty) {
+      return name;
+    }
+    return _couponTypeLabel(coupon.cardType);
+  }
+
+  String _couponTypeLabel(String type) {
+    final String normalized = type.trim().toUpperCase();
+    if (normalized == 'CASH') {
+      return i18n.t('cardPackageTypeCash');
+    }
+    if (normalized == 'FULL_REDUCTION') {
+      return i18n.t('cardPackageTypeReduction');
+    }
+    if (normalized == 'RATE_BOOST') {
+      return i18n.t('cardPackageTypeRateBoost');
+    }
+    if (normalized == 'EXPERIENCE') {
+      return i18n.t('cardPackageTypeExperience');
+    }
+    return i18n.t('cardPackageTypeUnknown');
   }
 
   Widget _buildSubmit(InvestProductItem item) {
@@ -390,7 +802,16 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
       _toast(shareMode ? i18n.t('purchaseConfigUnitAmount') : i18n.t('purchaseInputValidAmount'));
       return;
     }
-    final String? walletError = await _validateWalletBalance(item.currency, amount);
+    final CardPackageItem? coupon = _selectedCoupon;
+    if (coupon != null && !_isCouponSelectable(coupon, item, amount)) {
+      _toast('当前优惠券不满足使用条件');
+      return;
+    }
+    final double couponDiscount = coupon != null && _isCouponSelectable(coupon, item, amount)
+        ? _couponDiscountAmount(coupon, amount)
+        : 0;
+    final double payAmount = (amount - couponDiscount).clamp(0, double.infinity);
+    final String? walletError = await _validateWalletBalance(item.currency, payAmount);
     if (walletError != null) {
       _toast(walletError);
       return;
@@ -451,6 +872,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         contractText: preview.contractText,
         clientReqNo: reqNo,
         groupMode: submitGroupMode,
+        userCouponId: coupon != null && _isCouponSelectable(coupon, item, amount) ? coupon.userCouponId : null,
         joinGroupNo: joinGroupNo,
       );
       if (!mounted) return;
@@ -521,10 +943,6 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
       if (profile.payPasswordSet == 1) {
         return true;
       }
-      profile = await AuthApi.getInfo(forceRefresh: true);
-      if (profile.payPasswordSet == 1) {
-        return true;
-      }
       if (!mounted) {
         return false;
       }
@@ -534,7 +952,7 @@ class _InvestPurchasePageState extends State<InvestPurchasePage> {
         arguments: <String, dynamic>{'userId': profile.userId},
       );
       if (result == true) {
-        final AuthUserProfile latest = await AuthApi.getInfo(forceRefresh: true);
+        final AuthUserProfile latest = await AuthApi.getInfo();
         return latest.payPasswordSet == 1;
       }
       _toast(i18n.t('purchaseNeedSetPayPassword'));

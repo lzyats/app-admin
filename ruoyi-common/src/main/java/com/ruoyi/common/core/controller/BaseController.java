@@ -56,6 +56,14 @@ public class BaseController
     }
 
     /**
+     * 璁剧疆璇锋眰鍒嗛〉鏁版嵁
+     */
+    protected void startPage(boolean count)
+    {
+        PageUtils.startPage(count);
+    }
+
+    /**
      * 设置请求排序数据
      */
     protected void startOrderBy()

@@ -1,12 +1,6 @@
-import 'dart:html' as html;
-import 'dart:ui_web' as ui;
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 class AppNetworkImage extends StatelessWidget {
-  static final Set<String> _registeredViewTypes = <String>{};
-
   const AppNetworkImage({
     super.key,
     required this.src,
@@ -36,64 +30,46 @@ class AppNetworkImage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String viewType = 'app-network-image-${src.hashCode}';
-    if (!_registeredViewTypes.contains(viewType)) {
-      _registeredViewTypes.add(viewType);
-      ui.platformViewRegistry.registerViewFactory(
-        viewType,
-        (int viewId) {
-          final html.ImageElement img = html.ImageElement(src: src);
-          img.style.width = '100%';
-          img.style.height = '100%';
-          img.style.objectFit = _objectFit();
-          img.style.objectPosition = _objectPosition();
-          img.style.display = 'block';
-          if (width != null && width!.isFinite) {
-            img.width = width!.round();
-          }
-          if (height != null && height!.isFinite) {
-            img.height = height!.round();
-          }
-          if (color != null) {
-            img.style.filter = 'opacity(${(opacity?.value ?? 1.0)})';
-          }
-          return img;
-        },
-      );
+    final String url = src.trim();
+    if (url.isEmpty) {
+      return _buildFallback();
     }
-
-    return SizedBox(
+    return Image.network(
+      url,
       width: width,
       height: height,
-      child: HtmlElementView(viewType: viewType),
+      fit: fit,
+      errorBuilder: errorBuilder ?? (_, __, ___) => _buildFallback(),
+      color: color,
+      opacity: opacity,
+      colorBlendMode: colorBlendMode,
+      alignment: alignment,
+      gaplessPlayback: gaplessPlayback,
+      filterQuality: filterQuality,
+      loadingBuilder: (_, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return SizedBox(
+          width: width,
+          height: height,
+          child: const Center(
+            child: SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+        );
+      },
     );
   }
 
-  String _objectFit() {
-    switch (fit) {
-      case BoxFit.cover:
-        return 'cover';
-      case BoxFit.fill:
-        return 'fill';
-      case BoxFit.contain:
-        return 'contain';
-      case BoxFit.fitWidth:
-        return 'contain';
-      case BoxFit.fitHeight:
-        return 'cover';
-      case BoxFit.none:
-        return 'none';
-      case BoxFit.scaleDown:
-        return 'scale-down';
-      case null:
-        return 'contain';
-    }
-  }
-
-  String _objectPosition() {
-    if (alignment == Alignment.center) {
-      return 'center center';
-    }
-    return 'center center';
+  Widget _buildFallback() {
+    return SizedBox(
+      width: width,
+      height: height,
+      child: const Icon(Icons.broken_image_outlined),
+    );
   }
 }

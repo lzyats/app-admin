@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 import 'package:myapp/request/api_client.dart';
 import 'package:myapp/request/api_exception.dart';
@@ -350,7 +348,6 @@ class AuthApi {
   AuthApi._();
 
   static Future<AuthUserProfile>? _pendingGetInfo;
-  static const Duration _userProfileCacheMaxAge = Duration(minutes: 5);
 
   static Future<CaptchaPayload> captcha() async {
     try {
@@ -443,12 +440,6 @@ class AuthApi {
     if (!forceRefresh) {
       final AuthUserProfile? cached = await AuthTool.getUserProfile();
       if (cached != null && cached.userId > 0) {
-        final AuthUserProfile? fresh = await AuthTool.getFreshUserProfile(
-          maxAge: _userProfileCacheMaxAge,
-        );
-        if (fresh == null) {
-          unawaited(_refreshInfoInBackground());
-        }
         return cached;
       }
     }
@@ -482,15 +473,6 @@ class AuthApi {
         _pendingGetInfo = null;
       }
     }
-  }
-
-  static Future<void> _refreshInfoInBackground() async {
-    if (_pendingGetInfo != null) {
-      return;
-    }
-    try {
-      await _fetchInfo();
-    } catch (_) {}
   }
 
   static Future<AuthUserProfile> _fetchInfo() async {

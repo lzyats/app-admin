@@ -1,6 +1,8 @@
 package com.ruoyi.system.service;
 
 import java.util.List;
+import com.ruoyi.common.core.domain.entity.SysUser;
+import com.ruoyi.system.domain.SysCouponGrantRequest;
 import com.ruoyi.system.domain.SysCouponTemplate;
 
 public interface ISysCouponTemplateService
@@ -15,5 +17,7 @@ public interface ISysCouponTemplateService
 
     int deleteCouponTemplateByIds(Long[] couponIds);
 
-    int grantCouponToUsers(Long couponId, List<Long> userIds, Integer level, String grantType, String operator, String remark);
+    List<SysUser> selectCouponAudienceList(SysCouponGrantRequest request);
+
+    int grantCouponToUsers(Long couponId, SysCouponGrantRequest request, String operator);
 }

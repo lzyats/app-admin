@@ -2,6 +2,7 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\config\CloudStorageServ
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysAppRealNameAuth.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysCache.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysConfig.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysCouponGrantRequest.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysCouponTemplate.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysInvestProduct.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\SysInvestTag.java
@@ -41,6 +42,7 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\vo\MetaVo.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\domain\vo\RouterVo.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysAppInvestOrderMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysAppRealNameAuthMapper.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysCardPackageMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysConfigMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysCouponTemplateMapper.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\mapper\SysDeptMapper.java
@@ -93,6 +95,8 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysAppReal
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysBusinessNoticeServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysConfigServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysCouponTemplateServiceImpl.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysCouponUseServiceImpl.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDeliveryTargetServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDeptServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDictDataServiceImpl.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\impl\SysDictTypeServiceImpl.java
@@ -138,6 +142,8 @@ E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysAppRealName
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysBusinessNoticeService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysConfigService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysCouponTemplateService.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysCouponUseService.java
+E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDeliveryTargetService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDeptService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDictDataService.java
 E:\Go\go-api\ruoyi-system\src\main\java\com\ruoyi\system\service\ISysDictTypeService.java

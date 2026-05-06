@@ -164,10 +164,6 @@ class _YebaoPageState extends State<YebaoPage> {
       if (profile.payPasswordSet == 1) {
         return true;
       }
-      profile = await AuthApi.getInfo(forceRefresh: true);
-      if (profile.payPasswordSet == 1) {
-        return true;
-      }
       if (!mounted) {
         return false;
       }
@@ -177,7 +173,7 @@ class _YebaoPageState extends State<YebaoPage> {
         arguments: <String, dynamic>{'userId': profile.userId},
       );
       if (result == true) {
-        final AuthUserProfile latest = await AuthApi.getInfo(forceRefresh: true);
+        final AuthUserProfile latest = await AuthApi.getInfo();
         return latest.payPasswordSet == 1;
       }
       ScaffoldMessenger.of(context).showSnackBar(

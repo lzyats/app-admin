@@ -220,7 +220,9 @@ class _LinePageState extends State<LinePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        selectedHost?.name ?? i18n.t('lineTitle'),
+                        safeSelectedIndex < 0
+                            ? i18n.t('lineTitle')
+                            : '${i18n.t('lineTitle')} ${safeSelectedIndex + 1}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -233,7 +235,7 @@ class _LinePageState extends State<LinePage> {
                       Text(
                         selectedHost == null
                             ? '${i18n.t('lineLatencyPrefix')} --'
-                            : '${i18n.t('lineHttpPrefix')} ${selectedHost.httpUrl}',
+                            : i18n.t('lineAddressHidden'),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -340,7 +342,7 @@ class _LinePageState extends State<LinePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          host.name,
+                          '${i18n.t('lineTitle')} ${index + 1}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -351,7 +353,7 @@ class _LinePageState extends State<LinePage> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '${i18n.t('lineHttpPrefix')} ${host.httpUrl}',
+                          i18n.t('lineAddressHidden'),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(

@@ -5,6 +5,7 @@ import 'package:myapp/request/api_exception.dart';
 import 'package:myapp/request/miner_api.dart';
 import 'package:myapp/request/auth_api.dart';
 import 'package:myapp/tools/auth_tool.dart';
+import 'package:myapp/widgets/app_network_image.dart';
 
 class MinerClaimPage extends StatefulWidget {
   const MinerClaimPage({super.key});
@@ -122,13 +123,24 @@ class _MinerClaimPageState extends State<MinerClaimPage> {
       ),
       child: Row(
         children: <Widget>[
-          CircleAvatar(
-            radius: 26,
-            backgroundColor: const Color(0xFF0A0E26),
-            backgroundImage: avatar.isEmpty ? null : NetworkImage(avatar),
-            child: avatar.isEmpty
-                ? const Icon(Icons.person, color: Color(0xFF9DB1C9))
-                : null,
+          ClipOval(
+            child: Container(
+              width: 52,
+              height: 52,
+              color: const Color(0xFF0A0E26),
+              child: avatar.isEmpty
+                  ? const Icon(Icons.person, color: Color(0xFF9DB1C9))
+                  : AppNetworkImage(
+                      src: avatar,
+                      width: 52,
+                      height: 52,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(
+                        Icons.person,
+                        color: Color(0xFF9DB1C9),
+                      ),
+                    ),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -301,8 +313,8 @@ class _MinerClaimPageState extends State<MinerClaimPage> {
           color: const Color(0xFF0A0E26),
           child: imageUrl == null
               ? _minerSquarePlaceholder(size)
-              : Image.network(
-                  imageUrl,
+              : AppNetworkImage(
+                  src: imageUrl,
                   width: size,
                   height: size,
                   fit: BoxFit.cover,

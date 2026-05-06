@@ -22,11 +22,17 @@ class InvestProductItem {
     required this.redPacketPerUnit,
     required this.progressPercent,
     required this.groupEnabled,
+    required this.couponEnabled,
     required this.coverImage,
     required this.galleryImages,
     required this.productContent,
     required this.tradeRuleContent,
     required this.growthPerUnit,
+    required this.interestMode,
+    required this.principalMode,
+    required this.interestStageCount,
+    required this.principalStageCount,
+    required this.stageConfigJson,
     required this.limitLevel,
     required this.limitTimes,
     required this.totalShares,
@@ -57,11 +63,17 @@ class InvestProductItem {
   final double redPacketPerUnit;
   final double progressPercent;
   final bool groupEnabled;
+  final bool couponEnabled;
   final String coverImage;
   final List<String> galleryImages;
   final String productContent;
   final String tradeRuleContent;
   final double growthPerUnit;
+  final String interestMode;
+  final String principalMode;
+  final int interestStageCount;
+  final int principalStageCount;
+  final String stageConfigJson;
   final int limitLevel;
   final int limitTimes;
   final int totalShares;
@@ -93,11 +105,21 @@ class InvestProductItem {
       redPacketPerUnit: _toDouble(json['redPacketPerUnit']),
       progressPercent: _toDouble(json['progressPercent']),
       groupEnabled: _toString(json['groupEnabled']) == '1',
+      couponEnabled: _toBool(json['couponEnabled'], defaultValue: true),
       coverImage: _toString(json['coverImage']),
       galleryImages: _toStringList(json['galleryImages']),
       productContent: _toString(json['productContent']),
       tradeRuleContent: _toString(json['tradeRuleContent']),
       growthPerUnit: _toDouble(json['growthPerUnit']),
+      interestMode: _toString(json['interestMode']).isEmpty
+          ? 'MATURITY'
+          : _toString(json['interestMode']).toUpperCase(),
+      principalMode: _toString(json['principalMode']).isEmpty
+          ? 'MATURITY'
+          : _toString(json['principalMode']).toUpperCase(),
+      interestStageCount: _toInt(json['interestStageCount']),
+      principalStageCount: _toInt(json['principalStageCount']),
+      stageConfigJson: _toString(json['stageConfigJson']),
       limitLevel: _toInt(json['limitLevel']),
       limitTimes: _toInt(json['limitTimes']),
       totalShares: _toInt(json['totalShares']),
@@ -131,11 +153,17 @@ class InvestProductItem {
       'redPacketPerUnit': redPacketPerUnit,
       'progressPercent': progressPercent,
       'groupEnabled': groupEnabled ? '1' : '0',
+      'couponEnabled': couponEnabled ? '1' : '0',
       'coverImage': coverImage,
       'galleryImages': galleryImages,
       'productContent': productContent,
       'tradeRuleContent': tradeRuleContent,
       'growthPerUnit': growthPerUnit,
+      'interestMode': interestMode,
+      'principalMode': principalMode,
+      'interestStageCount': interestStageCount,
+      'principalStageCount': principalStageCount,
+      'stageConfigJson': stageConfigJson,
       'limitLevel': limitLevel,
       'limitTimes': limitTimes,
       'totalShares': totalShares,

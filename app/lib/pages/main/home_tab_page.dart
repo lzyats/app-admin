@@ -1,14 +1,18 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_html/flutter_html.dart';
 
 import 'package:myapp/config/app_images.dart';
 import 'package:myapp/config/app_localizations.dart';
+import 'package:myapp/request/api_client.dart';
 import 'package:myapp/pages/product/invest_product_list_page.dart';
 import 'package:myapp/pages/product/invest_product_detail_page.dart';
 import 'package:myapp/request/invest_product_api.dart';
 import 'package:myapp/request/news_api.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/widgets/app_image_cache.dart';
 import 'package:myapp/widgets/app_network_image.dart';
 
 class HomeTabPage extends StatefulWidget {
@@ -137,6 +141,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
         _noticePage = 0;
         _hotPage = 0;
       });
+      unawaited(_warmHomeImages());
     } catch (_) {
       if (!mounted) {
         return;
@@ -361,8 +366,13 @@ class _HomeTabPageState extends State<HomeTabPage> {
       _HomeActionItem(i18n.t('homeActionClaimMiner'), Icons.memory_rounded, const Color(0xFFFFA500), () {
         _pushHomeRoute(AppRouter.miner);
       }),
-      _HomeActionItem(i18n.t('homeActionPromote'), Icons.groups_outlined, const Color(0xFF39E6FF), () {
-        _pushHomeRoute(AppRouter.myTeam);
+      _HomeActionItem(i18n.locale.languageCode == 'zh' ? '卡包' : 'Card Package', Icons.workspace_premium_outlined, const Color(0xFF39E6FF), () {
+        _pushHomeRoute(
+          AppRouter.cardPackage,
+          extraArgs: <String, dynamic>{
+            'initialSection': 'trial',
+          },
+        );
       }),
       _HomeActionItem(
         i18n.t('homeActionInvite'),
@@ -721,45 +731,417 @@ class _HomeTabPageState extends State<HomeTabPage> {
   }
 
   Widget _buildNoticeRow() {
-    final List<String> noticeTexts = _notices.isNotEmpty
-        ? _notices
-            .map((HomeNotice item) => item.noticeTitle.trim().isNotEmpty ? item.noticeTitle.trim() : item.noticeContent.trim())
-            .where((String text) => text.isNotEmpty)
-            .toList()
-        : <String>[i18n.t('homeSystemNoticeDefault')];
-    final String notice = noticeTexts[_noticePage % noticeTexts.length];
+    final HomeNotice? notice = _currentNotice;
+    final String noticeText = notice == null
+        ? i18n.t('homeSystemNoticeDefault')
+        : (notice.noticeTitle.trim().isNotEmpty
+            ? notice.noticeTitle.trim()
+            : notice.noticeContent.trim());
     return Container(
       height: 38,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: _panelDecoration(
-        colors: const <Color>[Color(0xCC101C30), Color(0xCC0E1A2D)],
-      ),
-      child: Row(
-        children: <Widget>[
-          const Icon(Icons.bolt_rounded, color: Color(0xFFEBF2FF), size: 17),
-          const SizedBox(width: 6),
-          Expanded(
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 260),
-              transitionBuilder: (Widget child, Animation<double> animation) {
-                final Animation<Offset> offset = Tween<Offset>(
-                  begin: const Offset(0, 0.6),
-                  end: Offset.zero,
-                ).animate(animation);
-                return SlideTransition(position: offset, child: child);
-              },
-              child: Text(
-                notice,
-                key: ValueKey<String>(notice),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Color(0xFFD5E8FF), fontSize: 15),
-              ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: notice == null ? null : () => _showNoticeDialog(notice),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: _panelDecoration(
+              colors: const <Color>[Color(0xCC101C30), Color(0xCC0E1A2D)],
             ),
+            child: Row(
+              children: <Widget>[
+                const Icon(Icons.campaign_outlined, color: Color(0xFFEBF2FF), size: 17),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 260),
+                    transitionBuilder: (Widget child, Animation<double> animation) {
+                      final Animation<Offset> offset = Tween<Offset>(
+                        begin: const Offset(0, 0.6),
+                        end: Offset.zero,
+                      ).animate(animation);
+                      return SlideTransition(position: offset, child: child);
+                    },
+                    child: Text(
+                      noticeText,
+                      key: ValueKey<String>(noticeText),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Color(0xFFD5E8FF), fontSize: 15),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                const Icon(Icons.chevron_right_rounded, color: Color(0xFF7D91B8), size: 18),
+              ],
+              ),
           ),
-        ],
+        ),
       ),
     );
+  }
+
+  HomeNotice? get _currentNotice {
+    if (_notices.isEmpty) {
+      return null;
+    }
+    final int index = _noticePage % _notices.length;
+    if (index < 0 || index >= _notices.length) {
+      return null;
+    }
+    return _notices[index];
+  }
+
+  Future<void> _showNoticeDialog(HomeNotice notice) async {
+    if (!mounted) {
+      return;
+    }
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierColor: const Color(0xCC030712),
+      builder: (BuildContext context) {
+        final String title = notice.noticeTitle.trim().isNotEmpty
+            ? notice.noticeTitle.trim()
+            : i18n.t('homeSystemNoticeDefault');
+        final String content = notice.noticeContent.trim().isNotEmpty
+            ? notice.noticeContent.trim()
+            : title;
+        final String createTime = notice.createTime.trim();
+        final Size screenSize = MediaQuery.of(context).size;
+        final double dialogWidth = math.min(360.0, screenSize.width - 36.0);
+        final double dialogHeight = math.min(520.0, screenSize.height * 0.76);
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 24),
+          child: SizedBox(
+            width: dialogWidth,
+            height: dialogHeight,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: <Widget>[
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(24),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: <Color>[
+                        Color(0xFF111A36),
+                        Color(0xFF0D152A),
+                        Color(0xFF09111F),
+                      ],
+                    ),
+                    border: Border.all(color: const Color(0x5539E6FF)),
+                    boxShadow: const <BoxShadow>[
+                      BoxShadow(
+                        color: Color(0x99000000),
+                        blurRadius: 30,
+                        offset: Offset(0, 16),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Column(
+                      children: <Widget>[
+                        Container(
+                          height: 76,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: <Color>[
+                                Color(0xFF172550),
+                                Color(0xFF101B39),
+                              ],
+                            ),
+                          ),
+                          child: Stack(
+                            children: <Widget>[
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: const Color(0xFF39E6FF).withOpacity(0.14),
+                                    border: Border.all(color: const Color(0x5539E6FF)),
+                                  ),
+                                  child: const Icon(
+                                    Icons.campaign_outlined,
+                                    color: Color(0xFF39E6FF),
+                                    size: 20,
+                                  ),
+                                ),
+                              ),
+                              const Center(
+                                child: Text(
+                                  '系统公告',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.1,
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: InkWell(
+                                  onTap: () => Navigator.of(context).pop(),
+                                  borderRadius: BorderRadius.circular(999),
+                                  child: Container(
+                                    width: 34,
+                                    height: 34,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white.withOpacity(0.06),
+                                      border: Border.all(color: Colors.white.withOpacity(0.12)),
+                                    ),
+                                    child: const Icon(
+                                      Icons.close_rounded,
+                                      color: Color(0xFFEAF5FF),
+                                      size: 18,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(18, 12, 18, 16),
+                            child: _buildNoticeContent(content, title: title, createTime: createTime),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 12,
+                  top: 12,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: const Color(0xFF39E6FF).withOpacity(0.9),
+                      boxShadow: const <BoxShadow>[
+                        BoxShadow(color: Color(0x6639E6FF), blurRadius: 12),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildNoticeContent(
+    String content, {
+    required String title,
+    required String createTime,
+  }) {
+    final List<Widget> children = <Widget>[
+      Center(
+        child: Text(
+          title,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            height: 1.25,
+          ),
+        ),
+      ),
+      const SizedBox(height: 6),
+      Center(
+        child: Text(
+          _formatNoticeDate(createTime),
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: const Color(0xFF9AB0D2).withOpacity(0.95),
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+            height: 1.1,
+          ),
+        ),
+      ),
+      const SizedBox(height: 8),
+      Container(
+        height: 1,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: <Color>[
+              const Color(0xFF39E6FF).withOpacity(0.0),
+              const Color(0xFF39E6FF).withOpacity(0.55),
+              const Color(0xFF39E6FF).withOpacity(0.0),
+            ],
+          ),
+        ),
+      ),
+      const SizedBox(height: 10),
+    ];
+    if (!_looksLikeHtml(content)) {
+      children.add(
+        SelectableText(
+          content,
+          style: const TextStyle(
+            color: Color(0xFFD5E8FF),
+            fontSize: 14,
+            height: 1.75,
+          ),
+          textAlign: TextAlign.left,
+        ),
+      );
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+    children.add(
+      Html(
+        data: content,
+        extensions: <HtmlExtension>[
+          MatcherExtension(
+            matcher: (ExtensionContext context) => context.elementName == 'img',
+            builder: (ExtensionContext context) {
+              final String src = (context.attributes['src'] ?? '').trim();
+              final String? resolvedSrc = ApiClient.instance.resolveImageUrl(src);
+              if (resolvedSrc == null || resolvedSrc.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final double? width = double.tryParse((context.attributes['width'] ?? '').trim());
+              final double? height = double.tryParse((context.attributes['height'] ?? '').trim());
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                child: AppNetworkImage(
+                  src: resolvedSrc,
+                  width: width ?? double.infinity,
+                  height: height,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              );
+            },
+          ),
+        ],
+        style: <String, Style>{
+          'body': Style(
+            margin: Margins.zero,
+            padding: HtmlPaddings.zero,
+            color: const Color(0xFFD5E8FF),
+            fontSize: FontSize(14),
+            lineHeight: const LineHeight(1.75),
+          ),
+          'p': Style(
+            margin: Margins.only(bottom: 12),
+            color: const Color(0xFFD5E8FF),
+            fontSize: FontSize(14),
+            lineHeight: const LineHeight(1.75),
+          ),
+          'span': Style(
+            color: const Color(0xFFD5E8FF),
+            fontSize: FontSize(14),
+            lineHeight: const LineHeight(1.75),
+          ),
+          'h1': Style(
+            color: Colors.white,
+            fontSize: FontSize(22),
+            fontWeight: FontWeight.w700,
+          ),
+          'h2': Style(
+            color: Colors.white,
+            fontSize: FontSize(19),
+            fontWeight: FontWeight.w700,
+          ),
+          'h3': Style(
+            color: Colors.white,
+            fontSize: FontSize(17),
+            fontWeight: FontWeight.w700,
+          ),
+          'img': Style(
+            margin: Margins.only(top: 8, bottom: 8),
+          ),
+          'blockquote': Style(
+            margin: Margins.only(left: 12, top: 8, bottom: 8),
+            padding: HtmlPaddings.only(left: 12),
+            border: Border(left: BorderSide(color: const Color(0xFF3B4E7A), width: 3)),
+            color: const Color(0xFFEAF5FF),
+          ),
+        },
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: children,
+    );
+  }
+
+  String _formatNoticeDate(String raw) {
+    final String source = raw.trim();
+    if (source.isEmpty) {
+      return '发布日期：--';
+    }
+    final DateTime? parsed = DateTime.tryParse(source.replaceFirst(' ', 'T'));
+    if (parsed == null) {
+      final String fallback = source.length >= 10 ? source.substring(0, 10) : source;
+      return '发布日期：${fallback}';
+    }
+    final DateTime local = parsed.toLocal();
+    final String mm = local.month.toString().padLeft(2, '0');
+    final String dd = local.day.toString().padLeft(2, '0');
+    return '发布日期：${local.year}-${mm}-${dd}';
+  }
+
+  Future<void> _warmHomeImages() async {
+    final Set<String> urls = <String>{};
+    for (final NewsArticle item in _remoteBanners) {
+      final String? url = item.resolvedCoverUrl();
+      if (url != null && url.isNotEmpty) {
+        urls.add(url);
+      }
+    }
+    for (final NewsArticle item in _remoteAds) {
+      final String? url = item.resolvedCoverUrl();
+      if (url != null && url.isNotEmpty) {
+        urls.add(url);
+      }
+    }
+    for (final HomeLatestNewsItem item in _latestNews) {
+      final String? url = item.resolvedCoverUrl();
+      if (url != null && url.isNotEmpty) {
+        urls.add(url);
+      }
+    }
+    for (final InvestProductItem item in _hotProducts) {
+      final String cover = item.coverImage.trim();
+      if (cover.isNotEmpty) {
+        final String? url = ApiClient.instance.resolveImageUrl(cover);
+        if (url != null && url.isNotEmpty) {
+          urls.add(url);
+        }
+      }
+    }
+    for (final String url in urls) {
+      unawaited(AppImageCache.instance.prefetch(url));
+    }
+  }
+
+  bool _looksLikeHtml(String content) {
+    final String trimmed = content.trim();
+    return trimmed.startsWith('<') && trimmed.contains('>');
   }
 
   Widget _buildHotProductsSection() {
@@ -791,6 +1173,10 @@ class _HomeTabPageState extends State<HomeTabPage> {
 
   Widget _buildHotProductCard(InvestProductItem item) {
     final double progress = (item.progressPercent.clamp(0, 100)) / 100;
+    final bool useGroupRate = item.groupEnabled;
+    final double displayRate = useGroupRate ? item.groupRate : item.singleRate;
+    final String rateLabel =
+        useGroupRate ? i18n.t('productGroupRate') : i18n.t('productSingleRate');
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -848,8 +1234,8 @@ class _HomeTabPageState extends State<HomeTabPage> {
               children: <Widget>[
                 Expanded(
                   child: _statCell(
-                    value: '${item.singleRate.toStringAsFixed(3)} %',
-                    label: i18n.t('productSingleRate'),
+                    value: '${displayRate.toStringAsFixed(3)} %',
+                    label: rateLabel,
                   ),
                 ),
                 Container(

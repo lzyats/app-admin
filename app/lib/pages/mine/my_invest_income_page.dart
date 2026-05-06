@@ -75,6 +75,8 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                     padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
                     children: <Widget>[
                       _buildSummary(data),
+                      const SizedBox(height: 10),
+                      const _IncomeHint(),
                       const SizedBox(height: 18),
                       Row(
                         children: <Widget>[
@@ -355,6 +357,10 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
                 ),
               ),
               const SizedBox(height: 10),
+              if (_hasCouponInfo(item)) ...<Widget>[
+                _smallKv('券后口径', _couponDisplayText(item), valueColor: const Color(0xFF37DFFF)),
+                const SizedBox(height: 4),
+              ],
               Text(
                 i18n.t('orderNo'),
                 style: TextStyle(color: Color(0xFF95A0C0), fontSize: 12, fontWeight: FontWeight.w500),
@@ -417,6 +423,39 @@ class _MyInvestIncomePageState extends State<MyInvestIncomePage> {
     );
   }
 
+  bool _hasCouponInfo(InvestIncomeLogItem item) {
+    return item.userCouponId > 0 ||
+        item.couponDiscountAmount > 0 ||
+        item.couponName.trim().isNotEmpty ||
+        (item.payAmount > 0 && (item.payAmount - item.planAmount).abs() > 0.000001);
+  }
+
+  String _couponDisplayText(InvestIncomeLogItem item) {
+    final String name = item.couponName.trim().isNotEmpty ? item.couponName.trim() : '已使用优惠券';
+    final String discount = item.couponDiscountAmount > 0 ? _money(item.couponDiscountAmount) : '--';
+    final String payAmount = item.payAmount > 0 ? _money(item.payAmount) : '--';
+    return '$name / 抵扣 $discount / 实付 $payAmount';
+  }
+
+  Widget _smallKv(String k, String v, {Color valueColor = const Color(0xFF7B86AA)}) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        SizedBox(
+          width: 68,
+          child: Text(k, style: const TextStyle(color: Color(0xFF717EA8), fontSize: 12)),
+        ),
+        Expanded(
+          child: Text(
+            v,
+            textAlign: TextAlign.right,
+            style: TextStyle(color: valueColor, fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ),
+      ],
+    );
+  }
+
   _IncomeLogTheme _logTheme(String currency) {
     return const _IncomeLogTheme(
       cardColors: <Color>[Color(0xCC101C30), Color(0xCC0E182A)],
@@ -433,4 +472,25 @@ class _IncomeLogTheme {
 
   final List<Color> cardColors;
   final Color borderColor;
+}
+
+class _IncomeHint extends StatelessWidget {
+  const _IncomeHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0x1A39E6FF),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x3339E6FF)),
+      ),
+      child: const Text(
+        '提示：当前收益记录的返本口径已按优惠后实付金额计算，和订单页保持一致。',
+        style: TextStyle(color: Color(0xFF9DB1C9), fontSize: 12, height: 1.35),
+      ),
+    );
+  }
 }

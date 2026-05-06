@@ -3,6 +3,7 @@ import 'package:myapp/config/app_images.dart';
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/invest_order_api.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/pages/mine/invest_order_detail_page.dart';
 import 'package:myapp/widgets/countdown_text.dart';
 
 class MyInvestOrdersPage extends StatefulWidget {
@@ -335,28 +336,41 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
     final _OrderStatusView statusView = _statusView(item);
     final String unit = _currencyUnit(item.currency);
     final _OrderTheme theme = _themeFor(item.currency);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: theme.cardColors,
-        ),
-        border: Border.all(color: theme.borderColor, width: 1),
-        boxShadow: const <BoxShadow>[
-          BoxShadow(
-            color: Color(0x33000000),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute<Widget>(
+                builder: (_) => InvestOrderDetailPage(orderId: item.orderId),
+              ),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: theme.cardColors,
+              ),
+              border: Border.all(color: theme.borderColor, width: 1),
+              boxShadow: const <BoxShadow>[
+                BoxShadow(
+                  color: Color(0x33000000),
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
           Row(
             children: <Widget>[
               Image.asset(
@@ -390,6 +404,11 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
           ),
           const SizedBox(height: 8),
           _kv(i18n.t('productSingleRate'), '${_fmtMoney(item.investAmount)} $unit'),
+          if (_hasCouponInfo(item)) ...<Widget>[
+            _kv('优惠券', _couponDisplayName(item), valueColor: const Color(0xFF37DFFF), valueFontSize: 15),
+            _kv('优惠抵扣', '${_fmtMoney(item.couponDiscountAmount)} $unit', valueColor: const Color(0xFFFFA257), valueFontSize: 15),
+            _kv('实付金额', '${_fmtMoney(item.payAmount)} $unit', valueColor: const Color(0xFF38FFB3), valueFontSize: 15),
+          ],
           _kv(i18n.t('expectedIncome'), '${_fmtMoney(item.expectedIncome)} $unit'),
           _kv(i18n.t('productPeriod'), '${item.cycleDays}${i18n.t('signDayUnit')}'),
           _kv(i18n.t('investRate'), '${item.effectiveRate.toStringAsFixed(3)}%', valueColor: theme.valueColor),
@@ -455,7 +474,10 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
               ),
             ],
           ),
-        ],
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -554,6 +576,24 @@ class _MyInvestOrdersPageState extends State<MyInvestOrdersPage> {
       default:
         return i18n.t('normalOrder');
     }
+  }
+
+  bool _hasCouponInfo(InvestOrderListItem item) {
+    return item.userCouponId > 0 ||
+        item.couponDiscountAmount > 0 ||
+        item.couponName.trim().isNotEmpty ||
+        (item.payAmount > 0 && (item.payAmount - item.investAmount).abs() > 0.000001);
+  }
+
+  String _couponDisplayName(InvestOrderListItem item) {
+    final String name = item.couponName.trim();
+    if (name.isNotEmpty) {
+      return name;
+    }
+    if (item.userCouponId > 0) {
+      return '已使用优惠券';
+    }
+    return '--';
   }
 }
 

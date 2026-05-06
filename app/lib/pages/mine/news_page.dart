@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'package:myapp/config/app_localizations.dart';
 import 'package:myapp/request/news_api.dart';
 import 'package:myapp/routers/app_router.dart';
+import 'package:myapp/widgets/app_image_cache.dart';
 import 'package:myapp/widgets/app_network_image.dart';
 
 class NewsPage extends StatefulWidget {
@@ -29,7 +32,7 @@ class _NewsPageState extends State<NewsPage> {
     try {
       final String bootstrapCode = _selectedCode ?? _bootstrapCategoryCode;
       if (_articlesFuture == null && !forceRefresh) {
-        _articlesFuture = NewsApi.fetchArticles(categoryCode: bootstrapCode);
+        _articlesFuture = _fetchArticlesWithWarmup(categoryCode: bootstrapCode);
       }
       final List<NewsCategory> categories = await NewsApi.fetchCategories(forceRefresh: forceRefresh);
       if (!mounted) return;
@@ -44,7 +47,7 @@ class _NewsPageState extends State<NewsPage> {
         final String resolvedCode = _selectedCode ?? resolved.first.categoryCode;
         _selectedCode = resolvedCode;
         if (forceRefresh || _articlesFuture == null || resolvedCode != bootstrapCode) {
-          _articlesFuture = NewsApi.fetchArticles(
+          _articlesFuture = _fetchArticlesWithWarmup(
             categoryCode: resolvedCode,
             forceRefresh: forceRefresh,
           );
@@ -62,7 +65,7 @@ class _NewsPageState extends State<NewsPage> {
         final String resolvedCode = _selectedCode ?? fallback.first.categoryCode;
         _selectedCode = resolvedCode;
         if (forceRefresh || _articlesFuture == null || resolvedCode != _bootstrapCategoryCode) {
-          _articlesFuture = NewsApi.fetchArticles(
+          _articlesFuture = _fetchArticlesWithWarmup(
             categoryCode: resolvedCode,
             forceRefresh: forceRefresh,
           );
@@ -80,7 +83,25 @@ class _NewsPageState extends State<NewsPage> {
     if (_selectedCode == categoryCode) return;
     setState(() {
       _selectedCode = categoryCode;
-      _articlesFuture = NewsApi.fetchArticles(categoryCode: categoryCode);
+      _articlesFuture = _fetchArticlesWithWarmup(categoryCode: categoryCode);
+    });
+  }
+
+  Future<List<NewsArticle>> _fetchArticlesWithWarmup({
+    required String categoryCode,
+    bool forceRefresh = false,
+  }) {
+    return NewsApi.fetchArticles(
+      categoryCode: categoryCode,
+      forceRefresh: forceRefresh,
+    ).then((List<NewsArticle> articles) {
+      for (final NewsArticle article in articles.take(4)) {
+        final String? coverUrl = article.resolvedCoverUrl();
+        if (coverUrl != null && coverUrl.isNotEmpty) {
+          unawaited(AppImageCache.instance.prefetch(coverUrl));
+        }
+      }
+      return articles;
     });
   }
 

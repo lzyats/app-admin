@@ -48,7 +48,7 @@ public class AppRechargeController extends BaseController
     @GetMapping("/list")
     public TableDataInfo list(SysUserRecharge recharge)
     {
-        startPage();
+        startPage(false);
         recharge.setUserId(getUserId());
         List<SysUserRecharge> list = rechargeService.selectRechargeList(recharge);
         return getDataTable(list);
