@@ -11,11 +11,32 @@
  Target Server Version : 80409 (8.4.9)
  File Encoding         : 65001
 
- Date: 06/05/2026 18:21:37
+ Date: 06/05/2026 10:56:41
 */
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
+
+-- ----------------------------
+-- Table structure for currency_exchange_log
+-- ----------------------------
+DROP TABLE IF EXISTS `currency_exchange_log`;
+CREATE TABLE `currency_exchange_log`  (
+  `log_id` bigint NOT NULL AUTO_INCREMENT,
+  `user_id` bigint NOT NULL,
+  `from_currency` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `to_currency` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `from_amount` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `to_amount` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `exchange_rate` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`) USING BTREE,
+  INDEX `idx_user_id`(`user_id` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '货币互换记录表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Records of currency_exchange_log
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for gen_table
@@ -473,13 +494,6 @@ CREATE TABLE `sys_invest_order`  (
   `cycle_days` int NOT NULL DEFAULT 1 COMMENT '投资周期(天)',
   `invest_shares` bigint NOT NULL DEFAULT 0 COMMENT '认购份数（用于拼团失败回滚）',
   `expected_income` decimal(18, 6) NOT NULL DEFAULT 0.000000 COMMENT '预计收益',
-  `user_level_snapshot` int NULL DEFAULT NULL COMMENT '下单时用户等级快照',
-  `coupon_id` bigint NULL DEFAULT NULL COMMENT '优惠券模板ID',
-  `user_coupon_id` bigint NULL DEFAULT NULL COMMENT '用户优惠券ID',
-  `coupon_name` varchar(128) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '优惠券名称',
-  `coupon_type` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '优惠券类型',
-  `coupon_discount_amount` decimal(18, 2) NOT NULL DEFAULT 0.00 COMMENT '优惠券抵扣金额',
-  `pay_amount` decimal(18, 2) NOT NULL DEFAULT 0.00 COMMENT '实际支付金额',
   `contract_no` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL COMMENT '合同编号',
   `group_id` bigint NULL DEFAULT NULL COMMENT '拼团ID',
   `group_no` varchar(40) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '拼团团号',
@@ -505,15 +519,15 @@ CREATE TABLE `sys_invest_order`  (
 -- ----------------------------
 -- Records of sys_invest_order
 -- ----------------------------
-INSERT INTO `sys_invest_order` VALUES (1, 'IO202605041555361000107', 'REQ_S_1_100000_1777881335522503', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 0.020000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605041555361000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 15:55:36', 'admin', '2026-05-04 18:27:45', '后台赎回，仅退还本金');
-INSERT INTO `sys_invest_order` VALUES (2, 'IO202605041650241000107', 'REQ_S_2_20000_1777884623635719', 1000107, 'nnd1', 2, 'USD日息体验', 'USD', '0', 200.00, 1.0000, 1.2000, 1.0000, 1, 0, 0.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605041650241000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 16:50:24', 'admin', '2026-05-04 18:27:49', '后台赎回，仅退还本金');
-INSERT INTO `sys_invest_order` VALUES (3, 'IO202605041834391000107', 'REQ_S_1_100000_1777890878541305', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605041834391000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 18:34:39', 'admin', '2026-05-04 19:22:32', '后台赎回，仅退还本金');
-INSERT INTO `sys_invest_order` VALUES (4, 'IO202605041936261000107', 'REQ_S_1_100000_1777894585302216', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605041936261000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 19:36:26', 'admin', '2026-05-04 19:41:07', '后台赎回，仅退还本金');
-INSERT INTO `sys_invest_order` VALUES (5, 'IO202605041957471000107', 'REQ_S_1_100000_1777895865304454', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605041957471000107', NULL, NULL, '9', NULL, '1', 'nnd1', '2026-05-04 19:57:47', 'admin', '2026-05-04 21:31:11', '后台强制结算完成');
-INSERT INTO `sys_invest_order` VALUES (6, 'IO202605042204251000107', 'REQ_S_2_100000_1777903464954438', 1000107, 'nnd1', 2, 'USD日息体验', 'USD', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605042204251000107', NULL, NULL, '9', NULL, '0', 'nnd1', '2026-05-04 22:04:25', '', NULL, 'APP在线签约认购');
-INSERT INTO `sys_invest_order` VALUES (7, 'IO202605051222401000107', 'REQ_G_3_100000_1777954959711521', 1000107, 'nnd1', 3, '人民币定时测试', 'CNY', '1', 1000.00, 1.2000, 1.5000, 1.5000, 5, 1, 15.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605051222401000107', 3, 'IG202605051222411000107', '1', '2026-05-06 12:22:41', '0', 'nnd1', '2026-05-05 12:22:41', '', '2026-05-05 13:27:02', '拼团已成团');
-INSERT INTO `sys_invest_order` VALUES (8, 'IO202605051225181000107', 'REQ_G_3_100000_1777955117329339', 1000107, 'nnd1', 3, '人民币定时测试', 'CNY', '1', 1000.00, 1.2000, 1.5000, 1.5000, 5, 1, 15.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605051225181000107', 4, 'IG202605051225181000107', '0', '2026-05-06 12:25:18', '0', 'nnd1', '2026-05-05 12:25:18', '', NULL, 'APP在线签约认购');
-INSERT INTO `sys_invest_order` VALUES (9, 'IO202605051327011000100', 'REQ_G_3_100000_1777958820291447', 1000100, 'lanz', 3, '人民币定时测试', 'CNY', '1', 1000.00, 1.2000, 1.5000, 1.5000, 5, 1, 15.000000, NULL, NULL, NULL, NULL, NULL, 0.00, 0.00, 'IC202605051327011000100', 3, 'IG202605051222411000107', '1', '2026-05-06 12:22:41', '0', 'lanz', '2026-05-05 13:27:02', '', '2026-05-05 13:27:02', '拼团已成团');
+INSERT INTO `sys_invest_order` VALUES (1, 'IO202605041555361000107', 'REQ_S_1_100000_1777881335522503', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 0.020000, 'IC202605041555361000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 15:55:36', 'admin', '2026-05-04 18:27:45', '后台赎回，仅退还本金');
+INSERT INTO `sys_invest_order` VALUES (2, 'IO202605041650241000107', 'REQ_S_2_20000_1777884623635719', 1000107, 'nnd1', 2, 'USD日息体验', 'USD', '0', 200.00, 1.0000, 1.2000, 1.0000, 1, 0, 0.000000, 'IC202605041650241000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 16:50:24', 'admin', '2026-05-04 18:27:49', '后台赎回，仅退还本金');
+INSERT INTO `sys_invest_order` VALUES (3, 'IO202605041834391000107', 'REQ_S_1_100000_1777890878541305', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, 'IC202605041834391000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 18:34:39', 'admin', '2026-05-04 19:22:32', '后台赎回，仅退还本金');
+INSERT INTO `sys_invest_order` VALUES (4, 'IO202605041936261000107', 'REQ_S_1_100000_1777894585302216', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, 'IC202605041936261000107', NULL, NULL, '9', NULL, '2', 'nnd1', '2026-05-04 19:36:26', 'admin', '2026-05-04 19:41:07', '后台赎回，仅退还本金');
+INSERT INTO `sys_invest_order` VALUES (5, 'IO202605041957471000107', 'REQ_S_1_100000_1777895865304454', 1000107, 'nnd1', 1, '人民币日息体验', 'CNY', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, 'IC202605041957471000107', NULL, NULL, '9', NULL, '1', 'nnd1', '2026-05-04 19:57:47', 'admin', '2026-05-04 21:31:11', '后台强制结算完成');
+INSERT INTO `sys_invest_order` VALUES (6, 'IO202605042204251000107', 'REQ_S_2_100000_1777903464954438', 1000107, 'nnd1', 2, 'USD日息体验', 'USD', '0', 1000.00, 1.0000, 1.2000, 1.0000, 1, 0, 10.000000, 'IC202605042204251000107', NULL, NULL, '9', NULL, '0', 'nnd1', '2026-05-04 22:04:25', '', NULL, 'APP在线签约认购');
+INSERT INTO `sys_invest_order` VALUES (7, 'IO202605051222401000107', 'REQ_G_3_100000_1777954959711521', 1000107, 'nnd1', 3, '人民币定时测试', 'CNY', '1', 1000.00, 1.2000, 1.5000, 1.5000, 5, 1, 15.000000, 'IC202605051222401000107', 3, 'IG202605051222411000107', '1', '2026-05-06 12:22:41', '0', 'nnd1', '2026-05-05 12:22:41', '', '2026-05-05 13:27:02', '拼团已成团');
+INSERT INTO `sys_invest_order` VALUES (8, 'IO202605051225181000107', 'REQ_G_3_100000_1777955117329339', 1000107, 'nnd1', 3, '人民币定时测试', 'CNY', '1', 1000.00, 1.2000, 1.5000, 1.5000, 5, 1, 15.000000, 'IC202605051225181000107', 4, 'IG202605051225181000107', '0', '2026-05-06 12:25:18', '0', 'nnd1', '2026-05-05 12:25:18', '', NULL, 'APP在线签约认购');
+INSERT INTO `sys_invest_order` VALUES (9, 'IO202605051327011000100', 'REQ_G_3_100000_1777958820291447', 1000100, 'lanz', 3, '人民币定时测试', 'CNY', '1', 1000.00, 1.2000, 1.5000, 1.5000, 5, 1, 15.000000, 'IC202605051327011000100', 3, 'IG202605051222411000107', '1', '2026-05-06 12:22:41', '0', 'lanz', '2026-05-05 13:27:02', '', '2026-05-05 13:27:02', '拼团已成团');
 
 -- ----------------------------
 -- Table structure for sys_invest_order_plan
@@ -701,8 +715,6 @@ CREATE TABLE `sys_level_trial_template`  (
   `trial_level` int NOT NULL COMMENT '体验等级',
   `bonus_rate` decimal(10, 4) NOT NULL DEFAULT 0.0000 COMMENT '体验加成(%)',
   `valid_days` int NOT NULL DEFAULT 7 COMMENT '有效天数',
-  `valid_start_time` datetime NULL DEFAULT NULL COMMENT '可启用开始时间',
-  `valid_end_time` datetime NULL DEFAULT NULL COMMENT '可启用结束时间',
   `total_count` int NOT NULL DEFAULT 0 COMMENT '总发放量（0不限）',
   `received_count` int NOT NULL DEFAULT 0 COMMENT '已发放量',
   `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '0' COMMENT '状态（0正常 1停用）',
@@ -712,13 +724,12 @@ CREATE TABLE `sys_level_trial_template`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   `remark` varchar(500) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`trial_id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '等级体验券模板' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '等级体验券模板' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_level_trial_template
 -- ----------------------------
-INSERT INTO `sys_level_trial_template` VALUES (1, '5级体验卡', 5, 0.8000, 10, NULL, NULL, 0, 0, '0', 'admin', '2026-05-05 22:35:38', '', NULL, NULL);
-INSERT INTO `sys_level_trial_template` VALUES (2, '5级体验卡', 4, 0.8000, 10, '2026-05-06 15:30:00', '2026-09-01 00:00:00', 0, 2, '0', 'admin', '2026-05-06 15:10:45', '', '2026-05-06 15:15:50', NULL);
+INSERT INTO `sys_level_trial_template` VALUES (1, '5级体验卡', 5, 0.8000, 10, 0, 0, '0', 'admin', '2026-05-05 22:35:38', '', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for sys_level_trial_user
@@ -730,8 +741,6 @@ CREATE TABLE `sys_level_trial_user`  (
   `user_id` bigint NOT NULL COMMENT '用户ID',
   `user_name` varchar(64) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NULL DEFAULT '' COMMENT '用户名',
   `grant_type` varchar(32) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT 'MANUAL' COMMENT '发放类型 MANUAL/LEVEL/ACTIVITY/SYSTEM',
-  `original_level` int NULL DEFAULT NULL COMMENT '原级别',
-  `current_level` int NULL DEFAULT NULL COMMENT '现级别',
   `status` char(1) CHARACTER SET utf8mb3 COLLATE utf8mb3_general_ci NOT NULL DEFAULT '0' COMMENT '状态（0待生效 1生效中 2已失效 3已作废）',
   `start_time` datetime NULL DEFAULT NULL COMMENT '生效时间',
   `end_time` datetime NULL DEFAULT NULL COMMENT '失效时间',
@@ -743,15 +752,13 @@ CREATE TABLE `sys_level_trial_user`  (
   PRIMARY KEY (`user_trial_id`) USING BTREE,
   INDEX `idx_sys_level_trial_user_uid`(`user_id` ASC) USING BTREE,
   INDEX `idx_sys_level_trial_user_status`(`status` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '用户等级体验券' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 3 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '用户等级体验券' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_level_trial_user
 -- ----------------------------
-INSERT INTO `sys_level_trial_user` VALUES (1, 1, 1000107, 'nnd1', 'MANUAL', NULL, NULL, '2', '2026-05-05 22:47:52', '2026-05-15 22:47:52', 'admin', '2026-05-05 22:47:52', 'nnd1', '2026-05-06 16:11:43', '用户手动结束体验卡');
-INSERT INTO `sys_level_trial_user` VALUES (2, 1, 1000107, 'nnd1', 'MANUAL', NULL, NULL, '2', '2026-05-05 22:48:05', '2026-05-15 22:48:05', 'admin', '2026-05-05 22:48:05', 'nnd1', '2026-05-06 16:11:34', '用户手动结束体验卡');
-INSERT INTO `sys_level_trial_user` VALUES (3, 2, 1000106, 'nnd', 'MANUAL', NULL, NULL, '0', NULL, NULL, 'admin', '2026-05-06 15:15:03', '', NULL, NULL);
-INSERT INTO `sys_level_trial_user` VALUES (4, 2, 1000107, 'nnd1', 'MANUAL', 2, 4, '1', '2026-05-06 16:15:25', '2026-05-16 16:15:25', 'admin', '2026-05-06 15:15:50', 'nnd1', '2026-05-06 16:15:25', '体验卡使用中');
+INSERT INTO `sys_level_trial_user` VALUES (1, 1, 1000107, 'nnd1', 'MANUAL', '1', '2026-05-05 22:47:52', '2026-05-15 22:47:52', 'admin', '2026-05-05 22:47:52', '', NULL, NULL);
+INSERT INTO `sys_level_trial_user` VALUES (2, 1, 1000107, 'nnd1', 'MANUAL', '1', '2026-05-05 22:48:05', '2026-05-15 22:48:05', 'admin', '2026-05-05 22:48:05', '', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for sys_logininfor
@@ -770,7 +777,7 @@ CREATE TABLE `sys_logininfor`  (
   PRIMARY KEY (`info_id`) USING BTREE,
   INDEX `idx_sys_logininfor_s`(`status` ASC) USING BTREE,
   INDEX `idx_sys_logininfor_lt`(`login_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 282 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '系统访问记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 278 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '系统访问记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_logininfor
@@ -953,10 +960,6 @@ INSERT INTO `sys_logininfor` VALUES (274, 'admin', '127.0.0.1', '内网IP', 'Chr
 INSERT INTO `sys_logininfor` VALUES (275, 'admin', '127.0.0.1', '内网IP', 'Chrome 147', 'Windows10', '0', '登录成功', '2026-05-05 21:03:28');
 INSERT INTO `sys_logininfor` VALUES (276, 'nnd1', '192.168.140.1', '内网IP', 'Dart 3.4', '', '0', '登录成功', '2026-05-05 21:09:14');
 INSERT INTO `sys_logininfor` VALUES (277, 'lanz', '192.168.0.3', '内网IP', 'Dart 3.4', '', '0', '登录成功', '2026-05-05 23:22:51');
-INSERT INTO `sys_logininfor` VALUES (278, 'admin', '127.0.0.1', '内网IP', 'Chrome 147', 'Windows10', '0', '登录成功', '2026-05-06 11:15:07');
-INSERT INTO `sys_logininfor` VALUES (279, 'nnd1', '192.168.140.1', '内网IP', 'Dart 3.4', '', '0', '登录成功', '2026-05-06 11:52:49');
-INSERT INTO `sys_logininfor` VALUES (280, 'admin', '[0:0:0:0:0:0:0:1]', '内网IP', 'Chrome 147', 'Windows10', '0', '登录成功', '2026-05-06 13:59:52');
-INSERT INTO `sys_logininfor` VALUES (281, 'admin', '[0:0:0:0:0:0:0:1]', '内网IP', 'Chrome 147', 'Windows10', '0', '登录成功', '2026-05-06 14:37:28');
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -1397,7 +1400,7 @@ CREATE TABLE `sys_oper_log`  (
   INDEX `idx_sys_oper_log_bt`(`business_type` ASC) USING BTREE,
   INDEX `idx_sys_oper_log_s`(`status` ASC) USING BTREE,
   INDEX `idx_sys_oper_log_ot`(`oper_time` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 550 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '操作日志记录' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 541 CHARACTER SET = utf8mb3 COLLATE = utf8mb3_general_ci COMMENT = '操作日志记录' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_oper_log
@@ -1843,15 +1846,6 @@ INSERT INTO `sys_oper_log` VALUES (537, '等级体验券发放', 2, 'com.ruoyi.w
 INSERT INTO `sys_oper_log` VALUES (538, '等级体验券发放', 2, 'com.ruoyi.web.controller.system.SysLevelTrialTemplateController.grant()', 'POST', 1, 'admin', NULL, '/system/invest/trial/grant', '127.0.0.1', '内网IP', '{\"grantType\":\"MANUAL\",\"trialId\":1,\"userIds\":[1000107]} ', '{\"msg\":\"已发放1张\",\"code\":200}', 0, NULL, '2026-05-05 22:48:05', 18);
 INSERT INTO `sys_oper_log` VALUES (539, '定时任务', 2, 'com.ruoyi.quartz.controller.SysJobController.edit()', 'PUT', 1, 'admin', NULL, '/monitor/job', '127.0.0.1', '内网IP', '{\"concurrent\":\"1\",\"createBy\":\"admin\",\"createTime\":\"2026-05-04 18:21:25\",\"cronExpression\":\"* 0/10 * * * ?\",\"invokeTarget\":\"investOrderTask.settleIncome\",\"jobGroup\":\"DEFAULT\",\"jobId\":103,\"jobName\":\"投资结算与拼团退款\",\"misfirePolicy\":\"1\",\"nextValidTime\":\"2026-05-06 00:00:00\",\"params\":{},\"remark\":\"\",\"status\":\"0\",\"updateBy\":\"admin\",\"updateTime\":\"2026-05-05 11:49:01\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 23:51:46', 85);
 INSERT INTO `sys_oper_log` VALUES (540, '定时任务', 2, 'com.ruoyi.quartz.controller.SysJobController.edit()', 'PUT', 1, 'admin', NULL, '/monitor/job', '127.0.0.1', '内网IP', '{\"concurrent\":\"1\",\"createBy\":\"admin\",\"createTime\":\"2026-05-04 18:21:25\",\"cronExpression\":\"0 0/10 * * * ?\",\"invokeTarget\":\"investOrderTask.settleIncome\",\"jobGroup\":\"DEFAULT\",\"jobId\":103,\"jobName\":\"投资结算与拼团退款\",\"misfirePolicy\":\"1\",\"nextValidTime\":\"2026-05-06 00:00:00\",\"params\":{},\"remark\":\"\",\"status\":\"0\",\"updateBy\":\"admin\",\"updateTime\":\"2026-05-05 23:51:46\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-05 23:53:36', 99);
-INSERT INTO `sys_oper_log` VALUES (541, '个人信息', 2, 'com.ruoyi.web.controller.system.SysProfileController.updatePwd()', 'PUT', 1, 'nnd1', NULL, '/system/user/profile/updatePwd', '192.168.140.1', '内网IP', '{\"data\":\"cwJ7mwPCUrmEoRPzOGhjnL5dEildyrCvO7u6545KSIVHrQBwmwSV0PoRDGxi1RrptZo9zNoiX/jpNEfclhq3Dg==\"} ', '{\"msg\":\"修改密码失败，旧密码错误\",\"code\":500}', 0, NULL, '2026-05-06 11:10:13', 35);
-INSERT INTO `sys_oper_log` VALUES (542, '个人信息', 2, 'com.ruoyi.web.controller.system.SysProfileController.updatePwd()', 'PUT', 1, 'nnd1', NULL, '/system/user/profile/updatePwd', '192.168.140.1', '内网IP', '{\"data\":\"cwJ7mwPCUrmEoRPzOGhjnL5dEildyrCvO7u6545KSIVHrQBwmwSV0PoRDGxi1RrptZo9zNoiX/jpNEfclhq3Dg==\"} ', '{\"msg\":\"修改密码失败，旧密码错误\",\"code\":500}', 0, NULL, '2026-05-06 11:10:25', 5);
-INSERT INTO `sys_oper_log` VALUES (543, '安全问题设置', 1, 'com.ruoyi.web.controller.system.SysUserSecurityAnswerController.setAnswers()', 'POST', 1, 'nnd1', NULL, '/app/user/security/answers', '192.168.140.1', '内网IP', '{\"data\":\"pxxsnevziualPu8tKmpdHjlZq0OVo5G0oRbtJveRdpP6JK1hezM5APB8dNLCKQPUOy33zml0W0gBbJnbwLdpm6fowt03b5fGy3Gm5nzWgHw=\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-06 11:11:01', 275);
-INSERT INTO `sys_oper_log` VALUES (544, '等级体验卡模板', 1, 'com.ruoyi.web.controller.system.SysLevelTrialTemplateController.add()', 'POST', 1, 'admin', NULL, '/prod-api/system/invest/trial', '[0:0:0:0:0:0:0:1]', '内网IP', '{\"bonusRate\":0.8,\"createBy\":\"admin\",\"params\":{},\"receivedCount\":0,\"status\":\"0\",\"totalCount\":0,\"trialId\":2,\"trialLevel\":4,\"trialName\":\"5级体验卡\",\"validDays\":10,\"validEndTime\":\"2026-09-01 00:00:00\",\"validStartTime\":\"2026-05-06 15:30:00\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-06 15:10:45', 18);
-INSERT INTO `sys_oper_log` VALUES (545, '等级体验卡发放', 2, 'com.ruoyi.web.controller.system.SysLevelTrialTemplateController.grant()', 'POST', 1, 'admin', NULL, '/prod-api/system/invest/trial/grant', '[0:0:0:0:0:0:0:1]', '内网IP', '{\"grantType\":\"MANUAL\",\"trialId\":2,\"userIds\":[1000106]} ', '{\"msg\":\"已发放 1 张\",\"code\":200}', 0, NULL, '2026-05-06 15:15:03', 28);
-INSERT INTO `sys_oper_log` VALUES (546, '等级体验卡发放', 2, 'com.ruoyi.web.controller.system.SysLevelTrialTemplateController.grant()', 'POST', 1, 'admin', NULL, '/prod-api/system/invest/trial/grant', '[0:0:0:0:0:0:0:1]', '内网IP', '{\"grantType\":\"MANUAL\",\"trialId\":2,\"userIds\":[1000107]} ', '{\"msg\":\"已发放 1 张\",\"code\":200}', 0, NULL, '2026-05-06 15:15:50', 19);
-INSERT INTO `sys_oper_log` VALUES (547, '定时任务', 1, 'com.ruoyi.quartz.controller.SysJobController.add()', 'POST', 1, 'admin', NULL, '/prod-api/monitor/job', '[0:0:0:0:0:0:0:1]', '内网IP', '{\"concurrent\":\"1\",\"createBy\":\"admin\",\"cronExpression\":\"0 0/10 * * * ?\",\"invokeTarget\":\"levelTrialTask.expireTrialCards\",\"jobGroup\":\"DEFAULT\",\"jobId\":104,\"jobName\":\"体验卡检测\",\"misfirePolicy\":\"1\",\"nextValidTime\":\"2026-05-06 17:10:00\",\"params\":{},\"status\":\"1\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-06 17:06:05', 166);
-INSERT INTO `sys_oper_log` VALUES (548, '定时任务', 2, 'com.ruoyi.quartz.controller.SysJobController.changeStatus()', 'PUT', 1, 'admin', NULL, '/prod-api/monitor/job/changeStatus', '[0:0:0:0:0:0:0:1]', '内网IP', '{\"jobId\":104,\"misfirePolicy\":\"0\",\"params\":{},\"status\":\"0\"} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-06 17:06:10', 44);
-INSERT INTO `sys_oper_log` VALUES (549, '定时任务', 2, 'com.ruoyi.quartz.controller.SysJobController.run()', 'PUT', 1, 'admin', NULL, '/prod-api/monitor/job/run', '[0:0:0:0:0:0:0:1]', '内网IP', '{\"jobGroup\":\"DEFAULT\",\"jobId\":104,\"misfirePolicy\":\"0\",\"params\":{}} ', '{\"msg\":\"操作成功\",\"code\":200}', 0, NULL, '2026-05-06 17:06:14', 38);
 
 -- ----------------------------
 -- Table structure for sys_post
@@ -2311,7 +2305,7 @@ CREATE TABLE `sys_user`  (
 -- ----------------------------
 -- Records of sys_user
 -- ----------------------------
-INSERT INTO `sys_user` VALUES (1, 103, 'admin', '若依', NULL, '00', 'ry@163.com', '15888888888', '1', NULL, '', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '[0:0:0:0:0:0:0:1]', '2026-05-06 14:37:24', '2026-04-24 11:27:59', 'admin', '2026-04-24 11:27:59', '', '2026-05-06 14:37:23', '管理员', 'ABCDEF', '0', 0, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
+INSERT INTO `sys_user` VALUES (1, 103, 'admin', '若依', NULL, '00', 'ry@163.com', '15888888888', '1', NULL, '', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', '2026-05-05 21:03:25', '2026-04-24 11:27:59', 'admin', '2026-04-24 11:27:59', '', '2026-05-05 21:03:25', '管理员', 'ABCDEF', '0', 0, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000002, 105, 'ry', '若依', NULL, '00', 'ry@qq.com', '15666666666', '1', NULL, '', '$2a$10$7JB720yubVSZvUI0rEqK/.VqGOZTH.ulu33dHOiBE8ByOhJIrdAu2', '0', '0', '127.0.0.1', '2026-04-24 11:27:59', '2026-04-24 11:27:59', 'admin', '2026-04-24 11:27:59', '', NULL, '测试员', 'ABCDEG', '0', 0, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000100, NULL, 'lanz', '小兰男', NULL, '00', 'aa@abc.com', '13988888888', '0', '2026-04-25', 'https://img.1trx.in/avatar/6261112486f440e0bbb1ad0c8dbde87c.png', '$2a$10$JBPe895RePwgGN5hniLBguPWASmTXgvCtAu5ilkzlY35tNWGt7FOm', '0', '0', '192.168.0.3', '2026-05-05 23:22:49', '2026-04-30 20:54:01', '', '2026-04-24 20:30:27', 'admin', '2026-05-05 23:22:48', '万事开头男', 'ABCDEA', '0', 0, 1, '$2a$10$bLhiSDpHkYR7wLQBUAaKRuf.zrHU4s/NqOGLhI9iL7Gupz7hlb8z2', 3, 'CNY', 1, 1000.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000102, NULL, 'test1', '小王', NULL, '00', '', '13977777777', '0', '2013-05-01', 'https://img.1trx.in/avatar/74eb662070884ad8bf2872e7c53ec9d0.png', '$2a$10$RhuENwv4Kr91c6QhcrY9DO0SSLJVworA2beGoIibf4PcXiO.Q5RVm', '0', '0', '192.168.0.2', '2026-05-01 16:17:13', '2026-04-25 14:39:57', '', '2026-04-25 14:39:57', 'admin', '2026-05-01 23:05:28', NULL, 'LNWR6M', '0,1', 1, 0, '$2a$10$VYHgMfZU9cEP5jWNN29K9ucmeS/mh76K622B52T8uUKVqhv3WD28S', 3, 'CNY', 0, 0.00, 0.00, 0, 0);
@@ -2319,7 +2313,7 @@ INSERT INTO `sys_user` VALUES (1000103, NULL, 'liyats', 'liyats', NULL, '00', ''
 INSERT INTO `sys_user` VALUES (1000104, NULL, 'suyat', 'suyat', NULL, '00', '', '', '0', NULL, '', '$2a$10$vAn3CcctPLeHdmmf6qR9OOyVqjsn4qik2tf3bdqtl0nmHh720uNBW', '0', '0', '', NULL, '2026-05-02 12:39:40', '', '2026-05-02 12:39:39', '', NULL, NULL, 'AW5A8K', '0,1000100', 1, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000105, NULL, 'lian', 'lian', NULL, '00', '', '', '0', NULL, '', '$2a$10$h9GWo3g.qhsb.AtVAI9TAuwhuDi6ngQbLoMfNR7c7y0ieUb.6cyEi', '0', '0', '192.168.140.1', '2026-05-02 12:47:57', '2026-05-02 12:47:52', '', '2026-05-02 12:47:52', '', NULL, NULL, '8HPBM2', '0,1000100', 1, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
 INSERT INTO `sys_user` VALUES (1000106, NULL, 'nnd', 'nnd', NULL, '00', '', '', '0', NULL, '', '$2a$10$X/ErL7disJDeJhAVL/LxIezsA2kTy6y07Ifn/ozean3H72KGGRht.', '0', '0', '192.168.140.1', '2026-05-02 13:08:43', '2026-05-02 13:08:39', '', '2026-05-02 13:08:38', '', NULL, NULL, 'ERQJWA', '0,1000100', 1, 0, NULL, -1, 'CNY', 0, 0.00, 0.00, 0, 0);
-INSERT INTO `sys_user` VALUES (1000107, NULL, 'nnd1', '小天', 'xtsd', '00', 'c@qq.com', '13988888887', '0', '1995-05-01', 'https://img.1trx.in/avatar/b06c80c1b0f349d1a94fc617bdd630e8.png', '$2a$10$pALsff9tWHtg.zTyf6maj.QtjtuUqJRV5qkLQgxM.HTVP6iK3Amdy', '0', '0', '192.168.140.1', '2026-05-06 11:52:46', '2026-05-06 11:10:35', '', '2026-05-02 13:12:15', 'admin', '2026-05-06 16:15:25', NULL, 'YKZQ4N', '0,1000100', 4, 4, '$2a$10$JtWd0k6ITDSxXa3reolJiuKt1f.vi2NbKDOtgf4XNFf56zk5opU4.', 3, 'CNY', 1, 10800.00, 168000.00, 8501, 0);
+INSERT INTO `sys_user` VALUES (1000107, NULL, 'nnd1', '小天', 'xtsd', '00', 'c@qq.com', '13988888887', '0', '1995-05-01', 'https://img.1trx.in/avatar/b06c80c1b0f349d1a94fc617bdd630e8.png', '$2a$10$/CCCtZY0SFw.qCK5aKGrf.GtezC94R565l9f/MzxR1TiwSA7v.iPC', '0', '0', '192.168.140.1', '2026-05-05 21:09:12', '2026-05-02 13:12:15', '', '2026-05-02 13:12:15', 'admin', '2026-05-06 00:00:00', NULL, 'YKZQ4N', '0,1000100', 1, 2, '$2a$10$JtWd0k6ITDSxXa3reolJiuKt1f.vi2NbKDOtgf4XNFf56zk5opU4.', 3, 'CNY', 1, 10800.00, 168000.00, 8501, 0);
 
 -- ----------------------------
 -- Table structure for sys_user_bank_card
@@ -2661,17 +2655,17 @@ CREATE TABLE `sys_user_security_answer`  (
   UNIQUE INDEX `uk_user_question`(`user_id` ASC, `question_id` ASC) USING BTREE,
   INDEX `idx_user_id`(`user_id` ASC) USING BTREE,
   INDEX `idx_question_id`(`question_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户安全问题答案表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 11 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '用户安全问题答案表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user_security_answer
 -- ----------------------------
 INSERT INTO `sys_user_security_answer` VALUES (5, 1000102, 1, '1', '2026-05-01 16:44:44', NULL);
 INSERT INTO `sys_user_security_answer` VALUES (6, 1000102, 2, '1', '2026-05-01 16:44:44', NULL);
+INSERT INTO `sys_user_security_answer` VALUES (7, 1000107, 1, '$2a$10$Tj.hNo/V6UX3dgMaO7MDs.Wo3kqJsGYKB58Ew0fgUENgZJs68SbGi', '2026-05-02 14:36:49', NULL);
+INSERT INTO `sys_user_security_answer` VALUES (8, 1000107, 2, '$2a$10$SvpO4ypZPveKVyyvFJRFke/J5WU/AKdu4pl4kzsoLaKrSIjPKV/QG', '2026-05-02 14:36:49', NULL);
 INSERT INTO `sys_user_security_answer` VALUES (9, 1000100, 3, '$2a$10$eclgmiOf4KWsw75Hl0Ncp.b73EHgw.hnx3JMhFQzRYh9tfmQ2BtoK', '2026-05-05 13:27:13', NULL);
 INSERT INTO `sys_user_security_answer` VALUES (10, 1000100, 4, '$2a$10$2r58KT.qvwppuGU.UgKbYe7C6UVNDlS4YMakrt0skjfWyf99PMNq6', '2026-05-05 13:27:13', NULL);
-INSERT INTO `sys_user_security_answer` VALUES (11, 1000107, 1, '$2a$10$UptXprStageYRHWrawh3HONNP6clF7Ms/P3iNOM7naEc26E/vgUDO', '2026-05-06 11:11:01', NULL);
-INSERT INTO `sys_user_security_answer` VALUES (12, 1000107, 2, '$2a$10$ud7emm17AvKTQQGZJUQ6lej1h77cfMsLXp50P4FU/2BVHbITEcQ6K', '2026-05-06 11:11:01', NULL);
 
 -- ----------------------------
 -- Table structure for sys_user_sign_log
